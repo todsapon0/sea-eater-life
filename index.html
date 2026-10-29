@@ -34,6 +34,12 @@ canvas,#stick,#bite,#slam,.sk,#dexb{touch-action:none}#stick,#bite,#slam,.sk,#de
  #dexb{right:calc(8px + env(safe-area-inset-right,0px))}#hud{left:env(safe-area-inset-left,0px);right:env(safe-area-inset-right,0px);padding:6px 8px}#hud b{font-size:15px}#hud div{font-size:11px}.bar{width:120px}
  #pick{gap:5px;font-size:16px}#pick button{padding:6px;font-size:15px}#pick small{font-size:11px}
 }
+/* Compact layout follows the visible landscape viewport, including Safari bars. */
+body.compact #hud{left:env(safe-area-inset-left,0px);right:auto;top:env(safe-area-inset-top,0px);padding:3px 6px;line-height:1.15}
+body.compact #hud b{font-size:12px}body.compact #hud div{font-size:11px;margin-top:1px}
+body.compact #hud .bar{width:100px;height:4px;margin-top:2px}body.compact #help{display:none}
+body.compact #dexb{right:calc(8px + env(safe-area-inset-right,0px));min-width:44px;min-height:44px;padding:4px 8px}
+body.compact #debug{left:50%!important;right:auto!important;top:auto!important;bottom:calc(4px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);white-space:nowrap;font-size:10px!important}
 </style>
 </head>
 <body>
@@ -141,7 +147,7 @@ const r=m.hp/m.ty.hp;m.bar.position.set(g.position.x,g.position.y+2.8*m.ty.s,g.p
 if(P.hp<=0){sea.position.set(0,0,0);P.hp=P.max;say('สลบ! ฟื้นที่จุดเริ่มต้น');}else P.hp=Math.min(P.max,P.hp+dt*(P.song>0?P.max*.08:1));
 msgT-=dt;if(msgT<=0)$('msg').style.opacity=0;
 $('lv').textContent=(CLS==='bloop'?'Bloop ':CLS==='maja'?'El Gran Maja ':'Sea Eater ')+'Lv.'+P.lv+(P.lv>=20?' (สูงสุด)':'');$('xpb').style.width=(P.xp/need(P.lv)*100)+'%';$('hpb').style.width=(P.hp/P.max*100)+'%';
-const q=qs[P.qd];$('qt').textContent='เควสต์: ล้มมอนสเตอร์ '+P.q+'/'+q.n+' (รางวัล '+q.xp+' EXP)';$('slam').style.opacity=slamCD>0?.45:1;$('devour').style.opacity=P.devCD>0?.45:1;$('taunt').style.opacity=P.tauntCD>0?.45:1;$('shield').style.opacity=P.shCD>0?.45:1;};
+const q=qs[P.qd];$('qt').textContent=document.body.classList.contains('compact')?'เควสต์ '+P.q+'/'+q.n:'เควสต์: ล้มมอนสเตอร์ '+P.q+'/'+q.n+' (รางวัล '+q.xp+' EXP)';$('slam').style.opacity=slamCD>0?.45:1;$('devour').style.opacity=P.devCD>0?.45:1;$('taunt').style.opacity=P.tauntCD>0?.45:1;$('shield').style.opacity=P.shCD>0?.45:1;};
 
 // iOS browser gestures must not zoom the play surface; preserve panel scrolling.
 ['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,e=>{if(e.cancelable)e.preventDefault();},{passive:false}));
@@ -162,13 +168,15 @@ $('slam').addEventListener('pointerdown',e=>{e.preventDefault();doSlam();});cons
 document.getElementById('bite').addEventListener('pointerdown',e=>{e.preventDefault();doBite();});
 addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='Space'){e.preventDefault();doBite();}if(e.code==='KeyE')doSlam();if(e.code==='KeyQ')doDevour();if(e.code==='KeyR')doTaunt();if(e.code==='KeyF')doShield();});
 addEventListener('keyup',e=>{keys[e.code]=0;});
-addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight);});
+function updateCompact(){const v=window.visualViewport,w=v?v.width:innerWidth,h=v?v.height:innerHeight;document.body.classList.toggle('compact',w>h&&h<=420);}
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight);updateCompact();});
+addEventListener('orientationchange',updateCompact);if(window.visualViewport)window.visualViewport.addEventListener('resize',updateCompact);updateCompact();
 
 // loop
 const clock=new T.Clock();let t=0,face=0;cam.position.set(0,10,15);
 const debugEnabled=new URLSearchParams(location.search).get('debug')==='1';let debugFrames=0,debugStart=performance.now(),debugNode=null;
 if(debugEnabled){debugNode=document.createElement('div');debugNode.id='debug';debugNode.style.cssText='position:fixed;left:8px;top:calc(120px + env(safe-area-inset-top,0px));z-index:8;background:#001b22bb;color:white;font:12px monospace;padding:3px 6px;pointer-events:none';debugNode.textContent='FPS: --';document.body.append(debugNode);}
-function loop(){requestAnimationFrame(loop);if(debugNode){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+' | scale: '+(view?view.scale.toFixed(2):'n/a')+(view?' | '+Math.round(view.width)+'×'+Math.round(view.height):'');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;
+function loop(){requestAnimationFrame(loop);if(debugNode){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;
 let x=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),z=jz+((keys.KeyS||keys.ArrowDown)?1:0)-((keys.KeyW||keys.ArrowUp)?1:0);
 const l=Math.hypot(x,z);if(l>1){x/=l;z/=l;}const mv=l>.12;
 if(mv){sea.position.x=Math.max(-95,Math.min(95,sea.position.x+x*7*dt));sea.position.z=Math.max(-95,Math.min(95,sea.position.z+z*7*dt));
