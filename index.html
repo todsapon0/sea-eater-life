@@ -93,7 +93,7 @@ const m=new T.Mesh(new T.SphereGeometry(.5*s,14,10),new T.MeshStandardMaterial({
 g.position.set(0,i?0:1.5,i?-.55*Math.pow(.82,i-1):-.8);par.add(g);segs.push(g);par=g;}
 scene.add(sea);
 let CLS='sea';try{CLS=localStorage.getItem('selcls')||'sea';}catch(e){}const KEY=CLS==='bloop'?'sel01b':CLS==='maja'?'sel01m':'sel01';const P={lv:1,xp:0,hp:100,max:100,q:0,qd:0,inv:{},seen:{},sh:0,shCD:0,tauntT:0,tauntCD:0,devCD:0,bless:0,song:0},qs=[{n:5,xp:40},{n:10,xp:100},{n:20,xp:250}],need=l=>Math.round(20*Math.pow(l,1.5)),maxHp=()=>100+(P.lv-1)*15,$=id=>document.getElementById(id);
-try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.lv){P.lv=s.lv;P.xp=s.xp||0;P.qd=Math.min(s.qd||0,2);P.inv=s.inv||{};P.seen=s.seen||{};}}catch(e){}
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.lv){P.lv=s.lv;P.xp=s.xp||0;P.qd=Number.isInteger(s.qd)&&s.qd>=0&&s.qd<qs.length?s.qd:0;P.q=Number.isInteger(s.q)&&s.q>=0&&s.q<qs[P.qd].n?s.q:0;P.inv=s.inv||{};P.seen=s.seen||{};}}catch(e){}
 P.max=maxHp();P.hp=P.max;let slamCD=0,msgT=0;try{if(!localStorage.getItem('selcls'))$('pick').style.display='flex';}catch(e){}document.querySelectorAll('#pick button').forEach(b=>b.addEventListener('click',()=>{try{localStorage.setItem('selcls',b.dataset.c);}catch(e){}location.reload();}));if(CLS==='bloop'){white.color.set(0x7cc8f5);foot.color.set(0x4f9fd6);mo.material=new T.MeshStandardMaterial({color:0x1f4f8f});body.scale.set(1.15,1.05,1.1);mouth.children.slice(1).forEach(c=>c.visible=false);const bell=new T.Mesh(new T.ConeGeometry(.8,.9,16),new T.MeshStandardMaterial({color:0xb9ecff}));bell.position.y=3.95;sea.add(bell);$('bite').textContent='ยิงฟอง';$('slam').textContent='รักษา';$('devour').textContent='พร';$('taunt').textContent='เพลง';$('shield').textContent='โล่ฟอง';}if(CLS==='maja'){
 white.color.set(0x59658e);foot.color.set(0x424c72);mo.material=new T.MeshStandardMaterial({color:0x201b42});
 body.scale.set(1.2,.9,1.35);mouth.children.slice(1).forEach(c=>c.visible=false);
@@ -109,7 +109,7 @@ $('skillhelp').addEventListener('click',()=>{$('skillinfo').style.display='flex'
 const skillLabels={};['slam','devour','taunt','shield'].forEach(id=>skillLabels[id]=$(id).textContent);
 function showCooldown(id,time){const button=$(id),seconds=Math.ceil(time);if(button.dataset.cooldown===String(seconds))return;button.dataset.cooldown=String(seconds);button.style.opacity=seconds>0?.45:1;button.textContent=seconds>0?skillLabels[id]+' '+seconds:skillLabels[id];button.setAttribute('aria-label',seconds>0?skillLabels[id]+' รอ '+seconds+' วินาที':skillLabels[id]);}
 const shm=new T.Mesh(new T.SphereGeometry(2.2,16,12),new T.MeshBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.25}));shm.position.y=2.2;shm.visible=false;sea.add(shm);
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({lv:P.lv,xp:P.xp,qd:P.qd,inv:P.inv,seen:P.seen}));}catch(e){}};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({lv:P.lv,xp:P.xp,qd:P.qd,q:P.q,inv:P.inv,seen:P.seen}));}catch(e){}};
 const say=s=>{$('msg').textContent=s;$('msg').style.opacity=1;msgT=2.5;};
 const gain=x=>{P.xp+=x;while(P.xp>=need(P.lv)&&P.lv<20){P.xp-=need(P.lv);P.lv++;P.max=maxHp();P.hp=P.max;say('เลเวลอัป! Lv.'+P.lv);}save();};
 const types=[{n:'ray',nm:'ปลากระเบนตาฟ้า',dr:'ครีบกระเบน',c:0x7d8794,hp:30,xp:8,d:6,s:1,sp:2.5},{n:'shark',nm:'ฉลามปากแดง',dr:'ฟันฉลาม',c:0x8a2a30,hp:55,xp:14,d:10,s:1.3,sp:3.2},{n:'whale',nm:'วาฬปากกว้าง',dr:'ไขมันวาฬ',c:0x7a5a3a,hp:90,xp:25,d:14,s:1.8,sp:2.2},{n:'eel',nm:'งูทะเล',dr:'เกล็ดงู',c:0x3f8a6a,hp:45,xp:18,d:8,s:1.1,sp:4}],mons=[];
@@ -126,7 +126,7 @@ const mo=new T.Mesh(new T.SphereGeometry(.35,10,8),dark);mo.scale.z=.4;mo.positi
 g.scale.setScalar(ty.s);scene.add(g);
 const bar=new T.Group(),bf=new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0x5cf08a}));bf.position.z=.01;bar.add(new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0})),bf);scene.add(bar);
 const m={g,ty,bar,bf,k:Math.random()*6,orbit:i%2?1:-1};mons.push(m);spawn(m);}
-const kill=m=>{m.dead=6;m.g.visible=false;m.bar.visible=false;gain(m.ty.xp);if(Math.random()<.6){P.inv[m.ty.dr]=(P.inv[m.ty.dr]||0)+1;say('ได้ '+m.ty.dr);}if(!P.seen[m.ty.n]){P.seen[m.ty.n]=1;say('พบสายพันธุ์ใหม่: '+m.ty.nm);}save();renderDex();P.q++;const q=qs[P.qd];if(P.q>=q.n){P.q=0;P.qd=Math.min(P.qd+1,qs.length-1);say('เควสต์สำเร็จ! +'+q.xp+' EXP');gain(q.xp);}};
+const kill=m=>{m.dead=6;m.g.visible=false;m.bar.visible=false;gain(m.ty.xp);if(Math.random()<.6){P.inv[m.ty.dr]=(P.inv[m.ty.dr]||0)+1;say('ได้ '+m.ty.dr);}if(!P.seen[m.ty.n]){P.seen[m.ty.n]=1;say('พบสายพันธุ์ใหม่: '+m.ty.nm);}save();renderDex();P.q++;const q=qs[P.qd];if(P.q>=q.n){P.q=0;P.qd=Math.min(P.qd+1,qs.length-1);say('เควสต์สำเร็จ! +'+q.xp+' EXP');gain(q.xp);}save();};
 const hit=sl=>{const dmg=((sl?30:(CLS==='bloop'?9:12))+P.lv*3)*(P.bless>0?1.6:1),rad=sl?7:(CLS==='bloop'?10:3.8),fx=Math.sin(face),fz=Math.cos(face);mons.forEach(m=>{if(m.dead>0)return;const dx=m.g.position.x-sea.position.x,dz=m.g.position.z-sea.position.z,d=Math.hypot(dx,dz)||1;if(d>rad+m.ty.s*.5)return;if(!sl&&d>1.8+m.ty.s&&(dx*fx+dz*fz)/d<.3)return;m.hp-=dmg;m.g.position.x+=dx/d*1.2;m.g.position.z+=dz/d*1.2;if(m.hp<=0)kill(m);});};
 // Maja projectiles and whirlpools use the existing monster damage and rewards.
 const shots=[],vortices=[];
