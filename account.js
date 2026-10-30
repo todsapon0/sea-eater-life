@@ -83,7 +83,7 @@ window.startAccount = async function startAccount() {
     function finish(client,userId,row) {
       const record=row.save_data;
       const object=value=>value && typeof value==='object' && !Array.isArray(value);
-      if (!['sea','bloop','maja'].includes(row.character_class) || !object(record) ||
+      if (!['sea','bloop','maja','crab'].includes(row.character_class) || !object(record) ||
           !Number.isInteger(record.lv) || record.lv<1 || record.lv>20 ||
           !Number.isFinite(record.xp) || record.xp<0 || !Number.isInteger(record.qd) ||
           record.qd<0 || record.qd>2 || !Number.isInteger(record.q) || record.q<0 ||
@@ -91,7 +91,7 @@ window.startAccount = async function startAccount() {
           !Number.isInteger(row.revision) || row.revision<0) {
         error.textContent='ข้อมูลเซฟบนเซิร์ฟเวอร์ไม่ถูกต้อง กรุณาติดต่อผู้ดูแล'; return;
       }
-      const key={sea:'sel01',bloop:'sel01b',maja:'sel01m'}[row.character_class];
+      const key={sea:'sel01',bloop:'sel01b',maja:'sel01m',crab:'sel01c'}[row.character_class];
       // A separate journal for this project and authenticated account; never use legacy save keys.
       const journalKey='sel-account-pending-v2:'+cfg.url+':'+userId+':'+row.character_class;
       let revision=row.revision, pending=null, saving=false, blocked=false, timer=null, attempts=0, inflight=null;
