@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Sea Eater Life v0.5.3</title>
+<title>Sea Eater Life v0.5.4</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
@@ -66,13 +66,51 @@ body.compact #skillhelp{right:calc(60px + env(safe-area-inset-right,0px));min-he
 .damage-number{position:fixed;left:0;top:0;z-index:7;pointer-events:none;color:#fff2a8;font:bold 23px system-ui;line-height:1;text-shadow:0 2px 3px #05151c,0 0 9px #050a0e;display:none;white-space:nowrap;will-change:transform,opacity}
 
 #accountGate,.account-block{position:fixed;inset:0;z-index:100;background:#06242cf5;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;touch-action:pan-y}.account-card{max-width:400px;width:100%;display:grid;gap:10px}.account-card form{display:grid;gap:10px}.account-card label{display:grid;gap:4px}.account-card input,.account-card button{font:inherit;min-height:44px;padding:8px}#accountStatus{position:fixed;left:8px;bottom:4px;z-index:6;background:#042f38e8;padding:4px;font-size:12px}#accountStatus.error{background:#9b2636}
+
+/* ===== UI refresh v0.5.4: one tidy top row, one HUD card, round glass controls. No backdrop-filter (keeps 30 FPS on iPad 8 / iPhone 11). ===== */
+#topbar{position:fixed;z-index:3;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));display:flex;gap:6px;align-items:center;touch-action:none}
+#topbar>button{position:static;min-height:40px;min-width:40px;padding:0 12px;margin:0;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(7,38,48,.78);color:#eaf7f5;font:600 13px/1 system-ui,"Noto Sans Thai",sans-serif;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.28);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#topbar>button:active{background:rgba(20,92,108,.9)}
+#hud{right:auto;left:calc(10px + env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));width:max-content;max-width:min(270px,62vw);padding:8px 12px 10px;border-radius:16px;background:rgba(7,38,48,.62);border:1px solid rgba(255,255,255,.16);box-shadow:0 2px 8px rgba(0,0,0,.25);text-shadow:none}
+#hud b{display:block;font-size:11px;font-weight:600;opacity:.6;letter-spacing:0}
+#hud #lv{font-size:16px;font-weight:700;opacity:1;margin-top:1px}
+#hud .bar{width:100%;height:7px;margin-top:5px;background:rgba(0,0,0,.4);border-radius:999px}
+#hud .bar i{border-radius:999px}
+#hud #qt{font-size:12px;line-height:1.35;opacity:.95;margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.14)}
+#hud #qt:empty{display:none;border:0;margin:0;padding:0}
+#hud #help{font-size:11px;line-height:1.35;opacity:.65;margin-top:3px}
+body.hudmin #hud{padding:6px 10px 8px;max-width:150px}
+body.hudmin #hud #lv{font-size:14px}
+body.hudmin #hud .bar{width:100%;height:5px}
+/* controls: soft round glass buttons */
+#stick{background:rgba(7,38,48,.4);border:2px solid rgba(255,255,255,.4);box-shadow:inset 0 0 14px rgba(0,0,0,.25)}
+#knob{background:rgba(255,255,255,.88);box-shadow:0 2px 6px rgba(0,0,0,.35)}
+#bite,#slam,.sk{box-shadow:0 3px 8px rgba(0,0,0,.35);border-color:rgba(255,255,255,.55)}
+#bite:active,#slam:active,.sk:active{transform:scale(.94)}
+#dex{background:rgba(7,38,48,.94);border:1px solid rgba(255,255,255,.2);border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,.4);top:calc(58px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px))}
+#dex button{border-radius:10px;border:1px solid rgba(255,255,255,.28);background:rgba(18,83,95,.9);color:#fff;font:inherit;padding:6px 10px;margin:2px 2px 2px 0}
+#skillinfo .card{border-radius:18px}
+/* landscape phones: HUD card sits top-left, buttons top-right, nothing over the middle of the screen */
+@media (max-height:480px){
+ #topbar{top:calc(6px + env(safe-area-inset-top,0px))}
+ #topbar>button{min-height:36px;padding:0 10px;font-size:12px}
+ #hud,body.compact #hud{top:calc(6px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));right:auto;max-width:220px;padding:5px 9px 7px;line-height:1.2}
+ #hud b{display:none}
+ #hud #lv{font-size:14px;margin-top:0}
+ #hud .bar{height:5px;margin-top:4px}
+ #hud #qt{font-size:11px;margin-top:5px;padding-top:4px}
+ #hud #help,body.compact #help{display:none}
+ #dex{top:calc(48px + env(safe-area-inset-top,0px));max-height:calc(100dvh - 58px)}
+}
+body.compact #hud{top:calc(6px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));right:auto;max-width:220px;padding:5px 9px 7px}
+body.compact #hud b{display:none}body.compact #hud .bar{width:100%}
 </style>
 </head>
 <body>
 <div id="zoomWarn" role="status" style="display:none;position:fixed;left:0;top:0;z-index:30;box-sizing:border-box;padding:8px 12px;background:#b5702cf2;color:#fff;font-size:14px;line-height:1.4;text-align:center;pointer-events:none">หน้าจอถูกซูมเข้าอยู่ ใช้สองนิ้วบีบเพื่อย่อกลับ ปุ่มจะกลับมาครบ</div>
-<div id="hud"><b>Sea Eater Life v0.5.3</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button>
+<div id="hud"><b>Sea Eater Life v0.5.4</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><div id="topbar"><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="dexb">สมุด</button></div>
 <div id="stick"><div id="knob"></div></div>
-<button id="slam">ทุบพื้น</button><button id="devour" class="sk">กิน</button><button id="taunt" class="sk">ยั่ว</button><button id="shield" class="sk">โล่</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="dexb">สมุด</button><div id="skillinfo" role="dialog" aria-modal="true" aria-label="คำอธิบายสกิล"><div class="card"><b>สกิลของตัวละคร</b><div id="skilltext"></div><button id="closehelp">ปิด</button></div></div><div id="dex"></div><div id="pick"><b>เลือกตัวละคร</b><button data-c="sea">Sea Eater<br><small>Warrior / Tank — กัดระยะประชิด</small></button><button data-c="bloop">Bloop<br><small>Healer / Support — ยิงฟอง รักษา</small></button><button data-c="maja">El Gran Maja<br><small>Mage / DPS — โจมตีไกล ควบคุมศัตรู</small></button></div><button id="bite">กัด</button>
+<button id="slam">ทุบพื้น</button><button id="devour" class="sk">กิน</button><button id="taunt" class="sk">ยั่ว</button><button id="shield" class="sk">โล่</button><div id="skillinfo" role="dialog" aria-modal="true" aria-label="คำอธิบายสกิล"><div class="card"><b>สกิลของตัวละคร</b><div id="skilltext"></div><button id="closehelp">ปิด</button></div></div><div id="dex"></div><div id="pick"><b>เลือกตัวละคร</b><button data-c="sea">Sea Eater<br><small>Warrior / Tank — กัดระยะประชิด</small></button><button data-c="bloop">Bloop<br><small>Healer / Support — ยิงฟอง รักษา</small></button><button data-c="maja">El Gran Maja<br><small>Mage / DPS — โจมตีไกล ควบคุมศัตรู</small></button></div><button id="bite">กัด</button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="account-config.js"></script>
