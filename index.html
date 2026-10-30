@@ -69,6 +69,7 @@ body.compact #skillhelp{right:calc(60px + env(safe-area-inset-right,0px));min-he
 </style>
 </head>
 <body>
+<div id="zoomWarn" role="status" style="display:none;position:fixed;left:0;top:0;z-index:30;box-sizing:border-box;padding:8px 12px;background:#b5702cf2;color:#fff;font-size:14px;line-height:1.4;text-align:center;pointer-events:none">หน้าจอถูกซูมเข้าอยู่ ใช้สองนิ้วบีบเพื่อย่อกลับ ปุ่มจะกลับมาครบ</div>
 <div id="hud"><b>Sea Eater Life v0.5.3</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button>
 <div id="stick"><div id="knob"></div></div>
 <button id="slam">ทุบพื้น</button><button id="devour" class="sk">กิน</button><button id="taunt" class="sk">ยั่ว</button><button id="shield" class="sk">โล่</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="dexb">สมุด</button><div id="skillinfo" role="dialog" aria-modal="true" aria-label="คำอธิบายสกิล"><div class="card"><b>สกิลของตัวละคร</b><div id="skilltext"></div><button id="closehelp">ปิด</button></div></div><div id="dex"></div><div id="pick"><b>เลือกตัวละคร</b><button data-c="sea">Sea Eater<br><small>Warrior / Tank — กัดระยะประชิด</small></button><button data-c="bloop">Bloop<br><small>Healer / Support — ยิงฟอง รักษา</small></button><button data-c="maja">El Gran Maja<br><small>Mage / DPS — โจมตีไกล ควบคุมศัตรู</small></button></div><button id="bite">กัด</button>
@@ -280,7 +281,7 @@ function exportSaveBackup(){
     setTimeout(()=>URL.revokeObjectURL(url),60000);say('เริ่มดาวน์โหลดเซฟ โปรดตรวจไฟล์ในอุปกรณ์');
   }catch(e){if(url)URL.revokeObjectURL(url);say('สำรองเซฟไม่สำเร็จ: '+(e&&e.message?e.message:'ไม่สามารถอ่านเซฟได้'));}
 }
-const renderDex=()=>{$('dex').innerHTML='<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' (ดรอป: '+t.dr+')':'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b><br>'+(Object.keys(P.inv).map(k=>k+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:12px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วบนพื้นน้ำเพื่อหมุนกล้องรอบตัว 360° ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){say('บัญชีนี้มีตัวละครหนึ่งตัว');return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
+const renderDex=()=>{$('dex').innerHTML='<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' (ดรอป: '+t.dr+')':'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b><br>'+(Object.keys(P.inv).map(k=>k+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วบนพื้นน้ำเพื่อหมุนกล้องรอบตัว 360° ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){say('บัญชีนี้มีตัวละครหนึ่งตัว');return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
 // Fullscreen / PWA / HUD. iPhone Safari has no Fullscreen API, so there the honest answer
 // is Add to Home Screen, which gives a real fullscreen standalone window.
 const standalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
@@ -353,12 +354,26 @@ function updateCompact(){const v=window.visualViewport,w=v?v.width:innerWidth,h=
 // slides in or out, and the old code never resized the renderer on orientationchange at
 // all, which left the 3D view the wrong size with blank space beside it. visualViewport
 // is the size actually on screen, so everything is driven from that.
+// visualViewport.width shrinks when the page is pinch-zoomed or iOS auto-zooms into an input,
+// but position:fixed controls are laid out against the LAYOUT viewport. Multiplying by scale
+// recovers the layout size, so the 3D view never shrinks to the zoomed window.
 function applyViewport(){
-  const v=window.visualViewport;
-  let w=Math.round(v&&v.width?v.width:innerWidth),h=Math.round(v&&v.height?v.height:innerHeight);
+  const v=window.visualViewport,s=v&&v.scale>0?v.scale:1;
+  let w=Math.round(v&&v.width?v.width*s:innerWidth),h=Math.round(v&&v.height?v.height*s:innerHeight);
   if(!(w>0))w=Math.max(1,innerWidth);if(!(h>0))h=Math.max(1,innerHeight);
   cam.aspect=w/h;cam.updateProjectionMatrix();ren.setSize(w,h);
-  updateCompact();
+  updateCompact();updateZoomWarn();
+}
+// The page cannot reset the browser zoom itself, but it can say so instead of leaving
+// buttons mysteriously off screen. The banner is drawn in the visible (zoomed) area.
+function updateZoomWarn(){
+  const v=window.visualViewport,el=$('zoomWarn');if(!el)return;
+  const s=v&&v.scale>0?v.scale:1;
+  if(s<=1.05){el.style.display='none';return;}
+  el.style.display='block';
+  el.style.width=Math.round(v.width)+'px';
+  el.style.transformOrigin='0 0';
+  el.style.transform='translate('+v.offsetLeft+'px,'+v.offsetTop+'px) scale('+s+')';
 }
 // A rotation settles over several frames on iOS, so re-apply for a moment afterwards.
 let vpTicks=null;
