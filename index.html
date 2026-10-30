@@ -14,8 +14,10 @@
 <meta name="apple-mobile-web-app-title" content="Sea Eater">
 <style>
 html,body{height:100%;margin:0;background:#0a4a58;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:system-ui,"Noto Sans Thai",sans-serif;color:#eaf7f5}
-canvas{display:block;width:100%;height:100%;touch-action:none}
-#hud{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);padding:12px 16px;pointer-events:none;text-shadow:0 1px 3px #0008}
+canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
+/* The top button row is nearly full width on a phone, so the HUD sits below it
+   rather than running underneath the buttons. Landscape compact mode overrides this. */
+#hud{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 48px);padding:12px 16px;pointer-events:none;text-shadow:0 1px 3px #0008}
 #hud b{font-size:18px}#hud div{font-size:13px;opacity:.85;margin-top:2px}
 #stick{position:fixed;left:24px;bottom:calc(28px + env(safe-area-inset-bottom,0px));width:140px;height:140px;border-radius:50%;background:rgba(5,30,38,.45);border:2px solid rgba(234,247,245,.5)}
 #knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(245,242,234,.9)}
@@ -347,8 +349,30 @@ addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='Space'){e.preventDefa
 if(e.code==='KeyZ')CAM.yaw+=.12;if(e.code==='KeyX')CAM.yaw-=.12;if(e.code==='KeyC')recenterCam();});
 addEventListener('keyup',e=>{keys[e.code]=0;});
 function updateCompact(){const v=window.visualViewport,w=v?v.width:innerWidth,h=v?v.height:innerHeight;document.body.classList.toggle('compact',w>h&&h<=420);}
-addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight);updateCompact();});
-addEventListener('orientationchange',updateCompact);if(window.visualViewport)window.visualViewport.addEventListener('resize',updateCompact);updateCompact();
+// iOS reports stale innerWidth/innerHeight around a rotation and when Safari's chrome
+// slides in or out, and the old code never resized the renderer on orientationchange at
+// all, which left the 3D view the wrong size with blank space beside it. visualViewport
+// is the size actually on screen, so everything is driven from that.
+function applyViewport(){
+  const v=window.visualViewport;
+  let w=Math.round(v&&v.width?v.width:innerWidth),h=Math.round(v&&v.height?v.height:innerHeight);
+  if(!(w>0))w=Math.max(1,innerWidth);if(!(h>0))h=Math.max(1,innerHeight);
+  cam.aspect=w/h;cam.updateProjectionMatrix();ren.setSize(w,h);
+  updateCompact();
+}
+// A rotation settles over several frames on iOS, so re-apply for a moment afterwards.
+let vpTicks=null;
+function applyViewportSoon(){
+  applyViewport();
+  if(vpTicks)clearTimeout(vpTicks);
+  let n=0;const again=()=>{applyViewport();if(++n<8)vpTicks=setTimeout(again,120);};
+  vpTicks=setTimeout(again,60);
+}
+addEventListener('resize',applyViewportSoon);
+addEventListener('orientationchange',applyViewportSoon);
+addEventListener('pageshow',applyViewportSoon);
+if(window.visualViewport){visualViewport.addEventListener('resize',applyViewport);visualViewport.addEventListener('scroll',applyViewport);}
+applyViewportSoon();
 
 // loop
 const clock=new T.Clock();let t=0,face=0;cam.position.set(0,10,15);
