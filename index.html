@@ -135,6 +135,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #movezone.active #stick{border-color:#b7f2ff;box-shadow:0 0 12px #8ee8ff55,inset 0 0 14px #001e2666}
 @media(max-width:480px){#stick{width:144px;height:144px;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px))}}
 @media(max-width:360px),(max-height:480px){#stick{width:132px;height:132px;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px))}#knob{width:58px;height:58px;margin:-29px 0 0 -29px}}
+#evo .gear-compare{padding-top:5px;border-top:1px solid #ffffff33}#evo .gear-compare em{font-style:normal}#evo .gear-up{color:#9ef0b0}#evo .gear-down{color:#ffb5a9}#evo .gear-locked{font-size:12px;color:#ffde9c}#evo button:disabled{opacity:.7}#gearBonuses{padding:10px;border:1px solid #ffffff40;border-radius:12px;font-size:13px;line-height:1.6}#gearSort{font:16px system-ui;padding:8px;border-radius:10px;background:#12535f;color:#fff;border:1px solid #ffffff80}
 </style>
 </head>
 <body>
@@ -247,7 +248,7 @@ function gearFrom(id){
  Object.keys(MUT_KEYS).forEach(k=>{if(base[k])o[k]=1+(base[k]-1)*factor;});return o;
 }
 const ownsGear=id=>Number.isInteger(P.inv['eq:'+id])&&P.inv['eq:'+id]>0&&P.inv['eq:'+id]<=99999;
-const canEquip=(slot,id)=>{const o=gearFrom(id);return !!o&&!!ORG[slot]&&ORG[slot].some(b=>b.id===o.org)&&(!o.only||o.only===CLS)&&P.lv>=o.lv&&ownsGear(id);};
+const canEquip=(slot,id)=>gearRequirement(slot,id)==='';
 const organFor=slot=>canEquip(slot,P.mu[slot])?gearFrom(P.mu[slot]):null;
 function rollGear(monster,random=Math.random){
  const table=GEAR_DROPS[monster];if(!table||random()>=(monster==='boss'?1:.2))return null;
@@ -259,6 +260,27 @@ function rollGear(monster,random=Math.random){
 function awardGear(monster,random=Math.random){const o=rollGear(monster,random);if(o)P.inv['eq:'+o.id]=Math.min(99999,(P.inv['eq:'+o.id]||0)+1);return o;}
 function gearLabel(o){return o.n+' Lv.'+o.lv+' ['+RARITY[o.rar].n+']';}
 function inventoryLabel(key){const o=key.startsWith('eq:')?gearFrom(key.slice(3)):null;return o?gearLabel(o):key;}
+const GEAR_STATS={dm:'ดาเมจ',hp:'HP',tk:'ดาเมจที่รับ',heal:'ฟื้นเลือด',cdr:'ฟื้นสกิล',shm:'เวลาโล่',bl:'เวลาพร',sp:'ความเร็ว'};
+function gearRequirement(slot,id){const o=gearFrom(id);
+ if(!o||!ORG[slot]||!ORG[slot].some(b=>b.id===o.org))return 'ไม่ตรงช่องอุปกรณ์';
+ if(o.only&&o.only!==CLS)return 'ไม่ตรงสายพันธุ์';
+ if(!ownsGear(id))return 'ยังไม่มีไอเทมนี้';
+ if(P.lv<o.lv)return 'ต้องการผู้เล่น Lv.'+o.lv+' (ขาดอีก '+(o.lv-P.lv)+' เลเวล)';
+ return '';
+}
+function gearChanges(slot,id){const next=gearFrom(id),current=organFor(slot);if(!next)return [];
+ return Object.keys(MUT_KEYS).map(k=>{const delta=((next[k]||1)/(current&&current[k]||1)-1)*100;return {key:k,delta,better:k==='tk'?delta<0:delta>0};}).filter(d=>Math.abs(d.delta)>1e-8);
+}
+function equipmentBonuses(){const total={};Object.keys(ORG).forEach(slot=>{const o=organFor(slot);if(o)Object.keys(MUT_KEYS).forEach(k=>{if(o[k])total[k]=(total[k]||1)*o[k];});});return Object.entries(total).map(([key,mul])=>({key,delta:(mul-1)*100}));}
+function sortGear(items,slot,mode){const rarity=o=>RARITY[o.rar].mul;
+ return items.slice().sort((a,b)=>{
+  if(mode==='level')return b.lv-a.lv||rarity(b)-rarity(a)||a.id.localeCompare(b.id);
+  if(mode==='rarity')return rarity(b)-rarity(a)||b.lv-a.lv||a.id.localeCompare(b.id);
+  return Number(canEquip(slot,b.id))-Number(canEquip(slot,a.id))||rarity(b)-rarity(a)||b.lv-a.lv||a.id.localeCompare(b.id);
+ });
+}
+const gearPercent=value=>(value>0?'+':'')+Number(value.toFixed(1))+'%';
+let gearSort='ready';
 let organGroup=null;
 function buildOrgans(){
  if(organGroup){sea.remove(organGroup);organGroup.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
@@ -300,14 +322,15 @@ const evo=document.createElement('div');evo.id='evo';evo.setAttribute('role','di
 const evoReady=()=>{const n=EVO[P.ev];return !!n&&P.lv>=n.lv&&P.es>=n.es&&(!n.job||Object.prototype.hasOwnProperty.call(JOBS[CLS]||{},P.job));};
 let evoNotified=0;
 function updateEvo(){const ready=evoReady();$('evob').classList.toggle('ready',ready);if(ready&&evoNotified!==P.ev+1){evoNotified=P.ev+1;say('🧬 พร้อมวิวัฒนาการแล้ว! กดปุ่ม 🧬');}}
-function renderEvo(){const n=EVO[P.ev],names={sea:'Sea Eater',bloop:'Bloop',maja:'El Gran Maja'},effects={dm:'ดาเมจ',hp:'HP',tk:'ดาเมจที่รับ',heal:'ฟื้นเลือด',cdr:'ฟื้นสกิล',shm:'เวลาโล่',bl:'เวลาพร',sp:'ความเร็ว'};
+function renderEvo(){const n=EVO[P.ev],names={sea:'Sea Eater',bloop:'Bloop',maja:'El Gran Maja'},effects=GEAR_STATS;
  const slots=Object.keys(ORG).map((slot,i)=>{
-  const wearing=organFor(slot),owned=Object.keys(P.inv).filter(k=>k.startsWith('eq:')&&ownsGear(k.slice(3))).map(k=>gearFrom(k.slice(3))).filter(o=>o&&ORG[slot].some(b=>b.id===o.org)&&(!o.only||o.only===CLS)).sort((a,b)=>a.lv-b.lv||a.id.localeCompare(b.id));
-  return '<section><h3>'+['หัว','หลัง','หาง'][i]+' — '+(wearing?gearLabel(wearing):'ว่าง')+'</h3>'+(owned.length?owned.map(o=>'<button data-slot="'+slot+'" data-organ="'+o.id+'" '+(canEquip(slot,o.id)?'':'disabled')+' aria-pressed="'+(P.mu[slot]===o.id)+'"><b style="color:'+RARITY[o.rar].col+'">'+(P.mu[slot]===o.id?'✓ ':'')+gearLabel(o)+'</b><span>ต้องการผู้เล่น Lv.'+o.lv+' • มี '+P.inv['eq:'+o.id]+' ชิ้น<br>['+(o.only?'เฉพาะ '+names[o.only]:'ใช้ร่วม')+'] '+Object.keys(effects).filter(k=>o[k]).map(k=>effects[k]+' ×'+Number(o[k].toFixed(3))).join(' • ')+'</span></button>').join(''):'<p>ยังไม่มีอุปกรณ์ช่องนี้ — หาจากมอนสเตอร์ดรอป</p>')+'<button data-remove="'+slot+'" '+(P.mu[slot]?'':'disabled')+'>ถอด</button></section>';
+  const wearing=organFor(slot),owned=sortGear(Object.keys(P.inv).filter(k=>k.startsWith('eq:')&&ownsGear(k.slice(3))).map(k=>gearFrom(k.slice(3))).filter(o=>o&&ORG[slot].some(b=>b.id===o.org)&&(!o.only||o.only===CLS)),slot,gearSort);
+  return '<section><h3>'+['หัว','หลัง','หาง'][i]+' — '+(wearing?gearLabel(wearing):'ว่าง')+'</h3>'+(owned.length?owned.map(o=>'<button data-slot="'+slot+'" data-organ="'+o.id+'" '+(canEquip(slot,o.id)?'':'disabled')+' aria-pressed="'+(P.mu[slot]===o.id)+'"><b style="color:'+RARITY[o.rar].col+'">'+(P.mu[slot]===o.id?'✓ ':'')+gearLabel(o)+'</b><span>ต้องการผู้เล่น Lv.'+o.lv+' • มี '+P.inv['eq:'+o.id]+' ชิ้น<br>['+(o.only?'เฉพาะ '+names[o.only]:'ใช้ร่วม')+'] '+Object.keys(effects).filter(k=>o[k]).map(k=>effects[k]+' ×'+Number(o[k].toFixed(3))).join(' • ')+'</span>'+(gearRequirement(slot,o.id)?'<strong class="gear-locked">🔒 '+gearRequirement(slot,o.id)+'</strong>':'')+(P.mu[slot]!==o.id?'<span class="gear-compare">'+(wearing?'เทียบกับที่สวมอยู่: ':'เมื่อสวมใส่: ')+(gearChanges(slot,o.id).map(d=>'<em class="'+(d.better?'gear-up':'gear-down')+'">'+effects[d.key]+' '+gearPercent(d.delta)+'</em>').join(' • ')||'ค่าเท่าเดิม')+'</span>':'<span>สวมใส่อยู่</span>')+'</button>').join(''):'<p>ยังไม่มีอุปกรณ์ช่องนี้ — หาจากมอนสเตอร์ดรอป</p>')+'<button data-remove="'+slot+'" '+(P.mu[slot]?'':'disabled')+'>ถอด</button></section>';
  }).join('');
  const guide=Object.values(GEAR_DROPS).map(d=>d.n+' (ไอเทม Lv.'+d.lv.join('–')+'): '+d.ids.map(id=>Object.values(ORG).flat().find(o=>o.id===id)).filter(o=>!o.only||o.only===CLS).map(o=>o.n).join(', ')).join('<br>');
- evo.innerHTML='<div class="jbox"><h2>🧬 วิวัฒนาการ & อุปกรณ์</h2><div>เอสเซนส์ '+P.es+' • ขั้น '+P.ev+'/3</div><small>วิวัฒนาการถาวร ย้อนกลับไม่ได้<br>แต่ละขั้น: HP +12% • ดาเมจ +6% • ขนาด +5%</small>'+(n?'<div>ขั้นถัดไป: Lv.'+n.lv+' • '+n.es+' เอสเซนส์'+(n.job?' • เลือกอาชีพ Lv20 แล้ว':'')+'</div><button data-evolve '+(evoReady()?'':'disabled')+'>วิวัฒนาการขั้น '+(P.ev+1)+'</button>':'<div>วิวัฒนาการสูงสุดแล้ว</div>')+'<h2 id="gearTitle">🎒 อุปกรณ์สวมใส่</h2><small>เปิดครบ 3 ช่องตั้งแต่เริ่ม • ต้องได้ของดรอปก่อน<br>สวมตามเลเวลผู้เล่นและสายพันธุ์ • ถอด/สลับฟรี ของไม่หาย<br>ไอเทมมี Lv.1–20 และระดับ ธรรมดา / หายาก / มหากาพย์</small>'+slots+'<details><summary>แหล่งดรอปอุปกรณ์</summary><small>มอนสเตอร์ทั่วไป 20% • บอส 100%<br>'+guide+'</small></details><button data-close>ปิด</button></div>';
+ evo.innerHTML='<div class="jbox"><h2>🧬 วิวัฒนาการ & อุปกรณ์</h2><div>เอสเซนส์ '+P.es+' • ขั้น '+P.ev+'/3</div><small>วิวัฒนาการถาวร ย้อนกลับไม่ได้<br>แต่ละขั้น: HP +12% • ดาเมจ +6% • ขนาด +5%</small>'+(n?'<div>ขั้นถัดไป: Lv.'+n.lv+' • '+n.es+' เอสเซนส์'+(n.job?' • เลือกอาชีพ Lv20 แล้ว':'')+'</div><button data-evolve '+(evoReady()?'':'disabled')+'>วิวัฒนาการขั้น '+(P.ev+1)+'</button>':'<div>วิวัฒนาการสูงสุดแล้ว</div>')+'<h2 id="gearTitle">🎒 อุปกรณ์สวมใส่</h2><small>เปิดครบ 3 ช่องตั้งแต่เริ่ม • ต้องได้ของดรอปก่อน<br>สวมตามเลเวลผู้เล่นและสายพันธุ์ • ถอด/สลับฟรี ของไม่หาย<br>ไอเทมมี Lv.1–20 และระดับ ธรรมดา / หายาก / มหากาพย์</small><div id="gearBonuses">โบนัสจากอุปกรณ์: '+(equipmentBonuses().map(d=>GEAR_STATS[d.key]+' '+gearPercent(d.delta)).join(' • ')||'ยังไม่มี')+'</div><label>เรียงอุปกรณ์ <select id="gearSort" aria-label="เรียงอุปกรณ์">'+[['ready','พร้อมใส่ก่อน'],['level','Lv สูงก่อน'],['rarity','ความหายากก่อน']].map(([v,n])=>'<option value="'+v+'" '+(gearSort===v?'selected':'')+'>'+n+'</option>').join('')+'</select></label>'+slots+'<details><summary>แหล่งดรอปอุปกรณ์</summary><small>มอนสเตอร์ทั่วไป 20% • บอส 100%<br>'+guide+'</small></details><button data-close>ปิด</button></div>';
 }
+evo.addEventListener('change',e=>{if(e.target.id!=='gearSort'||!['ready','level','rarity'].includes(e.target.value))return;gearSort=e.target.value;const scroll=evo.scrollTop;renderEvo();evo.scrollTop=scroll;});
 $('evob').addEventListener('click',()=>{renderEvo();evo.style.display='flex';});
 evo.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
  if(b.hasAttribute('data-close')){evo.style.display='none';return;}

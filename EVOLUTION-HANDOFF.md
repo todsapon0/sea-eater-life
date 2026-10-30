@@ -94,3 +94,26 @@ second-touch ownership, walking+attack, independent camera, cancel and pinch.
 Cloud Chromium uses software WebGL; measured low/variable FPS is not proof of 30 FPS
 on iPhone/iPad. Owner still needs to approve model visuals and actual-device feel/
 performance before merge. Real server/account integration remains untested here.
+
+## Equipment usability follow-up
+
+The equipment panel now shows combined equipment-only bonuses (not job/evolution
+bonuses), requirements including levels still missing, and stat changes relative
+to the currently equipped item. Comparisons use `(candidate/current - 1)*100`,
+including stats lost on a swap. Incoming damage reduction is better when negative;
+other stat gains are better when positive. A tradeoff is not labelled universally
+better and nothing is equipped automatically.
+
+Sort choices: usable first (default), item level descending, rarity descending.
+Sorting copies the list, does not alter saved inventory/equipment, and keeps panel
+scroll position. The selected sort is a session-only UI preference. Helpers
+`gearRequirement`, `gearChanges`, `equipmentBonuses`, `sortGear` are covered in
+`test-equipment.cjs`. The 390px browser regression is:
+
+```
+THREE_JS_PATH=/path/to/trusted/three-r128.min.js python3 test-gear-ui.py
+```
+
+It checks comparison signs/tradeoffs, level gating text, all sorting modes,
+inventory unchanged by sorting/equip/remove, actual stats, and save/reload.
+Screenshot: `/tmp/sea-evolution/equipment-comparison.png` (outside git).

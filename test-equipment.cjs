@@ -2,7 +2,7 @@
 const fs=require('fs'),assert=require('assert');
 const html=fs.readFileSync('index.html','utf8');
 const core=html.slice(html.indexOf('const ORG='),html.indexOf('let organGroup='));
-function game(cls='sea',lv=1){const P={lv,ev:0,inv:{},mu:{}};return {P,...new Function('P','CLS',core+';return {ORG,RARITY,GEAR_DROPS,gearFrom,canEquip,organFor,rollGear,awardGear};')(P,cls)};}
+function game(cls='sea',lv=1){const P={lv,ev:0,inv:{},mu:{}};return {P,...new Function('P','CLS',core+';return {ORG,RARITY,GEAR_DROPS,gearFrom,canEquip,organFor,rollGear,awardGear,gearRequirement,gearChanges,equipmentBonuses,sortGear};')(P,cls)};}
 const sequence=(...v)=>()=>{assert(v.length,'unexpected random draw');return v.shift();};
 for(const cls of ['sea','bloop','maja']){
  const g=game(cls),{P}=g;
@@ -35,3 +35,24 @@ for(const cls of ['sea','bloop','maja']){
  delete P.inv['eq:fang:1:common'];assert.equal(g.organFor('head'),null); // forged equipment grants no stats
 }
 console.log('PASS: empty/open slots, ownership, levels, rarity, all drop tables/species, deterministic loot and inventory cap');
+
+// Comparisons use ratios, include lost bonuses, and treat lower incoming damage as better.
+{
+ const g=game('sea',8),P=g.P;
+ for(const id of ['fang:1:common','fang:8:rare','helm:1:common','fang:20:epic','scale:1:common'])P.inv['eq:'+id]=1;
+ P.mu.head='fang:1:common';P.mu.back='scale:1:common';
+ const changes=g.gearChanges('head','helm:1:common');
+ assert(Math.abs(changes.find(d=>d.key==='dm').delta-(1/1.12-1)*100)<1e-9);
+ assert.equal(changes.find(d=>d.key==='dm').better,false);
+ assert.equal(changes.find(d=>d.key==='tk').better,true);
+ assert.deepEqual(g.gearChanges('head','fang:1:common'),[]);
+ const bonus=Object.fromEntries(g.equipmentBonuses().map(d=>[d.key,d.delta]));
+ assert(Math.abs(bonus.dm-12)<1e-8);assert(Math.abs(bonus.hp-15)<1e-8);
+ assert(g.gearRequirement('head','fang:20:epic').includes('12'));
+ const items=['fang:1:common','fang:20:epic','fang:8:rare'].map(g.gearFrom),before=items.map(o=>o.id);
+ assert.deepEqual(g.sortGear(items,'head','ready').map(o=>o.id),['fang:8:rare','fang:1:common','fang:20:epic']);
+ assert.equal(g.sortGear(items,'head','rarity')[0].id,'fang:20:epic');
+ assert.equal(g.sortGear(items,'head','level')[0].lv,20);
+ assert.deepEqual(items.map(o=>o.id),before);
+}
+console.log('PASS: gear tradeoffs, incoming damage comparison, combined bonuses, level reasons and nonmutating sorting');
