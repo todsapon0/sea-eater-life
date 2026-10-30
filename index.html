@@ -155,6 +155,9 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #evo .rm{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.25);color:#fff;padding:0;min-height:0;font-size:13px}#evo .rm:disabled{opacity:.3}
 #evo .evguide{margin-top:10px;font-size:12px;opacity:.9}#evo .evguide summary{cursor:pointer}
 #evo .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+#evo .evdup small{display:block;font-size:11.5px;opacity:.85;margin:2px 0 6px}#evo .duprow{display:flex;align-items:center;gap:8px;margin-top:6px;padding:6px 8px;border-radius:12px;background:rgba(0,0,0,.2)}#evo .dchip{display:flex;flex-direction:column;align-items:center;width:46px;padding:3px 0;border-radius:10px;border:2px solid}#evo .dchip i{font-style:normal;font-size:20px;line-height:1.1}#evo .dchip b{font-size:10px}#evo .dcnt{font-weight:800;font-size:15px;min-width:26px}
+#evo .duprow button{flex:1;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font:700 12.5px system-ui,"Noto Sans Thai",sans-serif;min-height:0}#evo .duprow button.ghost{visibility:hidden}#evo .duprow button:active{background:rgba(255,217,90,.3)}
+#evo .chip s{position:absolute;bottom:-6px;right:-4px;text-decoration:none;font-size:10.5px;font-weight:800;background:#0b3a47;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:0 4px}
 </style>
 </head>
 <body>
@@ -307,34 +310,56 @@ function sortGear(items,slot,mode){const rarity=o=>RARITY[o.rar].mul;
 }
 const gearPercent=value=>(value>0?'+':'')+Number(value.toFixed(1))+'%';
 let gearSort='ready';
-let organGroup=null;
+let organGroup=null,organParts=[];
 function buildOrgans(){
- if(organGroup){sea.remove(organGroup);organGroup.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
- organGroup=new T.Group();organGroup.name='mutations';sea.add(organGroup);
+ organParts.forEach(g=>{if(g.parent)g.parent.remove(g);g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});});organParts=[];
+ if(organGroup)sea.remove(organGroup);organGroup=new T.Group();organGroup.name='mutations';sea.add(organGroup);
  const anchors=CLS==='sea'?[[0,2.45,1.5],[0,2.75,0],[0,1.5,-3]]:[[0,3.2,.8],[0,3.5,-.6],[0,1.6,-1.8]];
- Object.keys(ORG).forEach((slot,i)=>{const o=organFor(slot);if(!o)return;const g=new T.Group();g.name=o.org;g.position.set(...anchors[i]);if(CLS==='sea'){if(slot==='back')g.position.y-=.4;if(slot==='tail'){g.position.z-=.9;g.position.y+=.25;if(o.org==='spike')g.position.y+=.2;}if(o.org==='fang'||o.org==='jaw')g.position.y-=.35;}if(o.org==='spine'&&CLS!=='sea')g.position.y-=.2;if(o.org==='bub'){g.position.y-=.45;g.position.z+=.3;}organGroup.add(g);
- const mesh=(geo,col,x=0,y=0,z=0,basic=false)=>{const m=new T.Mesh(geo,basic?new T.MeshBasicMaterial({color:col}):new T.MeshStandardMaterial({color:col,roughness:.65}));m.position.set(x,y,z);g.add(m);return m;};
- const cone=(r,h,col,x=0,y=0,z=0)=>mesh(new T.ConeGeometry(r,h,10),col,x,y,z);
- switch(o.org){
- case 'fang':case 'jaw':[-1,1].forEach(s=>{const m=cone(.10,o.org==='jaw'?.55:.36,o.org==='jaw'?0xf2a03d:0xfff5dd,s*.27,0,.08);m.rotation.x=Math.PI/2;});break;
- case 'helm':mesh(new T.SphereGeometry(.46,16,8,0,Math.PI*2,0,Math.PI/2),0x89969d).scale.set(1,.6,1);break;
- case 'bub':[-1,0,1].forEach(s=>{const m=mesh(new T.SphereGeometry(.19,12,8),0x9de6ff,s*.25,.06,0);m.material.transparent=true;m.material.opacity=.65;});break;
- case 'crest':[-1,0,1].forEach(i=>cone(.08,.24+(.08*(1-Math.abs(i))),0xf3b47d,i*.18,.08,0));break;
- case 'spine':for(let i=0;i<5;i++)cone(.10,.3,0xd4d884,(i%2-.5)*.3,.03,-Math.floor(i/2)*.2);break;
- case 'lance':[-1,0,1].forEach(i=>{const m=mesh(new T.OctahedronGeometry(.18),0x92d9ee,i*.18,0,-.16,true);m.scale.set(.6,.6,1.5);});break;
- case 'horn':cone(.17,.65,0xab75de,0,.2,0);break;
- case 'scale':for(let k=0;k<3;k++)cone(.25,.25,0x83b1a4,0,0,-k*.24).scale.z=.45;break;
- case 'fin':cone(.35,.85,0x66bdcc,0,.25,0).scale.x=.25;break;
- case 'shell':mesh(new T.SphereGeometry(.65,16,8,0,Math.PI*2,0,Math.PI/2),0x956947).scale.set(1,.65,1.2);break;
- case 'wing':[-1,1].forEach(s=>mesh(new T.SphereGeometry(.5,12,8),0x93dcfa,s*.55,0,0).scale.set(1.5,.16,.65));break;
- case 'crys':mesh(new T.OctahedronGeometry(.4),0xb89cff,0,.15,0,true);break;
- case 'whip':{const m=mesh(new T.CylinderGeometry(.09,.05,.65,10),0xa8c5c8,0,0,-.22);m.rotation.x=Math.PI/2;break;}
- case 'rud':mesh(new T.BoxGeometry(.09,.65,.45),0x62b5ba,0,0,-.12);break;
- case 'spike':for(let k=0;k<3;k++)cone(.10,.36,0xe3c18d,0,.1,-k*.18);break;
- case 'glow':case 'orb':mesh(new T.SphereGeometry(.23,12,8),o.org==='glow'?0xffea76:0xbb83ff,0,0,-.12,true);break;
- }
+ sea.updateMatrixWorld(true);
+ Object.keys(ORG).forEach((slot,i)=>{const o=organFor(slot);if(!o)return;const g=new T.Group();g.name=o.org;g.position.set(...anchors[i]);
+  if(CLS==='sea'){if(slot==='back')g.position.y-=.4;if(slot==='tail'){g.position.z-=.9;g.position.y+=.25;if(o.org==='spike')g.position.y+=.2;}if(o.org==='fang'||o.org==='jaw')g.position.y-=.35;}
+  if(o.org==='spine'&&CLS!=='sea')g.position.y-=.2;if(o.org==='bub'){g.position.y-=.45;g.position.z+=.3;}
+  g.scale.setScalar((CLS==='sea'?1.35:1.25)*(.9+o.lv*.012)*({shell:.68,scale:.8,helm:.85,jaw:.85,wing:.8,fin:.9,horn:.9}[o.org]||1));g.userData={t:o.org,ph:i*1.7};organGroup.add(g);
+  const rc=new T.Color(RARITY[o.rar].col),emi=o.rar==='epic'?.7:o.rar==='rare'?.35:0;
+  const mat=(col,opt)=>new T.MeshStandardMaterial(Object.assign({color:col,roughness:.45,metalness:.12,emissive:rc,emissiveIntensity:emi*.45},opt||{}));
+  const add=(geo,col,x,y,z,opt)=>{const m=new T.Mesh(geo,mat(col,opt));m.position.set(x||0,y||0,z||0);g.add(m);return m;};
+  const glow=(geo,col,x,y,z)=>{const m=new T.Mesh(geo,new T.MeshBasicMaterial({color:col}));m.position.set(x||0,y||0,z||0);g.add(m);return m;};
+  const cone=(r,h,col,x,y,z)=>add(new T.ConeGeometry(r,h,14),col,x,y,z);
+  const gem=(x,y,z,r)=>glow(new T.OctahedronGeometry(r||.07),rc,x,y,z);
+  switch(o.org){
+  case 'fang':case 'jaw':{const big=o.org==='jaw';[-1,1].forEach(sd=>{const t=new T.Group();t.position.set(sd*.3,0,.05);t.rotation.y=sd*.18;g.add(t);
+    const base=new T.Mesh(new T.ConeGeometry(big?.15:.11,big?.5:.36,14),mat(big?0xf2a03d:0xfff5dd));base.rotation.x=Math.PI/2;base.position.z=big?.25:.18;t.add(base);
+    const tip=new T.Mesh(new T.ConeGeometry(big?.08:.06,big?.34:.24,12),mat(big?0xffcf7a:0xffffff));tip.rotation.x=Math.PI/2+.22;tip.position.set(0,big?-.05:-.03,big?.55:.38);t.add(tip);
+    const ring=new T.Mesh(new T.TorusGeometry(big?.13:.1,.025,8,16),new T.MeshBasicMaterial({color:rc}));ring.position.z=.02;t.add(ring);});break;}
+  case 'helm':{add(new T.SphereGeometry(.5,18,10,0,Math.PI*2,0,Math.PI/2),0x8d9ca4).scale.set(1,.62,1);const visor=add(new T.TorusGeometry(.5,.05,8,20,Math.PI),0xc9d6dc,0,0,0);visor.rotation.x=Math.PI/2;visor.scale.set(1,1,.6);cone(.06,.26,0xe9f2f5,0,.3,0);gem(0,.16,.42,.09);break;}
+  case 'bub':[-1,0,1].forEach((sd,k)=>{const m=add(new T.SphereGeometry(.2-Math.abs(sd)*.03,16,12),0x9de6ff,sd*.3,.06+Math.abs(sd)*-.04,0,{transparent:true,opacity:.62,emissiveIntensity:.25});m.userData.k=k;glow(new T.SphereGeometry(.05,8,6),0xffffff,sd*.3-.05,.12,.12);});break;
+  case 'crest':{const ring=add(new T.TorusGeometry(.34,.05,8,18),0xf0b04f,0,.0,0);ring.rotation.x=Math.PI/2;[-2,-1,0,1,2].forEach(k=>cone(.07,.3+.12*(1-Math.abs(k)/2),0xffcf6b,k*.15,.2,-Math.abs(k)*.05));gem(0,.1,.2,.08);break;}
+  case 'spine':for(let k=0;k<7;k++){const m=cone(.09,.34,0xd4d884,(k%2-.5)*.34,.05,-Math.floor(k/2)*.2);m.rotation.z=(k%2-.5)*.4;}break;
+  case 'lance':[-1,0,1].forEach(k=>{const m=glow(new T.OctahedronGeometry(.2),0x92d9ee,k*.2,0,-.16);m.scale.set(.6,.6,1.7);});gem(0,.14,-.05,.06);break;
+  case 'horn':{const m=cone(.19,.8,0xab75de,0,.28,0);for(let k=0;k<3;k++){const r=add(new T.TorusGeometry(.16-k*.04,.02,6,14),0xe2c9ff,0,.1+k*.2,0);r.rotation.x=Math.PI/2;}gem(0,.72,0,.06);break;}
+  case 'scale':for(let k=0;k<5;k++){const m=cone(.26-k*.015,.3,0x83b1a4,0,.02,-k*.22);m.scale.z=.42;m.rotation.x=-.15;m.material.color.offsetHSL(0,0,k%2?.05:0);}gem(0,.2,-.2,.05);break;
+  case 'fin':{const m=cone(.4,1.0,0x66bdcc,0,.32,0);m.scale.x=.2;const m2=cone(.25,.6,0x8bd8e6,0,.14,-.32);m2.scale.x=.18;break;}
+  case 'shell':{add(new T.SphereGeometry(.7,20,10,0,Math.PI*2,0,Math.PI/2),0x956947).scale.set(1,.66,1.25);for(let k=-1;k<=1;k++){const r=add(new T.TorusGeometry(.62-Math.abs(k)*.08,.03,6,20,Math.PI),0xc9966a,0,.03,k*.3);r.rotation.x=0;r.rotation.y=Math.PI/2;r.scale.y=.7;}gem(0,.5,0,.08);break;}
+  case 'wing':{const pv=[];[-1,1].forEach(sd=>{const pivot=new T.Group();pivot.position.set(sd*.18,0,0);const w=new T.Mesh(new T.SphereGeometry(.55,16,10),mat(0x93dcfa,{transparent:true,opacity:.82}));w.scale.set(1.6,.12,.62);w.position.x=sd*.55;pivot.add(w);const w2=new T.Mesh(new T.SphereGeometry(.4,14,8),mat(0xc3ecff,{transparent:true,opacity:.7}));w2.scale.set(1.4,.1,.5);w2.position.set(sd*.5,0,-.3);pivot.add(w2);g.add(pivot);pv.push(pivot);});g.userData.p=pv;break;}
+  case 'crys':{[[0,.2,0,.42],[-.28,.05,.1,.28],[.26,.0,-.08,.3]].forEach(c=>{const m=glow(new T.OctahedronGeometry(c[3]),0xb89cff,c[0],c[1],c[2]);m.scale.y=1.5;});break;}
+  case 'whip':{const m=add(new T.CylinderGeometry(.13,.06,.9,12),0xa8c5c8,0,0,-.3);m.rotation.x=Math.PI/2;const tipf=add(new T.ConeGeometry(.16,.4,4),0xc7e0e3,0,0,-.85);tipf.rotation.x=-Math.PI/2;tipf.scale.x=.3;gem(0,.12,-.1,.06);break;}
+  case 'rud':{const m=add(new T.BoxGeometry(.1,.85,.6),0x62b5ba,0,0,-.15);m.rotation.x=.12;const e2=add(new T.CylinderGeometry(.06,.06,.12,10),0x9fe0e4,0,.45,-.1);e2.rotation.z=Math.PI/2;break;}
+  case 'spike':for(let k=0;k<4;k++){const m=cone(.12,.46,0xe3c18d,0,.12,-k*.2);m.rotation.x=-.25;}break;
+  case 'glow':case 'orb':{const col=o.org==='glow'?0xffea76:0xbb83ff,m=glow(new T.SphereGeometry(.3,18,14),col,0,0,-.12);const halo=new T.Mesh(new T.SphereGeometry(.44,16,12),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.22}));halo.position.set(0,0,-.12);g.add(halo);if(o.org==='orb'){const r=new T.Mesh(new T.TorusGeometry(.46,.025,6,24),new T.MeshBasicMaterial({color:0xe3ccff}));r.position.set(0,0,-.12);r.rotation.x=Math.PI/2.4;g.add(r);}break;}
+  }
+  // ติดกับส่วนที่ขยับได้: หางตามปล้องหาง (แกว่งไปกับตัว)
+  if(slot==='tail'&&segs.length){segs[Math.min(3,segs.length-1)].attach(g);}
+  organParts.push(g);
  });
 }
+const _orgAnim=new T.Vector3();
+function animateOrgans(tm){for(const g of organParts){const k=g.userData.t,ph=g.userData.ph||0;
+  if(k==='wing'&&g.userData.p){g.userData.p.forEach((pv,j)=>{pv.rotation.z=(j?-1:1)*Math.sin(tm*4.5+ph)*.3;});}
+  else if(k==='glow'||k==='orb'){const h=g.children[1];if(h)h.scale.setScalar(1+Math.sin(tm*3+ph)*.12);}
+  else if(k==='crys'){g.rotation.y=tm*.8+ph;}
+  else if(k==='bub'){g.children.forEach((c,j)=>{if(c.userData&&c.userData.k!==undefined)c.position.y=.06+Math.sin(tm*2.6+j*1.3+ph)*.06;});}
+  else if(k==='fin'||k==='scale'||k==='spine'||k==='crest'){g.rotation.z=Math.sin(tm*2+ph)*.04;}
+ }}
 // ===== บัฟจากการกินมอนสเตอร์ (Hybrid Devour): ล้มแล้วมีโอกาสได้บัฟ 25 วิ, กินด้วยสกิลได้แน่นอน, ชนิดซ้ำรีเฟรช, เต็ม 2 ชนิดแทนตัวเก่าสุด; เอสเซนส์สะสมตามปกติ =====
 const FOOD={ray:{ic:'💨',n:'ว่องไว',d:'เดินเร็ว +15%',sp:1.15},shark:{ic:'🦷',n:'เขี้ยวฉลาม',d:'พลังโจมตี +20%',dm:1.2},eel:{ic:'🐍',n:'เกล็ดงู',d:'รับดาเมจ -15%',tk:.85},whale:{ic:'🐋',n:'อึดทน',d:'ฟื้นเลือด 2%/วิ',reg:.02},puffer:{ic:'🐡',n:'หนามพอง',d:'โจมตี +8% รับดาเมจ -10%',dm:1.08,tk:.9},shrimp:{ic:'🔮',n:'ผลึกคม',d:'สกิลฟื้นตัวเร็ว +25%',cdr:1.25},boss:{ic:'👑',n:'ราชาถ้ำ',d:'โจมตี +25% รับดาเมจ -15%',dm:1.25,tk:.85}},FOODKEYS=Object.keys(FOOD),FOOD_T=25;let devKill=false;
 FOODKEYS.forEach(k=>{P['fb_'+k]=0;});P.fbOrder=[];
@@ -359,21 +384,25 @@ const evo=document.createElement('div');evo.id='evo';evo.setAttribute('role','di
 const evoReady=()=>{const n=EVO[P.ev];return !!n&&P.lv>=n.lv&&P.es>=n.es&&(!n.job||Object.prototype.hasOwnProperty.call(JOBS[CLS]||{},P.job));};
 let evoNotified=0;
 function updateEvo(){const ready=evoReady();$('evob').classList.toggle('ready',ready);if(ready&&evoNotified!==P.ev+1){evoNotified=P.ev+1;say('🧬 พร้อมวิวัฒนาการแล้ว! กดปุ่ม 🧬');}}
+const NEXT_RAR={common:'rare',rare:'epic'},salvageValue=o=>({common:3,rare:8,epic:20}[o.rar]||3)+Math.floor(o.lv/4);
 function renderEvo(){const n=EVO[P.ev],names={sea:'Sea Eater',bloop:'Bloop',maja:'El Gran Maja'},effects=GEAR_STATS,
  IC={fang:'🦷',helm:'⛑️',jaw:'👄',bub:'🫧',horn:'🦄',scale:'🛡️',fin:'🐟',shell:'🐚',wing:'🪽',crys:'💎',whip:'➰',rud:'🚩',spike:'🌵',glow:'🔆',orb:'🔮',crest:'👑',spine:'🦔',lance:'🔱'},SL=['หัว','หลัง','หาง'];
  const slots=Object.keys(ORG).map((slot,i)=>{
   const wearing=organFor(slot),owned=sortGear(Object.keys(P.inv).filter(k=>k.startsWith('eq:')&&ownsGear(k.slice(3))).map(k=>gearFrom(k.slice(3))).filter(o=>o&&ORG[slot].some(b=>b.id===o.org)&&(!o.only||o.only===CLS)),slot,gearSort);
   const chips=owned.map(o=>{const req=gearRequirement(slot,o.id),on=P.mu[slot]===o.id,fx=Object.keys(effects).filter(k=>o[k]).map(k=>effects[k]+' ×'+Number(o[k].toFixed(3))).join(' • ');
-   return '<button class="chip" data-slot="'+slot+'" data-organ="'+o.id+'" '+(canEquip(slot,o.id)?'':'disabled')+' aria-pressed="'+on+'" title="'+gearLabel(o)+' • '+fx+(req?' • '+req:'')+'" style="border-color:'+RARITY[o.rar].col+'"><i>'+(IC[o.org]||'✨')+'</i><b>Lv.'+o.lv+'</b><u>'+(req?'🔒':on?'✓':'')+'</u><span class="sr"><b style="color:'+RARITY[o.rar].col+'">'+(on?'✓ ':'')+gearLabel(o)+'</b><span>ต้องการผู้เล่น Lv.'+o.lv+' • มี '+P.inv['eq:'+o.id]+' ชิ้น<br>['+(o.only?'เฉพาะ '+names[o.only]:'ใช้ร่วม')+'] '+fx+'</span>'+(req?'<strong class="gear-locked">🔒 '+req+'</strong>':'')+(on?'<span>สวมใส่อยู่</span>':'<span class="gear-compare">'+(wearing?'เทียบกับที่สวมอยู่: ':'เมื่อสวมใส่: ')+(gearChanges(slot,o.id).map(d=>'<em class="'+(d.better?'gear-up':'gear-down')+'">'+effects[d.key]+' '+gearPercent(d.delta)+'</em>').join(' • ')||'ค่าเท่าเดิม')+'</span>')+'</span></button>';}).join('');
+   return '<button class="chip" data-slot="'+slot+'" data-organ="'+o.id+'" '+(canEquip(slot,o.id)?'':'disabled')+' aria-pressed="'+on+'" title="'+gearLabel(o)+' • '+fx+(req?' • '+req:'')+'" style="border-color:'+RARITY[o.rar].col+'"><i>'+(IC[o.org]||'✨')+'</i><b>Lv.'+o.lv+'</b><u>'+(req?'🔒':on?'✓':'')+'</u>'+(P.inv['eq:'+o.id]>1?'<s>×'+P.inv['eq:'+o.id]+'</s>':'')+'<span class="sr"><b style="color:'+RARITY[o.rar].col+'">'+(on?'✓ ':'')+gearLabel(o)+'</b><span>ต้องการผู้เล่น Lv.'+o.lv+' • มี '+P.inv['eq:'+o.id]+' ชิ้น<br>['+(o.only?'เฉพาะ '+names[o.only]:'ใช้ร่วม')+'] '+fx+'</span>'+(req?'<strong class="gear-locked">🔒 '+req+'</strong>':'')+(on?'<span>สวมใส่อยู่</span>':'<span class="gear-compare">'+(wearing?'เทียบกับที่สวมอยู่: ':'เมื่อสวมใส่: ')+(gearChanges(slot,o.id).map(d=>'<em class="'+(d.better?'gear-up':'gear-down')+'">'+effects[d.key]+' '+gearPercent(d.delta)+'</em>').join(' • ')||'ค่าเท่าเดิม')+'</span>')+'</span></button>';}).join('');
   return '<section class="evslot"><h3><i class="big">'+(wearing?(IC[wearing.org]||'✨'):'＋')+'</i> '+SL[i]+'<span class="sr"> — '+(wearing?gearLabel(wearing):'ว่าง')+'</span></h3><div class="chips">'+(owned.length?chips:'<p>ยังไม่มีอุปกรณ์</p>')+'</div><button class="rm" data-remove="'+slot+'" aria-label="ถอด'+SL[i]+'" '+(P.mu[slot]?'':'disabled')+'>✕</button></section>';
  }).join('');
+
+ const dupItems=Object.keys(P.inv).filter(k=>k.startsWith('eq:')&&P.inv[k]>=2).map(k=>gearFrom(k.slice(3))).filter(o=>o&&(!o.only||o.only===CLS)).sort((a,b)=>P.inv['eq:'+b.id]-P.inv['eq:'+a.id]||b.lv-a.lv);
+ const dupHtml=dupItems.length?'<div class="evdup"><div class="evhead sub"><h2>♻ ของซ้ำ</h2></div><small>แลกเอสเซนส์ 💠 หรือรวม 3 ชิ้น → หายากขึ้น</small>'+dupItems.map(o=>{const c=P.inv['eq:'+o.id],nx=NEXT_RAR[o.rar];return '<div class="duprow"><span class="dchip" style="border-color:'+RARITY[o.rar].col+'"><i>'+(IC[o.org]||'✨')+'</i><b>Lv.'+o.lv+'</b></span><span class="dcnt">×'+c+'</span><button data-salvage="'+o.id+'" aria-label="แลกเอสเซนส์ '+gearLabel(o)+'">💠 +'+salvageValue(o)+'</button>'+(nx&&c>=3?'<button data-fuse="'+o.id+'" aria-label="รวม 3 ชิ้นเป็น '+RARITY[nx].n+'">3→⬆ '+RARITY[nx].n+'</button>':'<button disabled aria-hidden="true" class="ghost">3→⬆</button>')+'</div>';}).join('')+'</div>':'';
  const guide=Object.values(GEAR_DROPS).map(d=>d.n+' (ไอเทม Lv.'+d.lv.join('–')+'): '+d.ids.map(id=>Object.values(ORG).flat().find(o=>o.id===id)).filter(o=>!o.only||o.only===CLS).map(o=>o.n).join(', ')).join('<br>');
  evo.innerHTML='<div class="evbox"><div class="evhead"><h2>🧬 วิวัฒนาการ</h2><button class="evx" data-close aria-label="ปิด">✕</button></div>'
   +'<div class="evstages" aria-label="ขั้น '+P.ev+' จาก 3">'+[1,2,3].map(k=>'<i class="dot'+(P.ev>=k?' on':'')+'">'+(P.ev>=k?'★':'☆')+'</i>').join('')+'<span class="evess">💠 '+P.es+'</span></div>'
   +(n?'<div class="evnext">ขั้นต่อไป: Lv.'+n.lv+' • 💠 '+n.es+(n.job?' • เลือกอาชีพ Lv20':'')+'</div><button class="evgo" data-evolve '+(evoReady()?'':'disabled')+'>⬆ วิวัฒนาการ</button>':'<div class="evnext">เก่งสุดแล้ว 🎉</div>')
   +'<div class="evhead sub"><h2 id="gearTitle">🎒 อุปกรณ์</h2><label class="evsort"><span class="sr">เรียงอุปกรณ์</span><select id="gearSort" aria-label="เรียงอุปกรณ์">'+[['ready','พร้อมใส่'],['level','Lv สูง'],['rarity','หายาก']].map(([v,t])=>'<option value="'+v+'" '+(gearSort===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
   +'<div id="gearBonuses">โบนัสจากอุปกรณ์: '+(equipmentBonuses().map(d=>GEAR_STATS[d.key]+' '+gearPercent(d.delta)).join(' • ')||'ยังไม่มี')+'</div>'
-  +slots+'<details class="evguide"><summary>ได้อุปกรณ์จากไหน?</summary><small>มอนสเตอร์ทั่วไป 20% • บอส 100%<br>'+guide+'</small></details></div>';
+  +slots+dupHtml+'<details class="evguide"><summary>ได้อุปกรณ์จากไหน?</summary><small>มอนสเตอร์ทั่วไป 20% • บอส 100%<br>'+guide+'</small></details></div>';
 }
 evo.addEventListener('change',e=>{if(e.target.id!=='gearSort'||!['ready','level','rarity'].includes(e.target.value))return;gearSort=e.target.value;const scroll=evo.scrollTop;renderEvo();evo.scrollTop=scroll;});
 $('evob').addEventListener('click',()=>{renderEvo();evo.style.display='flex';evo.classList.add('pop');setTimeout(()=>evo.classList.remove('pop'),400);});
@@ -381,7 +410,10 @@ evo.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return
  if(b.hasAttribute('data-close')){evo.style.display='none';return;}
  if(b.hasAttribute('data-evolve')){if(!evoReady()||!confirm('วิวัฒนาการขั้น '+(P.ev+1)+' ใช้ '+EVO[P.ev].es+' เอสเซนส์ ย้อนกลับไม่ได้ ยืนยัน?'))return;P.es-=EVO[P.ev].es;P.ev++;}
  else if(b.dataset.slot){const slot=b.dataset.slot;if(!canEquip(slot,b.dataset.organ))return;P.mu[slot]=b.dataset.organ;const go=gearFrom(b.dataset.organ);if(go)say('สวม '+go.n+' แล้ว');}
- else if(b.dataset.remove){delete P.mu[b.dataset.remove];}else return;
+ else if(b.dataset.remove){delete P.mu[b.dataset.remove];}
+ else if(b.dataset.salvage){const o=gearFrom(b.dataset.salvage),key='eq:'+b.dataset.salvage;if(!o||!(P.inv[key]>=2))return;P.inv[key]--;const v=salvageValue(o);P.es=Math.min(1e7,P.es+v);say('แลกเป็น 💠 +'+v);}
+ else if(b.dataset.fuse){const o=gearFrom(b.dataset.fuse),key='eq:'+b.dataset.fuse,nx=o&&NEXT_RAR[o.rar];if(!nx||!(P.inv[key]>=3))return;P.inv[key]-=3;if(P.inv[key]<=0)delete P.inv[key];const nid=o.org+':'+o.lv+':'+nx,nk='eq:'+nid;P.inv[nk]=Math.min(99999,(P.inv[nk]||0)+1);Object.keys(P.mu).forEach(sl=>{if(!ownsGear(P.mu[sl]))delete P.mu[sl];});say('รวมร่างสำเร็จ! ได้ '+gearLabel(gearFrom(nid)));}
+ else return;
  applyJob();save();renderEvo();renderDex();updateEvo();
 });
 const jp=document.createElement('div');jp.id='jobpick';document.body.append(jp);
@@ -862,7 +894,7 @@ if(mv){sea.position.x=Math.max(-95,Math.min(95,sea.position.x+wx*7*dt*P.spMul));
 let d=Math.atan2(wx,wz)-face;d=Math.atan2(Math.sin(d),Math.cos(d));face+=d*Math.min(1,dt*10);sea.rotation.y=face;}
 const w=mv?t*11:0;legs[0].rotation.x=Math.sin(w)*.7;legs[1].rotation.x=-Math.sin(w)*.7;
 sea.position.y=h(sea.position.x,sea.position.z)+(mv?Math.abs(Math.sin(w))*.15:Math.sin(t*2)*.03);
-segs.forEach((g,i)=>g.rotation.y=Math.sin(t*(mv?8:2.5)-i*.9)*(mv?.35:.15));
+segs.forEach((g,i)=>g.rotation.y=Math.sin(t*(mv?8:2.5)-i*.9)*(mv?.35:.15));animateOrgans(t);
 let o=1;if(biteT>0){biteT-=dt;const p=Math.sin(Math.max(0,biteT)/.45*Math.PI);o=1+p*.9;body.position.z=p*.35;}else body.position.z=0;
 mouth.scale.y=o;mouth.position.z=.05+(body.position.z);
 const bpa=bg.attributes.position;for(let i=0;i<bpa.count;i++){let y=bpa.getY(i)+dt*1.2;if(y>18)y=0;bpa.setY(i,y);}bpa.needsUpdate=true;
