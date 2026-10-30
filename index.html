@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Sea Eater Life v0.5.1</title>
+<title>Sea Eater Life v0.5.3</title>
 <style>
 html,body{height:100%;margin:0;background:#0a4a58;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:system-ui,"Noto Sans Thai",sans-serif;color:#eaf7f5}
 canvas{display:block;width:100%;height:100%}
@@ -53,13 +53,14 @@ body.compact #skillhelp{right:calc(60px + env(safe-area-inset-right,0px));min-he
 </style>
 </head>
 <body>
-<div id="hud"><b>Sea Eater Life v0.5.1</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button>
+<div id="hud"><b>Sea Eater Life v0.5.3</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button>
 <div id="stick"><div id="knob"></div></div>
 <button id="slam">ทุบพื้น</button><button id="devour" class="sk">กิน</button><button id="taunt" class="sk">ยั่ว</button><button id="shield" class="sk">โล่</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="dexb">สมุด</button><div id="skillinfo" role="dialog" aria-modal="true" aria-label="คำอธิบายสกิล"><div class="card"><b>สกิลของตัวละคร</b><div id="skilltext"></div><button id="closehelp">ปิด</button></div></div><div id="dex"></div><div id="pick"><b>เลือกตัวละคร</b><button data-c="sea">Sea Eater<br><small>Warrior / Tank — กัดระยะประชิด</small></button><button data-c="bloop">Bloop<br><small>Healer / Support — ยิงฟอง รักษา</small></button><button data-c="maja">El Gran Maja<br><small>Mage / DPS — โจมตีไกล ควบคุมศัตรู</small></button></div><button id="bite">กัด</button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="account-config.js"></script>
 <script src="account.js"></script>
+<script src="save-tools.js"></script>
 <script>
 (async()=>{const account=await window.startAccount();const gameStorage=account.storage;
 if(!window.THREE){document.getElementById('hud').innerHTML='<b>โหลดเกมไม่สำเร็จ</b><div>เช็กอินเทอร์เน็ตแล้วรีเฟรชหน้า</div>';}
@@ -117,7 +118,7 @@ $('skillhelp').addEventListener('click',()=>{$('skillinfo').style.display='flex'
 const skillLabels={};['slam','devour','taunt','shield'].forEach(id=>skillLabels[id]=$(id).textContent);
 function showCooldown(id,time){const button=$(id),seconds=Math.ceil(time);if(button.dataset.cooldown===String(seconds))return;button.dataset.cooldown=String(seconds);button.style.opacity=seconds>0?.45:1;button.textContent=seconds>0?skillLabels[id]+' '+seconds:skillLabels[id];button.setAttribute('aria-label',seconds>0?skillLabels[id]+' รอ '+seconds+' วินาที':skillLabels[id]);}
 const shm=new T.Mesh(new T.SphereGeometry(2.2,16,12),new T.MeshBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.25}));shm.position.y=2.2;shm.visible=false;sea.add(shm);
-const save=()=>{try{gameStorage.setItem(KEY,JSON.stringify({lv:P.lv,xp:P.xp,qd:P.qd,q:P.q,inv:P.inv,seen:P.seen}));}catch(e){}};
+const save=()=>{if(window.__seaImporting)return;try{gameStorage.setItem(KEY,JSON.stringify({lv:P.lv,xp:P.xp,qd:P.qd,q:P.q,inv:P.inv,seen:P.seen}));}catch(e){}};
 const say=s=>{$('msg').textContent=s;$('msg').style.opacity=1;msgT=2.5;};
 const gain=x=>{P.xp+=x;while(P.xp>=need(P.lv)&&P.lv<20){P.xp-=need(P.lv);P.lv++;P.max=maxHp();P.hp=P.max;say('เลเวลอัป! Lv.'+P.lv);}save();};
 const types=[{n:'ray',nm:'ปลากระเบนตาฟ้า',dr:'ครีบกระเบน',c:0x7d8794,hp:30,xp:8,d:6,s:1,sp:2.5},{n:'shark',nm:'ฉลามปากแดง',dr:'ฟันฉลาม',c:0x8a2a30,hp:55,xp:14,d:10,s:1.3,sp:3.2},{n:'whale',nm:'วาฬปากกว้าง',dr:'ไขมันวาฬ',c:0x7a5a3a,hp:90,xp:25,d:14,s:1.8,sp:2.2},{n:'eel',nm:'งูทะเล',dr:'เกล็ดงู',c:0x3f8a6a,hp:45,xp:18,d:8,s:1.1,sp:4}],mons=[];
@@ -226,21 +227,52 @@ $('slam').addEventListener('pointerdown',e=>{e.preventDefault();doSlam();});cons
   for(const [name,key] of mapping){const raw=storage.getItem(key);if(raw===null)continue;let record;try{record=JSON.parse(raw);}catch(e){throw new Error('เซฟ '+name+' เสียหรือไม่ใช่ JSON');}if(!record||typeof record!=='object'||Array.isArray(record))throw new Error('รูปแบบเซฟ '+name+' ไม่ถูกต้อง');characters[name]=record;}
   if(!Object.keys(characters).length)throw new Error('ไม่พบเซฟที่สำรองได้');
   if(selected!==null&&!Object.prototype.hasOwnProperty.call(characters,selected))throw new Error('ไม่พบเซฟของตัวละครที่เลือก');
-  const backup={format:'sea-eater-save',version:1,exportedAt:now,source:{gameVersion:'v0.5.2',origin},characters};
+  const backup={format:'sea-eater-save',version:1,exportedAt:now,source:{gameVersion:'v0.5.3',origin},characters};
   if(selected!==null)backup.selectedClass=selected;
   return backup;
 }
 function exportSaveBackup(){
   let url;
   try{
-    const backup=makeSaveBackup(localStorage,location.origin,new Date().toISOString());
+    const backup=makeSaveBackup(gameStorage,location.origin,new Date().toISOString());
     if(!window.Blob||!URL.createObjectURL)throw new Error('เบราว์เซอร์นี้ไม่รองรับการดาวน์โหลด');
     url=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
     const a=document.createElement('a');a.href=url;a.download='sea-eater-life-save-backup.json';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),60000);say('เริ่มดาวน์โหลดเซฟ โปรดตรวจไฟล์ในอุปกรณ์');
   }catch(e){if(url)URL.revokeObjectURL(url);say('สำรองเซฟไม่สำเร็จ: '+(e&&e.message?e.message:'ไม่สามารถอ่านเซฟได้'));}
 }
-const renderDex=()=>{$('dex').innerHTML='<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' (ดรอป: '+t.dr+')':'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b><br>'+(Object.keys(P.inv).map(k=>k+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button>';};$('dex').addEventListener('click',e=>{if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){say('บัญชีนี้มีตัวละครหนึ่งตัว');return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
+const renderDex=()=>{$('dex').innerHTML='<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' (ดรอป: '+t.dr+')':'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b><br>'+(Object.keys(P.inv).map(k=>k+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:12px monospace;border-radius:8px"></textarea>';};$('dex').addEventListener('click',e=>{if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){say('บัญชีนี้มีตัวละครหนึ่งตัว');return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
+// SAVE-001: copy save code / import a save. Import is for local play only; online accounts keep their save on the server.
+const SST=window.SeaSaveTools;
+const importAllowed=()=>{if(account.remote){say('บัญชีออนไลน์เก็บเซฟบนเซิร์ฟเวอร์ ยังไม่รองรับการนำเข้า');return false;}if(!SST){say('โหลดระบบนำเข้าเซฟไม่สำเร็จ รีเฟรชหน้า');return false;}return true;};
+const runImport=backup=>{try{const plan=SST.planImport(backup,gameStorage);if(!confirm('นำเข้าเซฟ?\n'+plan.lines.join('\n')+'\n\nเกมจะรีโหลดหลังนำเข้า'))return;window.__seaImporting=true;SST.applyImport(gameStorage,plan);location.reload();}catch(e){window.__seaImporting=false;say('นำเข้าไม่สำเร็จ: '+(e&&e.message?e.message:'ไม่ทราบสาเหตุ'));}};
+$('dex').addEventListener('click',e=>{
+  const id=e.target.id;if(id!=='copySave'&&id!=='importFileBtn'&&id!=='importCodeBtn')return;
+  const box=$('saveCode');
+  if(id==='copySave'){
+    if(!SST){say('โหลดระบบรหัสเซฟไม่สำเร็จ รีเฟรชหน้า');return;}
+    let code;try{code=SST.encodeCode(makeSaveBackup(gameStorage,location.origin,new Date().toISOString()));}catch(x){say('คัดลอกรหัสไม่สำเร็จ: '+(x&&x.message?x.message:'อ่านเซฟไม่ได้'));return;}
+    box.style.display='block';box.value=code;box.focus();box.select();try{box.setSelectionRange(0,code.length);}catch(x){}
+    let ok=false;try{ok=!!document.execCommand('copy');}catch(x){}
+    if(!ok&&navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(code).then(()=>say('คัดลอกรหัสเซฟแล้ว'),()=>say('กดค้างที่ช่องรหัสแล้วเลือกคัดลอก'));return;}
+    say(ok?'คัดลอกรหัสเซฟแล้ว':'กดค้างที่ช่องรหัสแล้วเลือกคัดลอก');return;
+  }
+  if(!importAllowed())return;
+  if(id==='importFileBtn'){$('importFile').click();return;}
+  if(box.style.display==='none'||!box.value.trim()){box.style.display='block';box.value='';box.focus();say('วางรหัสเซฟในช่อง แล้วกด นำเข้ารหัส อีกครั้ง');return;}
+  let backup;try{backup=SST.decodeCode(box.value);}catch(x){say('นำเข้าไม่สำเร็จ: '+(x&&x.message?x.message:'รหัสไม่ถูกต้อง'));return;}
+  runImport(backup);
+});
+$('dex').addEventListener('change',e=>{
+  if(e.target.id!=='importFile')return;
+  const f=e.target.files&&e.target.files[0];e.target.value='';
+  if(!f||!importAllowed())return;
+  if(f.size>200000){say('นำเข้าไม่สำเร็จ: ไฟล์ใหญ่เกินไป');return;}
+  const rd=new FileReader();
+  rd.onerror=()=>say('นำเข้าไม่สำเร็จ: อ่านไฟล์ไม่ได้');
+  rd.onload=()=>{let backup;try{backup=SST.parseBackup(String(rd.result));}catch(x){say('นำเข้าไม่สำเร็จ: '+(x&&x.message?x.message:'ไฟล์ไม่ถูกต้อง'));return;}runImport(backup);};
+  rd.readAsText(f);
+});
 document.getElementById('bite').addEventListener('pointerdown',e=>{e.preventDefault();doBite();});
 addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='Space'){e.preventDefault();doBite();}if(e.code==='KeyE')doSlam();if(e.code==='KeyQ'){playTone('skill');doDevour();}if(e.code==='KeyR'){playTone('skill');doTaunt();}if(e.code==='KeyF'){playTone('skill');doShield();}});
 addEventListener('keyup',e=>{keys[e.code]=0;});
