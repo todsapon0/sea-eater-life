@@ -136,6 +136,8 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 @media(max-width:480px){#stick{width:144px;height:144px;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px))}}
 @media(max-width:360px),(max-height:480px){#stick{width:132px;height:132px;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px))}#knob{width:58px;height:58px;margin:-29px 0 0 -29px}}
 #evo .gear-compare{padding-top:5px;border-top:1px solid #ffffff33}#evo .gear-compare em{font-style:normal}#evo .gear-up{color:#9ef0b0}#evo .gear-down{color:#ffb5a9}#evo .gear-locked{font-size:12px;color:#ffde9c}#evo button:disabled{opacity:.7}#gearBonuses{padding:10px;border:1px solid #ffffff40;border-radius:12px;font-size:13px;line-height:1.6}#gearSort{font:16px system-ui;padding:8px;border-radius:10px;background:#12535f;color:#fff;border:1px solid #ffffff80}
+.nametag{position:fixed;left:0;top:0;z-index:5;pointer-events:none;display:none;font:700 12px/1.1 system-ui,"Noto Sans Thai",sans-serif;color:#fff;text-shadow:0 1px 3px #000,0 0 6px rgba(0,0,0,.55);white-space:nowrap;will-change:transform}
+.nametag.me{color:#c9f7ff;font-size:13px}.nametag.boss{color:#ffd95a;font-size:14px}
 </style>
 </head>
 <body>
@@ -158,6 +160,13 @@ const cam=new T.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);
 const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight);document.body.prepend(ren.domElement);
 scene.add(new T.HemisphereLight(0xeaffff,0xd9b873,.62));
 const sun=new T.DirectionalLight(0xfff0cf,.55);sun.position.set(10,25,8);scene.add(sun);
+// ===== เงา (เปิด/ปิดได้ ปิดจะลดความละเอียดภาพด้วย เหมาะกับ iPad 8 / iPhone 11) =====
+sun.target.position.set(0,0,0);scene.add(sun.target);let gfxHigh=true;try{if(localStorage.getItem('gfx')==='0')gfxHigh=false;}catch(e){}
+sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22,near:1,far:70});sun.shadow.bias=-.0008;ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFShadowMap;
+let gfxReady=false;function setGfx(on,persist){gfxHigh=on;sun.castShadow=on;ren.setPixelRatio(on?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1.25));if(gfxReady)applyViewportSoon();else ren.setSize(innerWidth,innerHeight);if(persist){try{localStorage.setItem('gfx',on?'1':'0');}catch(e){}}}
+setGfx(gfxHigh,false);
+let gfxN=0,gfxDts=[],gfxAutoDone=false;
+function gfxProbe(dt){gfxReady=true;if(gfxAutoDone||!gfxHigh||navigator.webdriver||document.hidden)return;if(++gfxN<=30)return;gfxDts.push(dt);if(gfxDts.length>=150){gfxAutoDone=true;gfxDts.sort((a,b)=>a-b);if(gfxDts[75]>1/24){setGfx(false,true);say('ภาพช้า จึงปิดเงาให้อัตโนมัติ เปิดกลับได้ในสมุด');if(typeof refreshDisplayUI==='function')refreshDisplayUI();}}}
 const h=(x,z)=>Math.sin(x*.15)*Math.cos(z*.13)*.5+Math.sin(x*.4+z*.3)*.1;
 const gg=new T.PlaneGeometry(240,240,60,60);gg.rotateX(-Math.PI/2);
 const gp=gg.attributes.position;for(let i=0;i<gp.count;i++)gp.setY(i,h(gp.getX(i),gp.getZ(i)));gg.computeVertexNormals();
@@ -168,7 +177,7 @@ const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(24,
 const sm=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);},ZC=[[1,1,1],[.7,.92,.64],[.4,.46,.62]],gcol=new Float32Array(gp.count*3);
 for(let i=0;i<gp.count;i++){const r=Math.hypot(gp.getX(i),gp.getZ(i)),t1=sm((r-23)/10),t2=sm((r-57)/10);for(let k=0;k<3;k++){const c=ZC[0][k]+(ZC[1][k]-ZC[0][k])*t1;gcol[i*3+k]=c+(ZC[2][k]-c)*t2;}}
 gg.setAttribute('color',new T.BufferAttribute(gcol,3));
-scene.add(new T.Mesh(gg,new T.MeshStandardMaterial({color:0xffffff,map:sandTex,roughness:1,vertexColors:true})));
+const groundMesh=new T.Mesh(gg,new T.MeshStandardMaterial({color:0xffffff,map:sandTex,roughness:1,vertexColors:true}));groundMesh.receiveShadow=true;scene.add(groundMesh);
 const rm=new T.MeshStandardMaterial({color:0xb9c1c6,flatShading:true});
 for(let i=0;i<45;i++){const x=(Math.random()-.5)*180,z=(Math.random()-.5)*180;if(Math.hypot(x,z)<8)continue;
 const r=new T.Mesh(new T.DodecahedronGeometry(.8+Math.random()*2),rm);r.position.set(x,h(x,z)+.4,z);r.rotation.set(Math.random()*3,Math.random()*3,0);scene.add(r);}
@@ -320,6 +329,7 @@ function applyJobVisual(){const j=(JOBS[CLS]||{})[P.job];const mm=CLS==='sea'?se
  sea.scale.setScalar((j?j.sc:1)*(1+.05*P.ev));
  if(j){if(!jobRing){jobRing=new T.Mesh(new T.TorusGeometry(.8,.07,8,28),new T.MeshBasicMaterial({color:j.col}));jobRing.rotation.x=Math.PI/2;jobRing.position.y=CLS==='sea'?3.7:4.2;sea.add(jobRing);}else jobRing.material.color.setHex(j.col);}
  buildOrgans();
+ sea.traverse(o=>{if(o.isMesh)o.castShadow=true;});
 }
 function applyJob(){const j=(JOBS[CLS]||{})[P.job]||{},st=P.st||0,oldMax=P.max;
  P.hpMul=(j.hp||1)*(1+st*.04)*(1+.12*P.ev);P.dmgMul=(j.dm||1)*(1+st*.04)*(1+.06*P.ev);
@@ -467,7 +477,7 @@ function buildMonster(ty,mat){return ty.n==='puffer'?buildPuffer(mat):ty.n==='sh
 // Keep 21 active monsters and five starter rays; replace one shark/eel/whale with new encounters.
 const monsterRoster=[...Array.from({length:4},()=>['ray','shark','whale','eel']).flat(),'ray','puffer','shrimp','puffer','boss'];
 for(let i=0;i<monsterRoster.length;i++){const ty=types.find(t=>t.n===monsterRoster[i]),mat=new T.MeshStandardMaterial({color:ty.c,roughness:.55,metalness:.02}),built=buildMonster(ty,mat),g=built.g;
-g.scale.setScalar(ty.s);scene.add(g);
+g.scale.setScalar(ty.s);scene.add(g);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});
 const bar=new T.Group(),bf=new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0x5cf08a}));bf.position.z=.01;bar.add(new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0})),bf);scene.add(bar);
 const m={g,ty,bar,bf,mat,tail:built.tail,segs:built.segs,puff:built.puff,flash:0,k:Math.random()*6,orbit:i%2?1:-1};mons.push(m);spawn(m);}
 const damagePool=Array.from({length:12},()=>{const el=document.createElement('span');el.className='damage-number';document.body.append(el);return {el,time:0,pos:new T.Vector3()};});
@@ -581,7 +591,15 @@ FOODKEYS.forEach(k=>BUFFS.push(['fb_'+k,FOOD[k].ic,FOOD[k].n]));
 function updateBuffHud(dt){buffClock+=dt;const act=[];for(const b of BUFFS){if(P[b[0]]>0){if(buffStart[b[0]]===undefined)buffStart[b[0]]=buffClock;act.push(b);}else delete buffStart[b[0]];}
 act.sort((a,c)=>buffStart[a[0]]-buffStart[c[0]]);const show=act.slice(-2),key=show.map(b=>b[0]+Math.ceil(P[b[0]])).join('|');if(key===buffKey)return;buffKey=key;
 buffBox.innerHTML=show.map(b=>'<div class="buff" role="status" aria-label="'+b[2]+' เหลือ '+Math.ceil(P[b[0]])+' วินาที"><span>'+b[1]+'</span><small>'+Math.ceil(P[b[0]])+'s</small></div>').join('');}
-const game=dt=>{updateFeedback(dt);updateBuffHud(dt);updateZone(dt);grace=Math.max(0,grace-dt);if(CLS==='maja')updateMaja(dt);separateMonsters();assignPursuers();slamCD=Math.max(0,slamCD-dt*P.cdr);['devCD','tauntCD','shCD'].forEach(k=>P[k]=Math.max(0,P[k]-dt*P.cdr));['tauntT','sh','bless','song'].forEach(k=>P[k]=Math.max(0,P[k]-dt));{let fx=false;FOODKEYS.forEach(k=>{const kk='fb_'+k;if(P[kk]>0){P[kk]=Math.max(0,P[kk]-dt);if(P[kk]===0)fx=true;}});if(fx){P.fbOrder=P.fbOrder.filter(x=>P[x]>0);applyJob();}}shm.visible=P.sh>0;
+// ===== ชื่อลอยเหนือหัวผู้เล่นและมอนสเตอร์ (บอสสีทอง) =====
+const nameProj=new T.Vector3();
+function mkTag(cls,text){const el=document.createElement('span');el.className='nametag '+cls;el.textContent=text;document.body.append(el);return el;}
+const myTag=mkTag('me','');mons.forEach(m=>{m.tag=mkTag(m.ty.n==='boss'?'boss':'',m.ty.nm);});let myTagText='';
+function placeTag(el,x,y,z){nameProj.set(x,y,z).project(cam);if(nameProj.z<-1||nameProj.z>1){el.style.display='none';return;}const sx=(nameProj.x*.5+.5)*innerWidth,sy=(-nameProj.y*.5+.5)*innerHeight;if(sx<-80||sx>innerWidth+80||sy<-30||sy>innerHeight+30){el.style.display='none';return;}el.style.display='block';el.style.transform='translate3d('+Math.round(sx)+'px,'+Math.round(sy)+'px,0) translate(-50%,-100%)';}
+function updateNames(){const nm=({sea:'Sea Eater',bloop:'Bloop',maja:'El Gran Maja'})[CLS]||'',txt='Lv.'+P.lv+' '+nm+(P.job?' • '+jobName():'');if(txt!==myTagText){myTagText=txt;myTag.textContent=txt;}
+  placeTag(myTag,sea.position.x,sea.position.y+(CLS==='sea'?3.7:4.9)*sea.scale.x,sea.position.z);
+  for(const m of mons){const el=m.tag;if(m.dead>0||!m.g.visible){el.style.display='none';continue;}const dx=m.g.position.x-sea.position.x,dz=m.g.position.z-sea.position.z;if(dx*dx+dz*dz>(m.ty.n==='boss'?4900:1600)){el.style.display='none';continue;}placeTag(el,m.g.position.x,m.g.position.y+3.45*m.ty.s,m.g.position.z);}}
+const game=dt=>{sun.position.set(sea.position.x+10,25,sea.position.z+8);sun.target.position.set(sea.position.x,0,sea.position.z);updateFeedback(dt);updateNames();updateBuffHud(dt);updateZone(dt);grace=Math.max(0,grace-dt);if(CLS==='maja')updateMaja(dt);separateMonsters();assignPursuers();slamCD=Math.max(0,slamCD-dt*P.cdr);['devCD','tauntCD','shCD'].forEach(k=>P[k]=Math.max(0,P[k]-dt*P.cdr));['tauntT','sh','bless','song'].forEach(k=>P[k]=Math.max(0,P[k]-dt));{let fx=false;FOODKEYS.forEach(k=>{const kk='fb_'+k;if(P[kk]>0){P[kk]=Math.max(0,P[kk]-dt);if(P[kk]===0)fx=true;}});if(fx){P.fbOrder=P.fbOrder.filter(x=>P[x]>0);applyJob();}}shm.visible=P.sh>0;
 mons.forEach(m=>{const g=m.g;if(m.dead>0){m.dead-=dt;if(m.dead<=0)spawn(m);return;}
 // Separate close enemies from the player, keeping them inside the world.
 let dx=sea.position.x-g.position.x,dz=sea.position.z-g.position.z,d=Math.hypot(dx,dz);const minDistance=m.aggro?1.7+.9*m.ty.s:(grace>0?12:7);
@@ -692,7 +710,7 @@ function exportSaveBackup(){
 }
 const ZN={ray:'หาดตื้น',shark:'ป่าสาหร่าย',eel:'ป่าสาหร่าย',whale:'ถ้ำมืด',boss:'ถ้ำมืดลึก',puffer:'ป่าสาหร่าย',shrimp:'ถ้ำมืด'};
 const dailyHtml=()=>{const evolution='<b>🧬 ขั้น '+P.ev+'/3 • เอสเซนส์ '+P.es+'</b><br>';const d=P.dly;if(!d||!Array.isArray(d.qs))return evolution;return evolution+'<b>🎯 ภารกิจวันนี้</b> (ล็อกอินต่อเนื่อง '+d.s+' วัน)<br>'+d.qs.map((q,i)=>(d.f[i]?'✅ ':'⬜ ')+QTXT[q.e](q.n)+(q.n>1?' ('+d.k[i]+'/'+q.n+')':'')).join('<br>')+'<br>'+(d.b?'🎉 ครบทุกภารกิจแล้ว':'ทำครบทั้ง 3 ข้อ รับโบนัสเพิ่ม')+'<hr style="border:0;border-top:1px solid #ffffff2e">';};
-const renderDex=()=>{$('dex').innerHTML=dailyHtml()+'<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' • '+(ZN[t.n]||'')+' • ล้มแล้ว '+(P.kc[t.n]||0)+' (ดรอป: '+t.dr+')'+(t.hint?'<br><small>'+t.hint+'</small>':''):'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b> <button id="equipGear">🎒 สวมอุปกรณ์</button><br>'+(Object.keys(P.inv).map(k=>inventoryLabel(k)+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button> <button id="zoomIn">ซูมเข้า +</button> <button id="zoomOut">ซูมออก −</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วหนึ่งนิ้วบนพื้นน้ำเพื่อหมุนกล้อง 360° บีบสองนิ้วเพื่อซูมเข้า-ออก ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: ล้อเมาส์ หรือ - = ซูม, Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='equipGear'){$('dex').style.display='none';renderEvo();evo.style.display='flex';$('gearTitle').scrollIntoView({block:'start'});return;}if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){location.reload();return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
+const renderDex=()=>{$('dex').innerHTML=dailyHtml()+'<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' • '+(ZN[t.n]||'')+' • ล้มแล้ว '+(P.kc[t.n]||0)+' (ดรอป: '+t.dr+')'+(t.hint?'<br><small>'+t.hint+'</small>':''):'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b> <button id="equipGear">🎒 สวมอุปกรณ์</button><br>'+(Object.keys(P.inv).map(k=>inventoryLabel(k)+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="gfxBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button> <button id="zoomIn">ซูมเข้า +</button> <button id="zoomOut">ซูมออก −</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วหนึ่งนิ้วบนพื้นน้ำเพื่อหมุนกล้อง 360° บีบสองนิ้วเพื่อซูมเข้า-ออก ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: ล้อเมาส์ หรือ - = ซูม, Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='equipGear'){$('dex').style.display='none';renderEvo();evo.style.display='flex';$('gearTitle').scrollIntoView({block:'start'});return;}if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){location.reload();return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
 // Fullscreen / PWA / HUD. iPhone Safari has no Fullscreen API, so there the honest answer
 // is Add to Home Screen, which gives a real fullscreen standalone window.
 const standalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
@@ -704,7 +722,7 @@ let hudMin=false;try{hudMin=localStorage.getItem('hudmin')==='1';}catch(e){}
 document.body.classList.toggle('hudmin',hudMin);
 function refreshDisplayUI(){
   const f=$('fsBtn'),hb=$('hudBtn'),hint=$('dispHint');if(!f)return;
-  hb.textContent=document.body.classList.contains('hudmin')?'ขยาย HUD':'ย่อ HUD';
+  hb.textContent=document.body.classList.contains('hudmin')?'ขยาย HUD':'ย่อ HUD';const gb=$('gfxBtn');if(gb)gb.textContent=gfxHigh?'เงา: เปิด':'เงา: ปิด (ประหยัด)';
   if(standalone()){f.textContent='เต็มจออยู่แล้ว';f.disabled=true;hint.textContent='เปิดจากไอคอนบนหน้าจอโฮม จึงเต็มจอให้อยู่แล้ว';return;}
   f.disabled=false;
   if(fsSupported()){f.textContent=fsOn()?'ออกจากเต็มจอ':'เต็มจอ';hint.textContent=iOSLike()?'ถ้าอยากเต็มจอถาวร ใช้ปุ่มแชร์ของ Safari แล้วเลือก เพิ่มไปยังหน้าจอโฮม':'';return;}
@@ -717,6 +735,7 @@ $('dex').addEventListener('click',e=>{
   if(id==='camBtn'){recenterCam();say('หันกล้องกลับไปหลังตัวแล้ว');return;}
   if(id==='zoomIn'){zoomCam(1/1.25);return;}
   if(id==='zoomOut'){zoomCam(1.25);return;}
+  if(id==='gfxBtn'){setGfx(!gfxHigh,true);refreshDisplayUI();say(gfxHigh?'เปิดเงาแล้ว':'ปิดเงาแล้ว ภาพเบาลง');return;}
   if(id==='hudBtn'){const on=!document.body.classList.contains('hudmin');document.body.classList.toggle('hudmin',on);try{localStorage.setItem('hudmin',on?'1':'0');}catch(x){}refreshDisplayUI();return;}
   if(id!=='fsBtn')return;
   if(standalone())return;
@@ -807,7 +826,7 @@ applyViewportSoon();
 const clock=new T.Clock();let t=0,face=0;cam.position.set(0,10,15);
 const debugEnabled=new URLSearchParams(location.search).get('debug')==='1';let debugFrames=0,debugStart=performance.now(),debugNode=null;
 if(debugEnabled){debugNode=document.createElement('div');debugNode.id='debug';debugNode.style.cssText='position:fixed;left:8px;top:calc(120px + env(safe-area-inset-top,0px));z-index:8;background:#001b22bb;color:white;font:12px monospace;padding:3px 6px;pointer-events:none';debugNode.textContent='FPS: --';document.body.append(debugNode);}
-function loop(){requestAnimationFrame(loop);if(debugNode){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;
+function loop(){requestAnimationFrame(loop);if(debugNode){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;gfxProbe(dt);
 let x=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),z=jz+((keys.KeyS||keys.ArrowDown)?1:0)-((keys.KeyW||keys.ArrowUp)?1:0);
 const l=Math.hypot(x,z);if(l>1){x/=l;z/=l;}const mv=l>.12;
 // Movement is relative to where the camera is looking, so "up" on the stick is always
