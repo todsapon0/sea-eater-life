@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="Sea Eater">
 <style>
 html,body{height:100%;margin:0;background:#0a4a58;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:system-ui,"Noto Sans Thai",sans-serif;color:#eaf7f5}
-canvas{display:block;width:100%;height:100%}
+canvas{display:block;width:100%;height:100%;touch-action:none}
 #hud{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);padding:12px 16px;pointer-events:none;text-shadow:0 1px 3px #0008}
 #hud b{font-size:18px}#hud div{font-size:13px;opacity:.85;margin-top:2px}
 #stick{position:fixed;left:24px;bottom:calc(28px + env(safe-area-inset-bottom,0px));width:140px;height:140px;border-radius:50%;background:rgba(5,30,38,.45);border:2px solid rgba(234,247,245,.5)}
@@ -224,6 +224,29 @@ const q=qs[P.qd];$('qt').textContent=document.body.classList.contains('compact')
 const gameSurface=e=>e.target instanceof Element&&!!e.target.closest('canvas,#stick,#bite,#slam,#devour,#taunt,#shield,#dexb');
 document.addEventListener('touchmove',e=>{if(e.touches.length>1&&gameSurface(e)&&e.cancelable)e.preventDefault();},{passive:false});
 let lastTapTime=0,lastTapTarget=null;document.addEventListener('touchend',e=>{if(!gameSurface(e)||e.changedTouches.length!==1)return;const now=performance.now();if(e.target===lastTapTarget&&now-lastTapTime<300&&e.cancelable)e.preventDefault();lastTapTime=now;lastTapTarget=e.target;},{passive:false});
+// Hybrid follow camera: it trails the player, and dragging on the water orbits it 360 degrees.
+// Listening on the canvas only is what keeps this off the buttons: a finger that lands on a
+// control never reaches here, so the stick and the camera can be dragged at the same time.
+const CAM={yaw:0,pitch:.62,dist:18},CAM_PITCH_MIN=.18,CAM_PITCH_MAX=1.25;
+let dragId=null,dragX=0,dragY=0;
+const camTarget=new T.Vector3();
+ren.domElement.addEventListener('pointerdown',e=>{
+  if(dragId!==null)return;
+  dragId=e.pointerId;dragX=e.clientX;dragY=e.clientY;
+  try{ren.domElement.setPointerCapture(dragId);}catch(x){}
+});
+ren.domElement.addEventListener('pointermove',e=>{
+  if(e.pointerId!==dragId)return;
+  const k=.0075;
+  CAM.yaw-=(e.clientX-dragX)*k;                                   // drag the world, not the head
+  CAM.pitch=Math.max(CAM_PITCH_MIN,Math.min(CAM_PITCH_MAX,CAM.pitch+(e.clientY-dragY)*k));
+  dragX=e.clientX;dragY=e.clientY;
+  if(e.cancelable)e.preventDefault();
+},{passive:false});
+const dragEnd=e=>{if(e.pointerId===dragId){try{ren.domElement.releasePointerCapture(dragId);}catch(x){}dragId=null;}};
+['pointerup','pointercancel'].forEach(tp=>ren.domElement.addEventListener(tp,dragEnd));
+const recenterCam=()=>{CAM.yaw=face+Math.PI;CAM.pitch=.62;};
+
 // input
 let jx=0,jz=0,sid=null,biteT=0;const keys={};
 const stick=document.getElementById('stick'),knob=document.getElementById('knob');
@@ -255,7 +278,7 @@ function exportSaveBackup(){
     setTimeout(()=>URL.revokeObjectURL(url),60000);say('เริ่มดาวน์โหลดเซฟ โปรดตรวจไฟล์ในอุปกรณ์');
   }catch(e){if(url)URL.revokeObjectURL(url);say('สำรองเซฟไม่สำเร็จ: '+(e&&e.message?e.message:'ไม่สามารถอ่านเซฟได้'));}
 }
-const renderDex=()=>{$('dex').innerHTML='<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' (ดรอป: '+t.dr+')':'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b><br>'+(Object.keys(P.inv).map(k=>k+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:12px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button><div class="hint" id="dispHint"></div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){say('บัญชีนี้มีตัวละครหนึ่งตัว');return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
+const renderDex=()=>{$('dex').innerHTML='<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' (ดรอป: '+t.dr+')':'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b><br>'+(Object.keys(P.inv).map(k=>k+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:12px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วบนพื้นน้ำเพื่อหมุนกล้องรอบตัว 360° ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){say('บัญชีนี้มีตัวละครหนึ่งตัว');return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
 // Fullscreen / PWA / HUD. iPhone Safari has no Fullscreen API, so there the honest answer
 // is Add to Home Screen, which gives a real fullscreen standalone window.
 const standalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
@@ -277,6 +300,7 @@ function refreshDisplayUI(){
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,refreshDisplayUI));
 $('dex').addEventListener('click',e=>{
   const id=e.target.id;
+  if(id==='camBtn'){recenterCam();say('หันกล้องกลับไปหลังตัวแล้ว');return;}
   if(id==='hudBtn'){const on=!document.body.classList.contains('hudmin');document.body.classList.toggle('hudmin',on);try{localStorage.setItem('hudmin',on?'1':'0');}catch(x){}refreshDisplayUI();return;}
   if(id!=='fsBtn')return;
   if(standalone())return;
@@ -319,7 +343,8 @@ $('dex').addEventListener('change',e=>{
   rd.readAsText(f);
 });
 document.getElementById('bite').addEventListener('pointerdown',e=>{e.preventDefault();doBite();});
-addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='Space'){e.preventDefault();doBite();}if(e.code==='KeyE')doSlam();if(e.code==='KeyQ'){playTone('skill');doDevour();}if(e.code==='KeyR'){playTone('skill');doTaunt();}if(e.code==='KeyF'){playTone('skill');doShield();}});
+addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='Space'){e.preventDefault();doBite();}if(e.code==='KeyE')doSlam();if(e.code==='KeyQ'){playTone('skill');doDevour();}if(e.code==='KeyR'){playTone('skill');doTaunt();}if(e.code==='KeyF'){playTone('skill');doShield();}
+if(e.code==='KeyZ')CAM.yaw+=.12;if(e.code==='KeyX')CAM.yaw-=.12;if(e.code==='KeyC')recenterCam();});
 addEventListener('keyup',e=>{keys[e.code]=0;});
 function updateCompact(){const v=window.visualViewport,w=v?v.width:innerWidth,h=v?v.height:innerHeight;document.body.classList.toggle('compact',w>h&&h<=420);}
 addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight);updateCompact();});
@@ -332,8 +357,12 @@ if(debugEnabled){debugNode=document.createElement('div');debugNode.id='debug';de
 function loop(){requestAnimationFrame(loop);if(debugNode){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;
 let x=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),z=jz+((keys.KeyS||keys.ArrowDown)?1:0)-((keys.KeyW||keys.ArrowUp)?1:0);
 const l=Math.hypot(x,z);if(l>1){x/=l;z/=l;}const mv=l>.12;
-if(mv){sea.position.x=Math.max(-95,Math.min(95,sea.position.x+x*7*dt));sea.position.z=Math.max(-95,Math.min(95,sea.position.z+z*7*dt));
-let d=Math.atan2(x,z)-face;d=Math.atan2(Math.sin(d),Math.cos(d));face+=d*Math.min(1,dt*10);sea.rotation.y=face;}
+// Movement is relative to where the camera is looking, so "up" on the stick is always
+// away from the camera however far it has been orbited.
+const camCos=Math.cos(CAM.yaw),camSin=Math.sin(CAM.yaw);
+const wx=x*camCos+z*camSin,wz=-x*camSin+z*camCos;
+if(mv){sea.position.x=Math.max(-95,Math.min(95,sea.position.x+wx*7*dt));sea.position.z=Math.max(-95,Math.min(95,sea.position.z+wz*7*dt));
+let d=Math.atan2(wx,wz)-face;d=Math.atan2(Math.sin(d),Math.cos(d));face+=d*Math.min(1,dt*10);sea.rotation.y=face;}
 const w=mv?t*11:0;legs[0].rotation.x=Math.sin(w)*.7;legs[1].rotation.x=-Math.sin(w)*.7;
 sea.position.y=h(sea.position.x,sea.position.z)+(mv?Math.abs(Math.sin(w))*.15:Math.sin(t*2)*.03);
 segs.forEach((g,i)=>g.rotation.y=Math.sin(t*(mv?8:2.5)-i*.9)*(mv?.35:.15));
@@ -341,7 +370,10 @@ let o=1;if(biteT>0){biteT-=dt;const p=Math.sin(Math.max(0,biteT)/.45*Math.PI);o=
 mouth.scale.y=o;mouth.position.z=.05+(body.position.z);
 const bpa=bg.attributes.position;for(let i=0;i<bpa.count;i++){let y=bpa.getY(i)+dt*1.2;if(y>18)y=0;bpa.setY(i,y);}bpa.needsUpdate=true;
 bub.position.set(sea.position.x,0,sea.position.z);game(dt);
-cam.position.lerp(new T.Vector3(sea.position.x,10,sea.position.z+15),1-Math.exp(-4*dt));cam.lookAt(sea.position.x,2,sea.position.z);
+const cpc=Math.cos(CAM.pitch),cps=Math.sin(CAM.pitch);
+const ctx=sea.position.x+Math.sin(CAM.yaw)*CAM.dist*cpc,ctz=sea.position.z+Math.cos(CAM.yaw)*CAM.dist*cpc;
+const cty=Math.max(sea.position.y+CAM.dist*cps,h(ctx,ctz)+2);   // never dip into the sea floor
+camTarget.set(ctx,cty,ctz);cam.position.lerp(camTarget,1-Math.exp(-6*dt));cam.lookAt(sea.position.x,sea.position.y+2,sea.position.z);
 ren.render(scene,cam);}
 loop();
 }
