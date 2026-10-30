@@ -70,4 +70,16 @@ throwsMsg(() => tools.applyImport(flaky, plan3), 'คืนให้แล้ว
 flaky.setItem = realSet;
 assert.deepStrictEqual(flaky.d, orig, 'storage must be exactly as before the failed import');
 
+
+// 7) New optional fields (daily quests, kill counts, job) validate and round-trip; old saves without them still pass.
+const dly = { d: '2026-10-30', last: '2026-10-30', s: 3, k: [1, 0, 2], f: [0, 0, 0], b: 0, qs: [{ e: 'kill:any', n: 12 }, { e: 'skill', n: 10 }, { e: 'zone:1', n: 1 }] };
+const rich = rec(7, { kc: { ray: 12, boss: 1 }, dly, job: 'guardian' });
+const parsedRich = tools.parseBackup(JSON.stringify(backup({ sea: rich })));
+assert.deepStrictEqual(parsedRich.characters.sea.dly, dly);
+assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(parsedRich)).characters.sea.kc, { ray: 12, boss: 1 });
+tools.parseBackup(JSON.stringify(backup({ sea: rec(7) })));
+throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(7, { kc: { ray: -1 } }) }))), 'สถิติ');
+throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(7, { job: 5 }) }))), 'อาชีพ');
+throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(7, { dly: { ...dly, k: [1, 2] } }) }))), 'ภารกิจรายวัน');
+
 console.log('PASS: save-tools (compat with existing export, code round trip, validation, plan/apply, rollback)');

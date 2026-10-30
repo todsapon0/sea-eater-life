@@ -19,6 +19,17 @@
     if (r.xp !== undefined && !(typeof r.xp === 'number' && isFinite(r.xp) && r.xp >= 0 && r.xp <= 1e7)) fail('EXP ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.qd !== undefined && !isInt(r.qd, 0, 2)) fail('เควสต์ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.q !== undefined && !isInt(r.q, 0, 20)) fail('ความคืบหน้าเควสต์ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    if (r.job !== undefined && !(typeof r.job === 'string' && r.job.length <= 20)) fail('อาชีพของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    if (r.kc !== undefined) {
+      if (!isPlain(r.kc)) fail('สถิติของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+      Object.keys(r.kc).forEach(function (k) { if (k.length > 30 || !isInt(r.kc[k], 0, 1e7)) fail('สถิติของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง'); });
+    }
+    if (r.dly !== undefined && r.dly !== null) {
+      var d = r.dly, okArr = function (a, f) { return Array.isArray(a) && a.length === 3 && a.every(f); };
+      if (!isPlain(d) || typeof d.d !== 'string' || d.d.length > 12 || typeof d.last !== 'string' || d.last.length > 12 || !isInt(d.s, 0, 99999) ||
+          !okArr(d.k, function (v) { return isInt(v, 0, 9999); }) || !okArr(d.f, function (v) { return v === 0 || v === 1; }) || !(d.b === 0 || d.b === 1) ||
+          !okArr(d.qs, function (q) { return isPlain(q) && typeof q.e === 'string' && q.e.length <= 20 && isInt(q.n, 1, 999); })) fail('ภารกิจรายวันของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    }
     ['inv', 'seen'].forEach(function (f) {
       if (r[f] === undefined) return;
       if (!isPlain(r[f])) fail('ข้อมูล ' + f + ' ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
