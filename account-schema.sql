@@ -1,10 +1,12 @@
 -- Run only in an approved dedicated Supabase test project.
 create table public.player_characters (
-  user_id uuid primary key references auth.users(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
   character_class text not null check (character_class in ('sea','bloop','maja')),
   save_data jsonb not null check (jsonb_typeof(save_data) = 'object'),
-  revision bigint not null default 0 check (revision >= 0)
+  revision bigint not null default 0 check (revision >= 0),
+  primary key (user_id, character_class)  -- one account, up to three characters, each with its own level and quest
 );
+-- Already created the old one-row table? Run once: alter table public.player_characters drop constraint player_characters_pkey, add primary key (user_id, character_class);
 alter table public.player_characters enable row level security;
 revoke all on public.player_characters from anon, authenticated;
 grant select, insert, update on public.player_characters to authenticated;

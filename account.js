@@ -23,36 +23,61 @@ window.startAccount = async function startAccount() {
   }
   return new Promise(resolve => {
     local.onclick = () => { root.remove(); resolve({ storage: localStorage, remote: false }); };
+    let client=null;
+    function getClient(){
+      if(!client){
+        if(!window.supabase) throw new Error('โหลดระบบบัญชีไม่สำเร็จ ตรวจอินเทอร์เน็ต');
+        // persistSession keeps this device signed in, so the password is not asked again on the same device.
+        client=window.supabase.createClient(cfg.url, cfg.publishableKey, {auth:{persistSession:true,autoRefreshToken:true}});
+      }
+      return client;
+    }
+    // One account can own up to three characters (one per class). Each has its own save row, level and quest.
+    async function showPicker(user) {
+      const c=getClient();
+      const {data: rows, error: readError} = await c.from('player_characters').select('character_class,save_data,revision').eq('user_id',user.id);
+      if (readError || !Array.isArray(rows)) throw new Error('โหลดเซฟจากเซิร์ฟเวอร์ไม่สำเร็จ');
+      form.remove(); local.remove(); error.textContent = 'เลือกตัวละคร (บัญชีเดียวมีได้หลายตัว เลเวลและเควสแยกกัน)';
+      const select = document.createElement('div');
+      const lock=()=>select.querySelectorAll('button').forEach(x=>x.disabled=true);
+      for (const [id,label] of [['sea','Sea Eater'],['bloop','Bloop'],['maja','El Gran Maja']]) {
+        const have=rows.find(r=>r.character_class===id);
+        const b=document.createElement('button'); b.type='button';
+        b.textContent=have ? label+' Lv.'+(have.save_data && have.save_data.lv|0) : 'สร้างตัวละคร '+label;
+        b.onclick=async()=>{
+          lock();
+          if (have) { finish(c,user.id,have); return; }
+          const initial={lv:1,xp:0,qd:0,q:0,inv:{},seen:{}};
+          const result=await c.from('player_characters').insert({user_id:user.id,character_class:id,save_data:initial}).select('character_class,save_data,revision').single();
+          if(result.error){error.textContent='สร้างตัวละครไม่สำเร็จ โปรดเข้าสู่ระบบใหม่เพื่อตรวจเซฟ';return;}
+          finish(c,user.id,result.data);
+        };
+        select.append(b);
+      }
+      const out=document.createElement('button'); out.type='button'; out.textContent='ออกจากระบบ (เครื่องนี้)';
+      out.onclick=async()=>{try{await c.auth.signOut();}catch(_){}location.reload();};
+      select.append(out);
+      root.querySelector('.account-card').append(select);
+    }
+    if (remoteConfigured && window.supabase) {
+      (async()=>{
+        try {
+          const {data}=await getClient().auth.getSession();
+          if (data && data.session && data.session.user) { error.textContent='กำลังโหลดตัวละคร…'; await showPicker(data.session.user); }
+        } catch (_) { error.textContent=''; }
+      })();
+    }
     form.onsubmit = async e => {
       e.preventDefault();
       if (!remoteConfigured) return;
       const submit = form.querySelector('button');
       submit.disabled = true; error.textContent = 'กำลังเข้าสู่ระบบ…';
       try {
-        if (!window.supabase) throw new Error('โหลดระบบบัญชีไม่สำเร็จ ตรวจอินเทอร์เน็ต');
-        const client = window.supabase.createClient(cfg.url, cfg.publishableKey, {auth:{persistSession:false,autoRefreshToken:true}});
-        const { data: auth, error: loginError } = await client.auth.signInWithPassword({email:root.querySelector('#accountEmail').value,password:root.querySelector('#accountPassword').value});
+        const c = getClient();
+        const { data: auth, error: loginError } = await c.auth.signInWithPassword({email:root.querySelector('#accountEmail').value,password:root.querySelector('#accountPassword').value});
         root.querySelector('#accountPassword').value = '';
         if (loginError || !auth.user) throw new Error('เข้าสู่ระบบไม่สำเร็จ ตรวจอีเมลและรหัสผ่าน');
-        let {data: row, error: readError} = await client.from('player_characters').select('character_class,save_data,revision').eq('user_id',auth.user.id).maybeSingle();
-        if (readError) throw new Error('โหลดเซฟจากเซิร์ฟเวอร์ไม่สำเร็จ');
-        if (!row) {
-          form.remove(); local.remove(); error.textContent = 'เลือกตัวละครหนึ่งตัวสำหรับบัญชีนี้';
-          const select = document.createElement('div');
-          for (const [id,label] of [['sea','Sea Eater'],['bloop','Bloop'],['maja','El Gran Maja']]) {
-            const b=document.createElement('button'); b.type='button'; b.textContent=label;
-            b.onclick=async()=>{
-              select.querySelectorAll('button').forEach(x=>x.disabled=true);
-              const initial={lv:1,xp:0,qd:0,q:0,inv:{},seen:{}};
-              const result=await client.from('player_characters').insert({user_id:auth.user.id,character_class:id,save_data:initial}).select('character_class,save_data,revision').single();
-              if(result.error){error.textContent='สร้างตัวละครไม่สำเร็จ โปรดเข้าสู่ระบบใหม่เพื่อตรวจเซฟ';return;}
-              finish(client,auth.user.id,result.data);
-            };
-            select.append(b);
-          }
-          root.querySelector('.account-card').append(select); return;
-        }
-        finish(client,auth.user.id,row);
+        await showPicker(auth.user);
       } catch (err) { error.textContent=err.message || 'เชื่อมต่อไม่สำเร็จ'; submit.disabled=false; }
     };
     function finish(client,userId,row) {
@@ -68,7 +93,7 @@ window.startAccount = async function startAccount() {
       }
       const key={sea:'sel01',bloop:'sel01b',maja:'sel01m'}[row.character_class];
       // A separate journal for this project and authenticated account; never use legacy save keys.
-      const journalKey='sel-account-pending-v1:'+cfg.url+':'+userId;
+      const journalKey='sel-account-pending-v2:'+cfg.url+':'+userId+':'+row.character_class;
       let revision=row.revision, pending=null, saving=false, blocked=false, timer=null, attempts=0, inflight=null;
       let current=JSON.stringify(row.save_data), durable=true;
       let journal, expectedJournal=null;
@@ -111,7 +136,7 @@ window.startAccount = async function startAccount() {
       function checkError(result){if(!result.error)return;if(result.status>=400 && result.status<500 && result.status!==408 && result.status!==429){blocked=true;show('เซฟต้องตรวจสอบสิทธิ์หรือการตั้งค่า หยุดเล่นและดาวน์โหลดเซฟค้าง');}throw new Error('request failed');}
       function withTimeout(request){let timeout;return Promise.race([request,new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('timeout')),15000);})]).finally(()=>clearTimeout(timeout));}
       async function checkServer(){
-        const result=await withTimeout(client.from('player_characters').select('character_class,save_data,revision').eq('user_id',userId).maybeSingle());
+        const result=await withTimeout(client.from('player_characters').select('character_class,save_data,revision').eq('user_id',userId).eq('character_class',row.character_class).maybeSingle());
         checkError(result);if(!result.data){blocked=true;show('ไม่พบเซฟบัญชีบนเซิร์ฟเวอร์ หยุดเล่นและดาวน์โหลดเซฟค้าง');throw new Error('missing row');}
         const server=result.data;
         if(server.character_class!==row.character_class) return false;
@@ -127,7 +152,7 @@ window.startAccount = async function startAccount() {
       const storage={
         getItem(k){if(k==='selcls')return row.character_class;if(k===key)return current;return null;},
         setItem(k,value){if(k!==key)return;current=String(value);pending=current;if(!persist())return; if(!blocked){show('เซฟบัญชี: รอส่งไปเซิร์ฟเวอร์',true);queueMicrotask(flush);}},
-        removeItem(){throw new Error('บัญชีมีตัวละครเดียว');}
+        removeItem(){}
       };
       async function flush(){
         if(saving || blocked || pending===null)return;
@@ -139,7 +164,7 @@ window.startAccount = async function startAccount() {
           }
           const snapshot=pending;
           inflight=snapshot;if(!persist())return;
-          const result=await withTimeout(client.from('player_characters').update({save_data:JSON.parse(snapshot),revision:revision+1}).eq('user_id',userId).eq('revision',revision).select('revision').maybeSingle());
+          const result=await withTimeout(client.from('player_characters').update({save_data:JSON.parse(snapshot),revision:revision+1}).eq('user_id',userId).eq('character_class',row.character_class).eq('revision',revision).select('revision').maybeSingle());
           checkError(result);
           if(!result.data){blocked=true;show('เซฟขัดแย้งกับอีกเครื่อง หยุดเล่น ข้อมูลค้างยังอยู่ในเครื่อง',false);return;}
           revision=result.data.revision;inflight=null;attempts=0;
