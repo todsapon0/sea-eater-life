@@ -232,13 +232,13 @@ let jobRing=null;const jobName=()=>((JOBS[CLS]||{})[P.job]||{}).n||'';
 // Species evolution is permanent; equipment slots are available from the start.
 const EVO=[{lv:8,es:40},{lv:14,es:140},{lv:20,es:360,job:1}];
 const ORG={head:[
-{id:'fang',n:'เขี้ยวคม',dm:1.12},{id:'helm',n:'เกราะหัว',tk:.92},{id:'jaw',n:'ปากขยาย',only:'sea',dm:1.10,hp:1.08},{id:'bub',n:'ถุงฟอง',only:'bloop',heal:1.25},{id:'horn',n:'เขาพลัง',only:'maja',dm:1.15}],back:[
-{id:'scale',n:'เกล็ดหนา',hp:1.15},{id:'fin',n:'ครีบหลังไว',sp:1.08},{id:'shell',n:'กระดองหิน',only:'sea',shm:1.4},{id:'wing',n:'ปีกฟอง',only:'bloop',bl:1.3},{id:'crys',n:'ผลึกพลัง',only:'maja',cdr:1.15}],tail:[
-{id:'whip',n:'หางฟาด',dm:1.08},{id:'rud',n:'หางหางเสือ',cdr:1.10},{id:'spike',n:'หางหนาม',only:'sea',tk:.90},{id:'glow',n:'หางเรือง',only:'bloop',heal:1.15,hp:1.10},{id:'orb',n:'หางลูกแก้ว',only:'maja',dm:1.10,sp:1.04}]};
+{id:'fang',n:'เขี้ยวคม',dm:1.12},{id:'helm',n:'เกราะหัว',tk:.92},{id:'jaw',n:'ปากขยาย',only:'sea',dm:1.10,hp:1.08},{id:'bub',n:'ถุงฟอง',only:'bloop',heal:1.25},{id:'horn',n:'เขาพลัง',only:'maja',dm:1.15},{id:'crest',n:'มงกุฎปะการัง',hp:1.06,heal:1.08}],back:[
+{id:'scale',n:'เกล็ดหนา',hp:1.15},{id:'fin',n:'ครีบหลังไว',sp:1.08},{id:'shell',n:'กระดองหิน',only:'sea',shm:1.4},{id:'wing',n:'ปีกฟอง',only:'bloop',bl:1.3},{id:'crys',n:'ผลึกพลัง',only:'maja',cdr:1.15},{id:'spine',n:'แผงหนามปักเป้า',tk:.94,hp:1.08}],tail:[
+{id:'whip',n:'หางฟาด',dm:1.08},{id:'rud',n:'หางหางเสือ',cdr:1.10},{id:'spike',n:'หางหนาม',only:'sea',tk:.90},{id:'glow',n:'หางเรือง',only:'bloop',heal:1.15,hp:1.10},{id:'orb',n:'หางลูกแก้ว',only:'maja',dm:1.10,sp:1.04},{id:'lance',n:'แพนหางผลึก',dm:1.06,cdr:1.05}]};
 // Equipment lives in the existing inventory as eq:<organ>:<level>:<rarity> stacks.
 // mu stores the selected stack ID; evolution never gates equipment slots.
 const RARITY={common:{n:'ธรรมดา',mul:1,col:'#eaf7f5'},rare:{n:'หายาก',mul:1.25,col:'#80caff'},epic:{n:'มหากาพย์',mul:1.5,col:'#d4a0ff'}};
-const GEAR_DROPS={ray:{n:'ปลากระเบน',lv:[1,7],ids:['fang','bub','fin']},shark:{n:'ฉลาม',lv:[5,12],ids:['helm','jaw','spike']},eel:{n:'งูทะเล',lv:[8,16],ids:['horn','crys','rud']},whale:{n:'วาฬ',lv:[12,20],ids:['scale','shell','wing']},boss:{n:'บอสฉลาม',lv:[16,20],ids:['whip','glow','orb']}};
+const GEAR_DROPS={ray:{n:'ปลากระเบน',lv:[1,7],ids:['fang','bub','fin']},shark:{n:'ฉลาม',lv:[5,12],ids:['helm','jaw','spike']},eel:{n:'งูทะเล',lv:[8,16],ids:['horn','crys','rud']},whale:{n:'วาฬ',lv:[12,20],ids:['scale','shell','wing']},boss:{n:'บอสฉลาม',lv:[16,20],ids:['whip','glow','orb']},puffer:{n:'ปลาปักเป้าตะไคร่',lv:[4,10],ids:['crest','spine','bub']},shrimp:{n:'กุ้งหอกผลึก',lv:[12,20],ids:['lance','crys','rud']}};
 const MUT_KEYS={dm:'dmgMul',hp:'hpMul',tk:'dmgTaken',heal:'healMul',cdr:'cdr',shm:'shMul',bl:'blMul',sp:'spMul'};
 function gearFrom(id){
  if(typeof id!=='string')return null;
@@ -286,13 +286,16 @@ function buildOrgans(){
  if(organGroup){sea.remove(organGroup);organGroup.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
  organGroup=new T.Group();organGroup.name='mutations';sea.add(organGroup);
  const anchors=CLS==='sea'?[[0,2.45,1.5],[0,2.75,0],[0,1.5,-3]]:[[0,3.2,.8],[0,3.5,-.6],[0,1.6,-1.8]];
- Object.keys(ORG).forEach((slot,i)=>{const o=organFor(slot);if(!o)return;const g=new T.Group();g.name=o.org;g.position.set(...anchors[i]);if(CLS==='sea'){if(slot==='back')g.position.y-=.4;if(slot==='tail'){g.position.z-=.9;g.position.y+=.25;if(o.org==='spike')g.position.y+=.2;}if(o.org==='fang'||o.org==='jaw')g.position.y-=.35;}if(o.org==='bub'){g.position.y-=.45;g.position.z+=.3;}organGroup.add(g);
+ Object.keys(ORG).forEach((slot,i)=>{const o=organFor(slot);if(!o)return;const g=new T.Group();g.name=o.org;g.position.set(...anchors[i]);if(CLS==='sea'){if(slot==='back')g.position.y-=.4;if(slot==='tail'){g.position.z-=.9;g.position.y+=.25;if(o.org==='spike')g.position.y+=.2;}if(o.org==='fang'||o.org==='jaw')g.position.y-=.35;}if(o.org==='spine'&&CLS!=='sea')g.position.y-=.2;if(o.org==='bub'){g.position.y-=.45;g.position.z+=.3;}organGroup.add(g);
  const mesh=(geo,col,x=0,y=0,z=0,basic=false)=>{const m=new T.Mesh(geo,basic?new T.MeshBasicMaterial({color:col}):new T.MeshStandardMaterial({color:col,roughness:.65}));m.position.set(x,y,z);g.add(m);return m;};
  const cone=(r,h,col,x=0,y=0,z=0)=>mesh(new T.ConeGeometry(r,h,10),col,x,y,z);
  switch(o.org){
  case 'fang':case 'jaw':[-1,1].forEach(s=>{const m=cone(.10,o.org==='jaw'?.55:.36,o.org==='jaw'?0xf2a03d:0xfff5dd,s*.27,0,.08);m.rotation.x=Math.PI/2;});break;
  case 'helm':mesh(new T.SphereGeometry(.46,16,8,0,Math.PI*2,0,Math.PI/2),0x89969d).scale.set(1,.6,1);break;
  case 'bub':[-1,0,1].forEach(s=>{const m=mesh(new T.SphereGeometry(.19,12,8),0x9de6ff,s*.25,.06,0);m.material.transparent=true;m.material.opacity=.65;});break;
+ case 'crest':[-1,0,1].forEach(i=>cone(.08,.24+(.08*(1-Math.abs(i))),0xf3b47d,i*.18,.08,0));break;
+ case 'spine':for(let i=0;i<5;i++)cone(.10,.3,0xd4d884,(i%2-.5)*.3,.03,-Math.floor(i/2)*.2);break;
+ case 'lance':[-1,0,1].forEach(i=>{const m=mesh(new T.OctahedronGeometry(.18),0x92d9ee,i*.18,0,-.16,true);m.scale.set(.6,.6,1.5);});break;
  case 'horn':cone(.17,.65,0xab75de,0,.2,0);break;
  case 'scale':for(let k=0;k<3;k++)cone(.25,.25,0x83b1a4,0,0,-k*.24).scale.z=.45;break;
  case 'fin':cone(.35,.85,0x66bdcc,0,.25,0).scale.x=.25;break;
@@ -365,14 +368,14 @@ const gain=x=>{P.xp+=x;while(P.xp>=need(P.lv)&&P.lv<20){P.xp-=need(P.lv);P.lv++;
 if(P.lv>=20&&!P.job)setTimeout(showJobPick,1200);
 if(P.lv>=20&&P.job){let c=0;while(P.st<10&&P.xp>=need(20)){P.xp-=need(20);P.st++;c++;}if(P.st>=10)P.xp=Math.min(P.xp,need(20)-1);if(c){applyJob();P.max=maxHp();P.hp=P.max;say('★ ระดับดาว '+P.st+'! แข็งแกร่งขึ้น');}}
 save();};
-const types=[{n:'ray',nm:'ปลากระเบนตาฟ้า',dr:'ครีบกระเบน',c:0x7d8794,hp:30,xp:8,d:6,s:1,sp:2.5},{n:'shark',nm:'ฉลามปากแดง',dr:'ฟันฉลาม',c:0x8a2a30,hp:55,xp:14,d:10,s:1.3,sp:3.2},{n:'whale',nm:'วาฬปากกว้าง',dr:'ไขมันวาฬ',c:0x7a5a3a,hp:90,xp:25,d:14,s:1.8,sp:2.2},{n:'eel',nm:'งูทะเล',dr:'เกล็ดงู',c:0x3f8a6a,hp:45,xp:18,d:8,s:1.1,sp:4},{n:'boss',nm:'ฉลามราชาถ้ำ',dr:'เขี้ยวราชา',c:0xffffff,hp:600,xp:260,d:18,s:2.4,sp:3.2}],mons=[];
+const types=[{n:'ray',nm:'ปลากระเบนตาฟ้า',dr:'ครีบกระเบน',c:0x7d8794,hp:30,xp:8,d:6,s:1,sp:2.5},{n:'shark',nm:'ฉลามปากแดง',dr:'ฟันฉลาม',c:0x8a2a30,hp:55,xp:14,d:10,s:1.3,sp:3.2},{n:'whale',nm:'วาฬปากกว้าง',dr:'ไขมันวาฬ',c:0x7a5a3a,hp:90,xp:25,d:14,s:1.8,sp:2.2},{n:'eel',nm:'งูทะเล',dr:'เกล็ดงู',c:0x3f8a6a,hp:45,xp:18,d:8,s:1.1,sp:4},{n:'boss',nm:'ฉลามราชาถ้ำ',dr:'เขี้ยวราชา',c:0xffffff,hp:600,xp:260,d:18,s:2.4,sp:3.2},{n:'puffer',nm:'ปลาปักเป้าตะไคร่',dr:'หนามตะไคร่',c:0x88aa48,hp:65,xp:20,d:9,s:1,sp:1.8,hint:'พองตัวก่อนโจมตีหนาม — ถอยออกจากระยะ'},{n:'shrimp',nm:'กุ้งหอกผลึก',dr:'เปลือกผลึก',c:0xa080cf,hp:85,xp:32,d:12,s:1.15,sp:2.8,hint:'ง้างก่อนพุ่ง — หลบออกด้านข้าง'}],mons=[];
 // The central training area is reserved for rays. Spawns remain near the player.
 const safeRadius=28,graceDuration=8;let grace=graceDuration;
-const ZR={ray:[0,45],shark:[28,70],eel:[28,70],whale:[58,95]};
+const ZR={ray:[0,45],shark:[28,70],eel:[28,70],whale:[58,95],puffer:[30,60],shrimp:[62,95]};
 const spawn=m=>{let x,z;if(m.ty.n==='boss'){x=0;z=-82;m.bs=null;}else{const rg=ZR[m.ty.n]||[0,95];let valid=false;
 if(m.placed){for(let i=0;i<200;i++){const a=Math.random()*Math.PI*2,r=12+Math.random()*27;x=sea.position.x+Math.cos(a)*r;z=sea.position.z+Math.sin(a)*r;const rr=Math.hypot(x,z);if(Math.abs(x)<=95&&Math.abs(z)<=95&&rr>=rg[0]&&rr<=rg[1]){valid=true;break;}}}
 if(!valid){const a=Math.random()*Math.PI*2,rr=rg[0]+Math.random()*(rg[1]-rg[0]);x=Math.sin(a)*rr;z=Math.cos(a)*rr;}m.placed=1;}
-m.g.position.set(x,0,z);m.hp=m.ty.hp;m.dead=0;m.aggro=false;m.slow=0;m.flee=0;m.windup=0;m.dash=0;m.dashWait=3;m.cd=1;m.a=Math.random()*6.28;m.g.visible=true;m.bar.visible=true;m.mat.emissive.setHex(0);};
+m.g.position.set(x,0,z);m.hp=m.ty.hp;m.dead=0;m.aggro=false;m.slow=0;m.flee=0;m.windup=0;m.dash=0;m.dashWait=3;m.cd=1;m.a=Math.random()*6.28;m.g.visible=true;m.bar.visible=true;m.mat.emissive.setHex(0);if(m.puff)m.puff.scale.setScalar(1);};
 
 // ===== Monster models v2: smooth, bright, anatomical =====
 function bodyLathe(pts,seg,col,belly,flat){ // pts: [รัศมี, ตำแหน่งตามยาว]; หัวอยู่ +Z
@@ -436,11 +439,30 @@ function buildEel(mat){
   addEyes(g,.24,.98,1.7,.09);
   const mo=new T.Mesh(new T.SphereGeometry(.2,10,8),gumMat);mo.scale.set(1,.5,.8);mo.position.set(0,.66,1.9);g.add(mo);
   return {g,tail:null,segs};}
-function buildMonster(ty,mat){return ty.n==='boss'?buildShark(mat,0x4a4f8c,0xd9d2e8,0x3b3f78):ty.n==='shark'?buildShark(mat):ty.n==='ray'?buildRay(mat):ty.n==='whale'?buildWhale(mat):buildEel(mat);}
-for(let i=0;i<21;i++){const ty=i===20?types[4]:types[i%4],mat=new T.MeshStandardMaterial({color:ty.c,roughness:.55,metalness:.02}),built=buildMonster(ty,mat),g=built.g;
+// Original low-poly silhouettes; fixed geometry, no runtime allocations for attacks.
+function buildPuffer(mat){
+ const g=new T.Group(),puff=new T.Group();puff.position.y=1;g.add(puff);
+ const body=new T.Mesh(new T.SphereGeometry(1,16,12),mat);body.scale.set(.85,.72,.95);puff.add(body);
+ const spikeMat=new T.MeshStandardMaterial({color:0xe5cd70,roughness:.8});
+ for(let i=0;i<18;i++){const y=1-2*(i+.5)/18,r=Math.sqrt(1-y*y),a=i*2.399,dir=new T.Vector3(Math.cos(a)*r,y,Math.sin(a)*r),spike=new T.Mesh(new T.ConeGeometry(.09,.28,6),spikeMat);spike.position.set(dir.x*.9,dir.y*.78,dir.z*1.0);spike.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),dir);puff.add(spike);}
+ const tail=new T.Group();tail.position.set(0,1,-.9);g.add(tail);const fin=new T.Mesh(new T.ConeGeometry(.32,.48,6),mat);fin.rotation.x=-Math.PI/2;fin.position.z=-.18;tail.add(fin);
+ addEyes(puff,.32,.22,.82,.11);return {g,tail,puff};
+}
+function buildShrimp(mat){
+ const g=new T.Group(),belly=new T.MeshStandardMaterial({color:0xdec5ed,roughness:.65});
+ for(let i=0;i<5;i++){const part=new T.Mesh(new T.SphereGeometry(.48-i*.045,12,8),mat);part.scale.set(1,.75,1.1);part.position.set(0,.85,1-i*.48);g.add(part);}
+ const tail=new T.Group();tail.position.set(0,.7,-1.15);g.add(tail);
+ [-1,0,1].forEach(s=>{const fan=new T.Mesh(new T.SphereGeometry(.28,10,6),belly);fan.scale.set(.65,.16,1.5);fan.position.set(s*.25,0,-.12);fan.rotation.y=s*.45;tail.add(fan);});
+ [-1,1].forEach(s=>{for(let i=0;i<3;i++){const leg=new T.Mesh(new T.CylinderGeometry(.04,.025,.7,6),belly);leg.rotation.z=s*.9;leg.position.set(s*.46,.45,.45-i*.45);g.add(leg);}const spear=new T.Mesh(new T.ConeGeometry(.12,1.05,7),belly);spear.rotation.x=Math.PI/2;spear.position.set(s*.43,.85,1.75);g.add(spear);});
+ addEyes(g,.27,1.12,1.22,.10);return {g,tail};
+}
+function buildMonster(ty,mat){return ty.n==='puffer'?buildPuffer(mat):ty.n==='shrimp'?buildShrimp(mat):ty.n==='boss'?buildShark(mat,0x4a4f8c,0xd9d2e8,0x3b3f78):ty.n==='shark'?buildShark(mat):ty.n==='ray'?buildRay(mat):ty.n==='whale'?buildWhale(mat):buildEel(mat);}
+// Keep 21 active monsters and five starter rays; replace one shark/eel/whale with new encounters.
+const monsterRoster=[...Array.from({length:4},()=>['ray','shark','whale','eel']).flat(),'ray','puffer','shrimp','puffer','boss'];
+for(let i=0;i<monsterRoster.length;i++){const ty=types.find(t=>t.n===monsterRoster[i]),mat=new T.MeshStandardMaterial({color:ty.c,roughness:.55,metalness:.02}),built=buildMonster(ty,mat),g=built.g;
 g.scale.setScalar(ty.s);scene.add(g);
 const bar=new T.Group(),bf=new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0x5cf08a}));bf.position.z=.01;bar.add(new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0})),bf);scene.add(bar);
-const m={g,ty,bar,bf,mat,tail:built.tail,segs:built.segs,flash:0,k:Math.random()*6,orbit:i%2?1:-1};mons.push(m);spawn(m);}
+const m={g,ty,bar,bf,mat,tail:built.tail,segs:built.segs,puff:built.puff,flash:0,k:Math.random()*6,orbit:i%2?1:-1};mons.push(m);spawn(m);}
 const damagePool=Array.from({length:12},()=>{const el=document.createElement('span');el.className='damage-number';document.body.append(el);return {el,time:0,pos:new T.Vector3()};});
 const rings=Array.from({length:6},()=>{const mesh=new T.Mesh(new T.TorusGeometry(1,.08,6,20),new T.MeshBasicMaterial({color:0xa7edff,transparent:true,opacity:.7}));mesh.rotation.x=-Math.PI/2;mesh.visible=false;scene.add(mesh);return {mesh,time:0};});
 let soundOn=false,audioContext=null,soundLevel=1;const soundToggle=$('soundToggle'),soundLevelButton=$('soundLevel');
@@ -452,14 +474,14 @@ function playTone(kind){if(kind==='skill')dailyEvent('skill');if(!soundOn)return
 function feedbackHit(m,amount){if(m.ty.n==='ray'){m.flee=3;m.aggro=false;}const slot=damagePool.find(x=>x.time<=0);if(slot){slot.time=1.15;slot.pos.copy(m.g.position);slot.pos.y+=1.7*m.ty.s;slot.el.textContent=String(Math.round(amount));slot.el.style.display='block';}m.flash=.14;m.mat.emissive.setHex(0x555555);playTone('hit');}
 function feedbackDefeat(m){const slot=rings.find(x=>x.time<=0);if(slot){slot.time=.5;slot.mesh.position.copy(m.g.position);slot.mesh.position.y+=.5;slot.mesh.scale.setScalar(m.ty.s);slot.mesh.material.opacity=.7;slot.mesh.visible=true;}playTone('defeat');}
 const projectedDamage=new T.Vector3();function updateFeedback(dt){for(const m of mons)if(m.flash>0){m.flash-=dt;if(m.flash<=0)m.mat.emissive.setHex(0);}for(const s of damagePool){if(s.time<=0)continue;s.time-=dt;if(s.time<=0){s.el.style.display='none';continue;}s.pos.y+=dt*.9;projectedDamage.copy(s.pos).project(cam);if(projectedDamage.z< -1||projectedDamage.z>1){s.el.style.display='none';continue;}const sx=Math.max(22,Math.min(innerWidth-22,(projectedDamage.x*.5+.5)*innerWidth)),sy=Math.max(28,Math.min(innerHeight-28,(-projectedDamage.y*.5+.5)*innerHeight));s.el.style.display='block';s.el.style.transform='translate3d('+sx+'px,'+sy+'px,0) translate(-50%,-50%)';s.el.style.opacity=String(Math.min(1,s.time*4));}for(const s of rings){if(s.time<=0)continue;s.time-=dt;if(s.time<=0){s.mesh.visible=false;continue;}s.mesh.material.opacity=Math.min(1,s.time*2);}}
-const kill=m=>{P.es=Math.min(1e7,P.es+({ray:1,shark:2,eel:2,whale:3,boss:30}[m.ty.n]||0));feedbackDefeat(m);P.kc[m.ty.n]=(P.kc[m.ty.n]||0)+1;dailyEvent('kill',m.ty.n);m.dead=m.ty.n==='boss'?120:6;if(m.ty.n==='boss'){hideBossFx();say('ชนะบอส! ฉลามราชาถ้ำพ่ายแพ้');}m.g.visible=false;m.bar.visible=false;gain(m.ty.xp);if(m.ty.n==='boss'||Math.random()<.6){P.inv[m.ty.dr]=(P.inv[m.ty.dr]||0)+(m.ty.n==='boss'?3:1);say('ได้ '+m.ty.dr);}if(!P.seen[m.ty.n]){P.seen[m.ty.n]=1;say('พบสายพันธุ์ใหม่: '+m.ty.nm+' +30 EXP');gain(30);}save();renderDex();P.q++;const q=qs[P.qd];if(P.q>=q.n){P.q=0;P.qd=Math.min(P.qd+1,qs.length-1);say('เควสต์สำเร็จ! +'+q.xp+' EXP');gain(q.xp);}const loot=awardGear(m.ty.n);save();if(loot){say('🎒 ได้ '+gearLabel(loot));renderDex();if(evo.style.display==='flex')renderEvo();}};
+const kill=m=>{P.es=Math.min(1e7,P.es+({ray:1,shark:2,eel:2,whale:3,boss:30,puffer:2,shrimp:3}[m.ty.n]||0));feedbackDefeat(m);P.kc[m.ty.n]=(P.kc[m.ty.n]||0)+1;dailyEvent('kill',m.ty.n);m.dead=m.ty.n==='boss'?120:6;if(m.ty.n==='boss'){hideBossFx();say('ชนะบอส! ฉลามราชาถ้ำพ่ายแพ้');}m.g.visible=false;m.bar.visible=false;gain(m.ty.xp);if(m.ty.n==='boss'||Math.random()<.6){P.inv[m.ty.dr]=(P.inv[m.ty.dr]||0)+(m.ty.n==='boss'?3:1);say('ได้ '+m.ty.dr);}if(!P.seen[m.ty.n]){P.seen[m.ty.n]=1;say('พบสายพันธุ์ใหม่: '+m.ty.nm+' +30 EXP');gain(30);}save();renderDex();P.q++;const q=qs[P.qd];if(P.q>=q.n){P.q=0;P.qd=Math.min(P.qd+1,qs.length-1);say('เควสต์สำเร็จ! +'+q.xp+' EXP');gain(q.xp);}const loot=awardGear(m.ty.n);save();if(loot){say('🎒 ได้ '+gearLabel(loot));renderDex();if(evo.style.display==='flex')renderEvo();}};
 // ===== ภารกิจรายวัน + รางวัลล็อกอินต่อเนื่อง (ให้อัตโนมัติ เด็กไม่ต้องกดรับ) =====
 const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');},dayNum=s=>Math.floor(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/864e5);
-const QTXT={'kill:any':n=>'ล้มมอนสเตอร์ใดก็ได้ '+n+' ตัว','kill:ray':n=>'ล่าปลากระเบน '+n+' ตัว','kill:shark':n=>'ล่าฉลาม '+n+' ตัว','kill:eel':n=>'ล่างูทะเล '+n+' ตัว','kill:whale':n=>'ล่าวาฬ '+n+' ตัว','kill:boss':n=>'ล้มฉลามราชาถ้ำ',skill:n=>'ใช้สกิล '+n+' ครั้ง','zone:1':n=>'ไปถึงป่าสาหร่าย','zone:2':n=>'ไปถึงถ้ำมืด'};
+const QTXT={'kill:any':n=>'ล้มมอนสเตอร์ใดก็ได้ '+n+' ตัว','kill:ray':n=>'ล่าปลากระเบน '+n+' ตัว','kill:shark':n=>'ล่าฉลาม '+n+' ตัว','kill:eel':n=>'ล่างูทะเล '+n+' ตัว','kill:whale':n=>'ล่าวาฬ '+n+' ตัว','kill:boss':n=>'ล้มฉลามราชาถ้ำ','kill:puffer':n=>'ล่าปลาปักเป้าตะไคร่ '+n+' ตัว','kill:shrimp':n=>'ล่ากุ้งหอกผลึก '+n+' ตัว',skill:n=>'ใช้สกิล '+n+' ครั้ง','zone:1':n=>'ไปถึงป่าสาหร่าย','zone:2':n=>'ไปถึงถ้ำมืด'};
 const LOGIN_XP=[40,60,80,100,130,160,300];
 function pickQuests(t){let seed=dayNum(t)*2654435761>>>0;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;},pick=a=>a[Math.floor(rnd()*a.length)],lv=P.lv;
   const a=pick([{e:'kill:any',n:12},{e:'kill:ray',n:8}]);
-  const b=lv<6?pick([{e:'skill',n:10},{e:'kill:ray',n:15}]):lv<12?pick([{e:'kill:shark',n:5},{e:'kill:eel',n:5},{e:'zone:1',n:1}]):pick([{e:'kill:whale',n:3},{e:'zone:2',n:1},{e:'kill:shark',n:8}]);
+  const b=lv<6?pick([{e:'skill',n:10},{e:'kill:ray',n:15}]):lv<12?pick([{e:'kill:shark',n:5},{e:'kill:eel',n:5},{e:'kill:puffer',n:4},{e:'zone:1',n:1}]):pick([{e:'kill:whale',n:3},{e:'kill:shrimp',n:3},{e:'zone:2',n:1},{e:'kill:shark',n:8}]);
   const c=lv<6?{e:'kill:any',n:20}:lv<12?pick([{e:'zone:1',n:1},{e:'skill',n:15}]):lv>=15?{e:'kill:boss',n:1}:{e:'zone:2',n:1};
   const out=[a,b,c],seen={},fb=[{e:'kill:any',n:20},{e:'kill:ray',n:15},{e:'skill',n:12},{e:'kill:any',n:30}];return out.map(q=>{if(seen[q.e])q=fb.find(f=>!seen[f.e]);seen[q.e]=1;return q;});}
 const dailyReward=()=>40+P.lv*12;
@@ -518,6 +540,21 @@ function bossAI(m,dt,dx,dz,d,sf){const g=m.g,s=m.ty.s,bs=m.bs||(m.bs={st:'idle',
     if(bs.t>=1.5){hideBossFx();if(d<8)hurtP(m.ty.d*1.2);feedbackDefeat({g,ty:{s:3}});bs.st='idle';bs.cool=3;}}
 }
 // Retain current pursuers until they die or leave the release radius; fill empty slots only.
+// Return false for legacy species so their existing AI remains unchanged.
+function specialMonsterAI(m,dt,dx,dz,d,speedFactor){
+ if(m.ty.n!=='puffer'&&m.ty.n!=='shrimp')return false;
+ const g=m.g,reach=1.8+m.ty.s;
+ if(m.ty.n==='puffer'){
+  if(m.windup>0){m.windup=Math.max(0,m.windup-dt);if(m.windup===0){if(d<=reach)hurtP(m.ty.d);m.cd=2.4;}}
+  else{m.a=Math.atan2(dx,dz);if(d>reach){g.position.x+=Math.sin(m.a)*m.ty.sp*dt*speedFactor;g.position.z+=Math.cos(m.a)*m.ty.sp*dt*speedFactor;}else{m.cd-=dt;if(m.cd<=0)m.windup=1.2;}}
+ }else{
+  if(m.dash>0){m.dash=Math.max(0,m.dash-dt);if(d<=reach){hurtP(m.ty.d);m.dash=0;m.cd=2;}else{g.position.x+=Math.sin(m.a)*m.ty.sp*2*dt*speedFactor;g.position.z+=Math.cos(m.a)*m.ty.sp*2*dt*speedFactor;}}
+  else if(m.windup>0){m.windup=Math.max(0,m.windup-dt);if(m.windup===0){m.dash=.45;m.dashWait=6;m.cd=2;}}
+  else{m.a=Math.atan2(dx,dz);if(d>4&&d<7&&m.dashWait<=0)m.windup=.9;else if(d>reach){g.position.x+=Math.sin(m.a)*m.ty.sp*dt*speedFactor;g.position.z+=Math.cos(m.a)*m.ty.sp*dt*speedFactor;}else{m.cd-=dt;if(m.cd<=0)m.windup=.9;}}
+ }
+ return true;
+}
+function clampNewHabitat(m){if(m.ty.n!=='puffer'&&m.ty.n!=='shrimp')return;const p=m.g.position,range=ZR[m.ty.n],r=Math.hypot(p.x,p.z);if(r<range[0]||r>range[1]){const a=r>1e-6?Math.atan2(p.x,p.z):m.a,limit=Math.max(range[0],Math.min(range[1],r));p.x=Math.sin(a)*limit;p.z=Math.cos(a)*limit;}}
 function assignPursuers(){const detect=P.tauntT>0?45:(P.lv<=3?9:14),release=detect+4;let count=0;
 for(const m of mons){if(m.ty.n==='boss')continue;const d=Math.hypot(m.g.position.x-sea.position.x,m.g.position.z-sea.position.z);if(m.dead>0||m.flee>0||grace>0||d>release||(m.ty.n!=='ray'&&Math.hypot(sea.position.x,sea.position.z)<safeRadius))m.aggro=false;if(m.aggro)count++;}
 if(grace>0)return;for(const m of mons){if(count>=3)break;if(m.ty.n==='boss')continue;if(m.dead>0||m.flee>0||m.aggro||(m.ty.n!=='ray'&&Math.hypot(sea.position.x,sea.position.z)<safeRadius))continue;const d=Math.hypot(m.g.position.x-sea.position.x,m.g.position.z-sea.position.z);if(d<detect){m.aggro=true;count++;}}}
@@ -546,6 +583,7 @@ g.position.x=x;g.position.z=z;dx=sea.position.x-x;dz=sea.position.z-z;d=Math.hyp
 m.k+=dt;m.slow=Math.max(0,(m.slow||0)-dt);m.flee=Math.max(0,m.flee-dt);m.dashWait=Math.max(0,m.dashWait-dt);const speedFactor=m.slow>0?.5:1;
 if(m.ty.n==='boss'){bossAI(m,dt,dx,dz,d,speedFactor);}
 else if(m.flee>0){m.a=Math.atan2(-dx,-dz);g.position.x+=Math.sin(m.a)*m.ty.sp*dt*speedFactor;g.position.z+=Math.cos(m.a)*m.ty.sp*dt*speedFactor;}
+else if(m.aggro&&specialMonsterAI(m,dt,dx,dz,d,speedFactor)){}
 else if(m.aggro){
   if(m.ty.n==='eel'&&m.dash>0){m.dash-=dt;if(d<=1.8+m.ty.s){P.hp-=m.ty.d*(P.sh>0?.3:1)*P.dmgTaken;m.dash=0;m.cd=1.3;}else{g.position.x+=Math.sin(m.a)*m.ty.sp*2*dt*speedFactor;g.position.z+=Math.cos(m.a)*m.ty.sp*2*dt*speedFactor;}}
   else if(m.windup>0){m.windup-=dt;if(m.windup<=0){if(m.ty.n==='eel'){m.dash=.45;m.dashWait=5;}else{if(d<=1.8+m.ty.s)P.hp-=m.ty.d*(P.sh>0?.3:1)*P.dmgTaken;m.cd=1.3;}}}
@@ -557,8 +595,8 @@ else if(d<12){const a=Math.atan2(dx,dz)+(m.orbit||1)*Math.PI/2;m.a=a;g.position.
 else{m.a+=(Math.random()-.5)*dt*4;g.position.x+=Math.sin(m.a)*.8*dt*speedFactor;g.position.z+=Math.cos(m.a)*.8*dt*speedFactor;}
 // Keep stronger species outside the training area, even while wandering.
 if(m.ty.n!=='ray'){const sd=Math.hypot(g.position.x,g.position.z);if(sd<safeRadius){const a=sd>1e-6?Math.atan2(g.position.x,g.position.z):m.a;g.position.x=Math.sin(a)*safeRadius;g.position.z=Math.cos(a)*safeRadius;}}
-g.position.x=Math.max(-95,Math.min(95,g.position.x));g.position.z=Math.max(-95,Math.min(95,g.position.z));
-if(!m.aggro){m.windup=0;m.dash=0;}if(m.flash<=0)m.mat.emissive.setHex(m.windup>0?0x693d00:0);
+clampNewHabitat(m);g.position.x=Math.max(-95,Math.min(95,g.position.x));g.position.z=Math.max(-95,Math.min(95,g.position.z));
+if(!m.aggro){m.windup=0;m.dash=0;}if(m.puff)m.puff.scale.setScalar(1+(m.windup>0?.2*(1-m.windup/1.2):0));if(m.flash<=0)m.mat.emissive.setHex(m.windup>0?0x693d00:0);
 g.position.y=h(g.position.x,g.position.z)+.3+Math.sin(m.k*2)*.15;g.rotation.y=m.a;if(m.tail)m.tail.rotation.y=Math.sin(m.k*5)*.4;if(m.segs)m.segs.forEach((q,j)=>{q.position.x=Math.sin(m.k*4-j*.6)*.2*(1+j*.1);});
 const r=m.hp/m.ty.hp;m.bar.position.set(g.position.x,g.position.y+2.8*m.ty.s,g.position.z);m.bar.quaternion.copy(cam.quaternion);m.bf.scale.x=Math.max(.001,r);m.bf.position.x=-.8*(1-r);});
 if(P.hp<=0){sea.position.set(0,0,0);P.hp=P.max;grace=graceDuration;mons.forEach(m=>{m.aggro=false;if(m.dead<=0&&Math.hypot(m.g.position.x,m.g.position.z)<12){const a=Math.atan2(m.g.position.x,m.g.position.z)||m.a;m.g.position.x=Math.sin(a)*12;m.g.position.z=Math.cos(a)*12;}});say('สลบ! ฟื้นที่จุดเริ่มต้น');}else P.hp=Math.min(P.max,P.hp+dt*P.healMul*(P.song>0?P.max*.08:1));
@@ -644,9 +682,9 @@ function exportSaveBackup(){
     setTimeout(()=>URL.revokeObjectURL(url),60000);say('เริ่มดาวน์โหลดเซฟ โปรดตรวจไฟล์ในอุปกรณ์');
   }catch(e){if(url)URL.revokeObjectURL(url);say('สำรองเซฟไม่สำเร็จ: '+(e&&e.message?e.message:'ไม่สามารถอ่านเซฟได้'));}
 }
-const ZN={ray:'หาดตื้น',shark:'ป่าสาหร่าย',eel:'ป่าสาหร่าย',whale:'ถ้ำมืด',boss:'ถ้ำมืดลึก'};
+const ZN={ray:'หาดตื้น',shark:'ป่าสาหร่าย',eel:'ป่าสาหร่าย',whale:'ถ้ำมืด',boss:'ถ้ำมืดลึก',puffer:'ป่าสาหร่าย',shrimp:'ถ้ำมืด'};
 const dailyHtml=()=>{const evolution='<b>🧬 ขั้น '+P.ev+'/3 • เอสเซนส์ '+P.es+'</b><br>';const d=P.dly;if(!d||!Array.isArray(d.qs))return evolution;return evolution+'<b>🎯 ภารกิจวันนี้</b> (ล็อกอินต่อเนื่อง '+d.s+' วัน)<br>'+d.qs.map((q,i)=>(d.f[i]?'✅ ':'⬜ ')+QTXT[q.e](q.n)+(q.n>1?' ('+d.k[i]+'/'+q.n+')':'')).join('<br>')+'<br>'+(d.b?'🎉 ครบทุกภารกิจแล้ว':'ทำครบทั้ง 3 ข้อ รับโบนัสเพิ่ม')+'<hr style="border:0;border-top:1px solid #ffffff2e">';};
-const renderDex=()=>{$('dex').innerHTML=dailyHtml()+'<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' • '+(ZN[t.n]||'')+' • ล้มแล้ว '+(P.kc[t.n]||0)+' (ดรอป: '+t.dr+')':'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b> <button id="equipGear">🎒 สวมอุปกรณ์</button><br>'+(Object.keys(P.inv).map(k=>inventoryLabel(k)+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button> <button id="zoomIn">ซูมเข้า +</button> <button id="zoomOut">ซูมออก −</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วหนึ่งนิ้วบนพื้นน้ำเพื่อหมุนกล้อง 360° บีบสองนิ้วเพื่อซูมเข้า-ออก ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: ล้อเมาส์ หรือ - = ซูม, Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='equipGear'){$('dex').style.display='none';renderEvo();evo.style.display='flex';$('gearTitle').scrollIntoView({block:'start'});return;}if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){location.reload();return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
+const renderDex=()=>{$('dex').innerHTML=dailyHtml()+'<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' • '+(ZN[t.n]||'')+' • ล้มแล้ว '+(P.kc[t.n]||0)+' (ดรอป: '+t.dr+')'+(t.hint?'<br><small>'+t.hint+'</small>':''):'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b> <button id="equipGear">🎒 สวมอุปกรณ์</button><br>'+(Object.keys(P.inv).map(k=>inventoryLabel(k)+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button> <button id="zoomIn">ซูมเข้า +</button> <button id="zoomOut">ซูมออก −</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วหนึ่งนิ้วบนพื้นน้ำเพื่อหมุนกล้อง 360° บีบสองนิ้วเพื่อซูมเข้า-ออก ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: ล้อเมาส์ หรือ - = ซูม, Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='equipGear'){$('dex').style.display='none';renderEvo();evo.style.display='flex';$('gearTitle').scrollIntoView({block:'start'});return;}if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){location.reload();return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
 // Fullscreen / PWA / HUD. iPhone Safari has no Fullscreen API, so there the honest answer
 // is Add to Home Screen, which gives a real fullscreen standalone window.
 const standalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));

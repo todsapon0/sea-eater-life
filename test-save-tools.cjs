@@ -99,3 +99,7 @@ const equipmentSave=backup({sea:rec(20,{ev:0,mu:{head:'fang:8:rare',tail:'whip:2
 assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(equipmentSave)),equipmentSave);
 for(const key of ['eq:fang:0:common','eq:fang:21:rare','eq:fang:1:fake','eq:unknown:1:common'])assert.throws(()=>tools.parseBackup(JSON.stringify(backup({sea:rec(1,{inv:{[key]:1}})}))));
 console.log('PASS: equipment level/rarity stacks and equipped IDs survive backup round trip; invalid equipment rejected');
+
+const newMonsterSave=backup({sea:rec(20,{mu:{head:'crest:10:epic',back:'spine:8:rare',tail:'lance:18:rare'},inv:{'eq:crest:10:epic':1,'eq:spine:8:rare':1,'eq:lance:18:rare':1,'หนามตะไคร่':2,'เปลือกผลึก':1},kc:{puffer:2,shrimp:1},seen:{puffer:1,shrimp:1}})});
+assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(newMonsterSave)),newMonsterSave);
+console.log('PASS: new monster discovery, kills, materials and equipment save round trip');

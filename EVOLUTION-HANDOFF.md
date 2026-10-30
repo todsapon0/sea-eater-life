@@ -21,7 +21,7 @@ no paid services, no real Supabase writes or provisioning.
 
 ## Implementation / storage
 
-`index.html` remains the single-file Three.js r128 game. `ORG` contains the 15 base
+`index.html` remains the single-file Three.js r128 game. `ORG` contains the 18 base
 attachments; `RARITY`, `GEAR_DROPS`, `gearFrom`, `canEquip`, `rollGear`, `awardGear`
 implement loot. `organFor` filters ownership, player level, slot and species for
 both stats and rendering. `applyJob` resets all multipliers then combines job,
@@ -47,6 +47,8 @@ Default loot balance (owner has not separately tuned these rates):
 | eel | 8–16 | horn, crys, rud |
 | whale | 12–20 | scale, shell, wing |
 | boss | 16–20 | whip, glow, orb |
+| puffer | 4–10 | crest, spine, bub |
+| shrimp | 12–20 | lance, crys, rud |
 
 Normal enemies: 20% equipment drop, rarity common/rare/epic = 75/22/3%.
 Boss: guaranteed equipment, rare/epic = 70/30%. Existing material and essence
@@ -87,7 +89,7 @@ or `EVOLUTION_ARTIFACTS`, not git. Omit EVOLUTION_QUICK for all 6 jobs × 4 view
 Equipment Node tests cover empty/open slots at ev0, ownership, item levels, species,
 rarity stats, deterministic drops for all organ/enemy combinations and count caps.
 Browser regression covers evolution, equipment selection, under-level disabling,
-15-organ multiplier checks per species, save/reload, essence, heal/whirlpool and
+18-organ multiplier checks per species, save/reload, essence, heal/whirlpool and
 mobile UI. Touch tests cover 390×844, 844×390, 320×568: near misses, pointer capture,
 second-touch ownership, walking+attack, independent camera, cancel and pinch.
 
@@ -117,3 +119,44 @@ THREE_JS_PATH=/path/to/trusted/three-r128.min.js python3 test-gear-ui.py
 It checks comparison signs/tradeoffs, level gating text, all sorting modes,
 inventory unchanged by sorting/equip/remove, actual stats, and save/reload.
 Screenshot: `/tmp/sea-evolution/equipment-comparison.png` (outside git).
+
+
+## New encounters and loot
+
+Two original low-poly monster models, no external assets:
+
+- `puffer` / ปลาปักเป้าตะไคร่: kelp forest radius 30–60, HP65, XP20,
+  damage9, essence2, material หนามตะไคร่. Inflates/emissive-warns for 1.2 seconds
+  before a short-range hit; 2.4-second recovery. Backing away dodges it.
+- `shrimp` / กุ้งหอกผลึก: cave radius 62–95, HP85, XP32, damage12, essence3,
+  material เปลือกผลึก. Warns 0.9 seconds before a locked-direction 0.45-second
+  dash. Side-step to dodge; each dash hits at most once, with recovery/cooldown.
+
+`specialMonsterAI` handles only new species; old species retain their existing AI.
+`clampNewHabitat` keeps new species in their zones. Central radius28 training area
+and three-pursuer cap remain. `monsterRoster` keeps 21 active monsters:
+5 ray, 4 shark, 4 whale, 4 eel, 2 puffer, 1 shrimp, 1 boss. Geometry is created at
+startup, not per attack/frame. Real-device performance remains unverified.
+
+New shared equipment (same level/rarity scaling and ownership rules):
+- `crest` head / มงกุฎปะการัง: base HP×1.06, healing×1.08.
+- `spine` back / แผงหนามปักเป้า: incoming damage×0.94, HP×1.08.
+- `lance` tail / แพนหางผลึก: damage×1.06, cooldown recovery×1.05.
+
+New equipment drops use the existing 20% normal-enemy chance and 75/22/3 rarity
+weights. Materials keep the existing 60% chance. Daily quests can target puffer
+for Lv6+ and shrimp for Lv12+. Bestiary includes discovery/kills/materials and
+short dodge hints. Existing save fields store all progress; reserved eq key
+validation now accepts the three new IDs.
+
+```
+node test-monsters.cjs
+THREE_JS_PATH=/path/to/trusted/three-r128.min.js python3 test-monsters.py
+```
+
+Unit checks: attack telegraphs, dodging, single-hit dash, recovery, legacy AI
+routing and habitat clamps. Browser checks: 100 spawn samples, exact roster,
+starter-area exclusion, pursuer cap, essence/discovery, new equipment awards,
+backup-compatible save/reload, 4 views per monster and gear on all 3 species.
+Model screenshots pause simulation and hide transient messages/debug output;
+they are not FPS benchmarks. Images stay in `/tmp/sea-evolution`, outside git.
