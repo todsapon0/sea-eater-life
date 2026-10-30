@@ -19,6 +19,7 @@
     if (r.xp !== undefined && !(typeof r.xp === 'number' && isFinite(r.xp) && r.xp >= 0 && r.xp <= 1e7)) fail('EXP ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.qd !== undefined && !isInt(r.qd, 0, 2)) fail('เควสต์ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.q !== undefined && !isInt(r.q, 0, 20)) fail('ความคืบหน้าเควสต์ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    if (r.st !== undefined && !isInt(r.st, 0, 10)) fail('ดาวระดับของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.job !== undefined && !(typeof r.job === 'string' && r.job.length <= 20)) fail('อาชีพของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.kc !== undefined) {
       if (!isPlain(r.kc)) fail('สถิติของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
