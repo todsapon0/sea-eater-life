@@ -67,3 +67,24 @@ write Supabase data without explicit authorization.
   **not** establish a performance target or rule out a smaller regression.
 - The visual capture run covers all six existing jobs at four camera angles.
   Owner approval of the rendered attachments and real-device FPS is still pending.
+
+## Follow-up: larger joystick / camera separation
+
+User reported that the left joystick was too small and near misses rotated the
+camera. `#movezone` now owns a larger bottom-left touch area, including outside
+of the visible circle. It captures the first movement pointer; a second pointer
+cannot steal it. Releasing, cancelling, losing capture or window blur resets it.
+Camera gestures remain on the canvas; walking + attack and walking + intentional
+camera movement still work independently.
+
+The circle is 144px on phones (previously 104px), 132px on narrow/landscape layouts
+(previously 88px in landscape), and 160px on larger screens. The knob is 58–64px;
+its travel stays inside the circle. Existing buttons remain above the pad and
+panels remain scrollable.
+
+Run `THREE_JS_PATH=/path/to/three-r128.min.js python3 test-touch-controls.py`.
+CDP touch tests passed at 390×844, 844×390 and 320×568: near misses, capture outside
+pad bounds, second-finger ownership, attack while walking, independent camera,
+cancellation and two-finger canvas pinch. No console/page errors. Screenshots:
+`/tmp/sea-evolution/touch-controls-<width>x<height>.png` (not committed).
+Confirm the thumb feel on an actual phone; these are Chromium emulation checks.

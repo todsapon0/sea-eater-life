@@ -127,12 +127,20 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #topbar>#evob.ready{border-color:#ffd76a!important;box-shadow:0 0 14px #ffd76a}
 #evo{touch-action:pan-y;align-items:flex-start}#evo .jbox{margin:auto;max-width:420px;padding:12px 0}#evo section{display:flex;flex-direction:column;gap:8px}#evo h3{margin:10px 0 0}#evo button:disabled{opacity:.45}#evo button[aria-pressed=true]{border-color:#ffd76a;background:#356b65}
 @media(max-width:440px){#topbar{display:grid;grid-template-columns:repeat(3,38px)}#buffs{top:calc(100px + env(safe-area-inset-top,0px))}#dex{top:calc(104px + env(safe-area-inset-top,0px));max-height:calc(100dvh - 116px)}}
+/* A generous movement pad owns bottom-left touches, including near misses of the circle. */
+#movezone{position:fixed;left:0;bottom:0;width:clamp(160px,48vw,240px);height:min(42vh,260px);min-height:180px;z-index:2;touch-action:none;user-select:none}
+#stick{width:160px;height:160px;left:calc(20px + env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+#knob{width:64px;height:64px;margin:-32px 0 0 -32px;pointer-events:none}
+#stick::after{content:'เดิน';position:absolute;bottom:7px;left:0;right:0;text-align:center;font-size:11px;color:#eaf7f5b3;pointer-events:none}
+#movezone.active #stick{border-color:#b7f2ff;box-shadow:0 0 12px #8ee8ff55,inset 0 0 14px #001e2666}
+@media(max-width:480px){#stick{width:144px;height:144px;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px))}}
+@media(max-width:360px),(max-height:480px){#stick{width:132px;height:132px;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px))}#knob{width:58px;height:58px;margin:-29px 0 0 -29px}}
 </style>
 </head>
 <body>
 <div id="zoomWarn" role="status" style="display:none;position:fixed;left:0;top:0;z-index:30;box-sizing:border-box;padding:8px 12px;background:#b5702cf2;color:#fff;font-size:14px;line-height:1.4;text-align:center;pointer-events:none">หน้าจอถูกซูมเข้าอยู่ ใช้สองนิ้วบีบเพื่อย่อกลับ ปุ่มจะกลับมาครบ</div>
 <div id="hud"><b>Sea Eater Life v0.5.4</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><div id="topbar"><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="evob" aria-label="วิวัฒนาการ">🧬</button><button id="dexb">สมุด</button></div>
-<div id="stick"><div id="knob"></div></div>
+<div id="movezone" role="group" aria-label="จอยเดิน: ลากนิ้วในพื้นที่มุมซ้ายล่าง"><div id="stick"><div id="knob"></div></div></div>
 <button id="slam">ทุบพื้น</button><button id="devour" class="sk">กิน</button><button id="taunt" class="sk">ยั่ว</button><button id="shield" class="sk">โล่</button><div id="skillinfo" role="dialog" aria-modal="true" aria-label="คำอธิบายสกิล"><div class="card"><b>สกิลของตัวละคร</b><div id="skilltext"></div><button id="closehelp">ปิด</button></div></div><div id="dex"></div><div id="pick"><b>เลือกตัวละคร</b><button data-c="sea">Sea Eater<br><small>Warrior / Tank — กัดระยะประชิด</small></button><button data-c="bloop">Bloop<br><small>Healer / Support — ยิงฟอง รักษา</small></button><button data-c="maja">El Gran Maja<br><small>Mage / DPS — โจมตีไกล ควบคุมศัตรู</small></button></div><button id="bite">กัด</button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -508,7 +516,7 @@ const q=qs[P.qd];$('qt').textContent=document.body.classList.contains('compact')
 
 // iOS browser gestures must not zoom the play surface; preserve panel scrolling.
 ['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,e=>{if(e.cancelable)e.preventDefault();},{passive:false}));
-const gameSurface=e=>e.target instanceof Element&&!!e.target.closest('canvas,#stick,#bite,#slam,#devour,#taunt,#shield,#dexb');
+const gameSurface=e=>e.target instanceof Element&&!!e.target.closest('canvas,#movezone,#stick,#bite,#slam,#devour,#taunt,#shield,#dexb');
 document.addEventListener('touchmove',e=>{if(e.touches.length>1&&gameSurface(e)&&e.cancelable)e.preventDefault();},{passive:false});
 let lastTapTime=0,lastTapTarget=null;document.addEventListener('touchend',e=>{if(!gameSurface(e)||e.changedTouches.length!==1)return;const now=performance.now();if(e.target===lastTapTarget&&now-lastTapTime<300&&e.cancelable)e.preventDefault();lastTapTime=now;lastTapTarget=e.target;},{passive:false});
 // Hybrid follow camera: it trails the player, and dragging on the water orbits it 360 degrees.
@@ -554,12 +562,13 @@ const recenterCam=()=>{CAM.yaw=face+Math.PI;CAM.pitch=.62;};
 
 // input
 let jx=0,jz=0,sid=null,biteT=0;const keys={};
-const stick=document.getElementById('stick'),knob=document.getElementById('knob');
-function setK(e){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const m=r.width/2-10,l=Math.hypot(dx,dy);if(l>m){dx*=m/l;dy*=m/l;}knob.style.transform='translate('+dx+'px,'+dy+'px)';jx=dx/m;jz=dy/m;}
-stick.addEventListener('pointerdown',e=>{sid=e.pointerId;stick.setPointerCapture(sid);setK(e);});
-stick.addEventListener('pointermove',e=>{if(e.pointerId===sid)setK(e);});
-const end=e=>{if(e.pointerId===sid){sid=null;jx=jz=0;knob.style.transform='';}};
-stick.addEventListener('pointerup',end);stick.addEventListener('pointercancel',end);
+const stick=document.getElementById('stick'),knob=document.getElementById('knob'),movezone=document.getElementById('movezone');
+function setK(e){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const m=Math.max(1,(r.width-knob.getBoundingClientRect().width)/2),l=Math.hypot(dx,dy);if(l>m){dx*=m/l;dy*=m/l;}knob.style.transform='translate('+dx+'px,'+dy+'px)';jx=dx/m;jz=dy/m;}
+movezone.addEventListener('pointerdown',e=>{if(sid!==null||e.button>0)return;e.preventDefault();e.stopPropagation();sid=e.pointerId;movezone.setPointerCapture(sid);movezone.classList.add('active');setK(e);});
+movezone.addEventListener('pointermove',e=>{if(e.pointerId!==sid)return;e.preventDefault();setK(e);});
+const end=e=>{if(e.pointerId===sid){sid=null;jx=jz=0;knob.style.transform='';movezone.classList.remove('active');if(movezone.hasPointerCapture(e.pointerId))movezone.releasePointerCapture(e.pointerId);}};
+['pointerup','pointercancel','lostpointercapture'].forEach(type=>movezone.addEventListener(type,end));
+window.addEventListener('blur',()=>{if(sid!==null)end({pointerId:sid});});
 const doBite=()=>{if(biteT<=0){biteT=.45;if(CLS==='maja')shoot(9+P.lv*3,18,14,0x8cf4ff,.24);else setTimeout(()=>hit(false),150);}};
 const doSlam=()=>{if(slamCD<=0&&biteT<=0){playTone('skill');biteT=.45;if(CLS==='maja'){slamCD=10;whirlpool();say('Whirlpool! น้ำวนชะลอศัตรู');}else if(CLS==='bloop'){slamCD=6;P.hp=Math.min(P.max,P.hp+P.max*.3*P.healMul);say('คลื่นรักษา! ฟื้นเลือด');}else{slamCD=5;setTimeout(()=>hit(true),220);}}};
 $('slam').addEventListener('pointerdown',e=>{e.preventDefault();doSlam();});const doDevour=()=>{if(CLS==='maja'){if(P.devCD>0||biteT>0)return;P.devCD=7;biteT=.45;shoot(22+P.lv*3,22,18,0xbd8cff,.48);say('Abyss Blast!');return;}if(CLS==='bloop'){if(P.devCD>0)return;P.devCD=14;P.bless=8*P.blMul;say('พรแห่งทะเล! โจมตีแรงขึ้น');return;}if(P.devCD>0||biteT>0)return;P.devCD=8;biteT=.45;let n=0;mons.forEach(m=>{if(m.dead>0)return;const dx=m.g.position.x-sea.position.x,dz=m.g.position.z-sea.position.z,d=Math.hypot(dx,dz)||1;if(d<4.5&&(dx*Math.sin(face)+dz*Math.cos(face))/d>.3&&m.hp<=m.ty.hp*.35){m.hp=0;kill(m);n++;}});if(n){P.hp=Math.min(P.max,P.hp+P.max*.3*n);say('กินสำเร็จ! ฟื้นเลือด');}else{hit(false);P.hp=Math.min(P.max,P.hp+10);}};const doTaunt=()=>{if(CLS==='maja')return;if(CLS==='bloop'){if(P.tauntCD>0)return;P.tauntCD=12;P.song=6;say('เพลงฟื้นชีพ ฟื้นเลือดต่อเนื่อง');return;}if(P.tauntCD>0)return;P.tauntCD=10;P.tauntT=4;say('ยั่ว! ศัตรูรุมมาหา');};const doShield=()=>{if(CLS==='maja')return;if(P.shCD>0)return;P.shCD=12;P.sh=5*P.shMul;say('โล่ลดดาเมจ 5 วิ');};['devour','taunt','shield'].forEach((id,i)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();playTone('skill');[doDevour,doTaunt,doShield][i]();}));function makeSaveBackup(storage,origin,now){
