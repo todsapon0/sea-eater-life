@@ -19,6 +19,12 @@
     if (r.xp !== undefined && !(typeof r.xp === 'number' && isFinite(r.xp) && r.xp >= 0 && r.xp <= 1e7)) fail('EXP ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.qd !== undefined && !isInt(r.qd, 0, 2)) fail('เควสต์ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.q !== undefined && !isInt(r.q, 0, 20)) fail('ความคืบหน้าเควสต์ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    if (r.ev !== undefined && !isInt(r.ev, 0, 3)) fail('ขั้นวิวัฒนาการไม่ถูกต้อง');
+    if (r.es !== undefined && !isInt(r.es, 0, 1e7)) fail('เอสเซนส์ไม่ถูกต้อง');
+    if (r.mu !== undefined) {
+      if (!isPlain(r.mu) || (Object.getPrototypeOf(r.mu) !== Object.prototype && Object.getPrototypeOf(r.mu) !== null)) fail('อวัยวะไม่ถูกต้อง');
+      Object.keys(r.mu).forEach(function (k) { if (['head','back','tail'].indexOf(k) < 0 || typeof r.mu[k] !== 'string' || r.mu[k].length > 20) fail('อวัยวะไม่ถูกต้อง'); });
+    }
     if (r.st !== undefined && !isInt(r.st, 0, 10)) fail('ดาวระดับของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.job !== undefined && !(typeof r.job === 'string' && r.job.length <= 20)) fail('อาชีพของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.kc !== undefined) {

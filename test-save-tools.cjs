@@ -83,3 +83,14 @@ throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(7, { job: 5 }
 throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(7, { dly: { ...dly, k: [1, 2] } }) }))), 'ภารกิจรายวัน');
 
 console.log('PASS: save-tools (compat with existing export, code round trip, validation, plan/apply, rollback)');
+
+// Optional evolution fields preserve old saves and reject malformed records.
+assert.doesNotThrow(() => tools.parseBackup(JSON.stringify(backup({sea:rec(1)}))));
+for (const extra of [{ev:0,es:0,mu:{}},{ev:3,es:1e7,mu:{head:'fang',back:'scale',tail:'whip'}}]) {
+ const b=backup({sea:rec(20,extra)});
+ assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(b)),b);
+}
+for (const extra of [{ev:-1},{ev:4},{ev:1.5},{ev:'1'},{ev:null},{es:-1},{es:1e7+1},{es:1.1},{es:'1'},{es:null},{mu:[]},{mu:null},{mu:'fang'},{mu:{leg:'fang'}},{mu:{head:1}},{mu:{tail:'x'.repeat(21)}},{mu:JSON.parse('{"__proto__":"fang"}')}]) {
+ assert.throws(()=>tools.parseBackup(JSON.stringify(backup({sea:rec(20,extra)}))));
+}
+console.log('PASS: evolution save boundaries, legacy compatibility and mutation validation');
