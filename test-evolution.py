@@ -15,7 +15,7 @@ server=http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler);threading.Thread
 url=f'http://127.0.0.1:{server.server_port}/?debug=1'
 html=(root/'index.html').read_text()
 # Test-only instrumentation served in memory: never added to repository or shipped.
-html=html.replace('loop();\n}', 'window.__evoTest={P,sea,cam,ren,ORG,JOBS,applyJob,save,kill,mons,updateEvo,organFor,evoReady,renderEvo,doSlam,whirlpool,updateMaja,vortices,resetCooldown:()=>{slamCD=0;biteT=0}};loop();\n}')
+html=html.replace('loop();\n}', 'window.__evoTest={P,sea,cam,ren,ORG,JOBS,applyJob,save,kill,mons,updateEvo,organFor,evoReady,renderEvo,doSlam,whirlpool,updateMaja,vortices,awardGear,gearFrom,canEquip,resetCooldown:()=>{slamCD=0;biteT=0}};loop();\n}')
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  for cls,job in [('sea','guardian'),('bloop','priest'),('maja','frost')]:
@@ -31,14 +31,19 @@ with sync_playwright() as p:
    else:r.continue_()
   ctx.route('**/*',route)
   key={'sea':'sel01','bloop':'sel01b','maja':'sel01m'}[cls]
-  seed={'lv':20,'xp':0,'q':0,'qd':0,'inv':{},'seen':{},'job':job,'st':2,'es':600}
+  seed={'lv':20,'xp':0,'q':0,'qd':0,'inv':{},'seen':{},'job':job,'st':2,'es':600,'mu':{'head':'fang'}}
   page.add_init_script(f"if(!localStorage.getItem('seeded')){{localStorage.setItem('seeded','1');localStorage.setItem('selcls',{json.dumps(cls)});localStorage.setItem({json.dumps(key)},JSON.stringify({json.dumps(seed)}));}}")
   def load():
    page.goto(url,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__evoTest && document.querySelector("canvas")')
   load();page.evaluate('''()=>{const t=__evoTest,P=t.P,seed={...P};for(const c of [{ev:0,lv:7,es:600,job:seed.job,want:false},{ev:0,lv:8,es:39,job:seed.job,want:false},{ev:0,lv:8,es:40,job:seed.job,want:true},{ev:1,lv:13,es:600,job:seed.job,want:false},{ev:2,lv:20,es:600,job:'',want:false},{ev:2,lv:20,es:600,job:'__proto__',want:false},{ev:2,lv:20,es:600,job:'invalid',want:false},{ev:2,lv:20,es:360,job:seed.job,want:true}]){Object.assign(P,c);if(t.evoReady()!==c.want)throw Error('requirements gate');}Object.assign(P,seed);t.applyJob();}''');page.evaluate('window.__cam.dist=9');page.wait_for_timeout(2500)
   baseline=page.locator('#debug').inner_text()
   page.locator('#evob').click();assert page.locator('[data-evolve]').is_enabled()
-  assert page.locator('[data-slot="back"]').count()==0
+  assert page.locator('#evo section').count()==3
+  assert page.evaluate('Object.keys(__evoTest.P.mu).length')==0
+  assert page.locator('#evo section').filter(has_text='ยังไม่มีอุปกรณ์').count()==3
+  page.evaluate("()=>{const t=__evoTest;t.P.inv['eq:fang:20:rare']=1;t.P.lv=1;t.renderEvo();}")
+  assert page.locator('[data-organ="fang:20:rare"]').is_disabled()
+  page.evaluate("()=>{const t=__evoTest;delete t.P.inv['eq:fang:20:rare'];t.P.lv=20;t.renderEvo();}")
   page.once('dialog',lambda d:d.dismiss());page.locator('[data-evolve]').click();assert page.evaluate('__evoTest.P.ev')==0
   page.on('dialog',lambda d:d.accept())
   for stage,ess in [(1,560),(2,420),(3,60)]:
@@ -49,12 +54,12 @@ with sync_playwright() as p:
   report=page.evaluate('''()=>{const t=__evoTest,P=t.P;let count=0;const fields={dm:'dmgMul',hp:'hpMul',tk:'dmgTaken',heal:'healMul',cdr:'cdr',shm:'shMul',bl:'blMul',sp:'spMul'};
    const near=(a,b)=>{if(Math.abs(a-b)>1e-8)throw Error(a+' != '+b)};
    const j=t.JOBS[localStorage.selcls][P.job];P.mu={};t.applyJob();near(P.hpMul,(j.hp||1)*1.08*1.36);near(P.dmgMul,(j.dm||1)*1.08*1.18);
-   const old=P.ev;P.ev=0;P.mu={head:'fang',back:'scale',tail:'whip'};t.applyJob();near(P.dmgMul,(j.dm||1)*1.08);P.ev=old;
-   for(const slot of Object.keys(t.ORG))for(const o of t.ORG[slot]){P.mu={};t.applyJob();const base={...P};P.mu[slot]=o.id;t.applyJob();for(const [k,f]of Object.entries(fields))near(P[f],base[f]*((!o.only||o.only===localStorage.selcls)?o[k]||1:1));count++;}
-   P.mu={};t.applyJob();const hp=P.hp;P.mu.back='scale';t.applyJob();if(P.hp<hp)throw Error('HP decreased');P.mu={};t.applyJob();return {organsChecked:count};}''')
+   const old=P.ev;P.ev=0;P.mu={head:'fang:1:common'};t.applyJob();near(P.dmgMul,(j.dm||1)*1.08);if(t.organFor('head'))throw Error('unowned gear');for(const id of ['fang','scale','whip'])P.inv['eq:'+id+':1:common']=1;P.mu={head:'fang:1:common',back:'scale:1:common',tail:'whip:1:common'};t.applyJob();near(P.dmgMul,(j.dm||1)*1.08*1.12*1.08);P.ev=old;
+   for(const slot of Object.keys(t.ORG))for(const o of t.ORG[slot]){P.mu={};t.applyJob();const base={...P};P.inv['eq:'+o.id+':1:common']=1;P.mu[slot]=o.id+':1:common';t.applyJob();for(const [k,f]of Object.entries(fields))near(P[f],base[f]*((!o.only||o.only===localStorage.selcls)?o[k]||1:1));count++;}
+   P.mu={};t.applyJob();const hp=P.hp;P.mu.back='scale:1:common';t.applyJob();if(P.hp<hp)throw Error('HP decreased');P.mu={};t.applyJob();t.renderEvo();return {organsChecked:count};}''')
   print(cls+': all organ multipliers PASS',flush=True)
   # Select species-specific organs through the actual UI.
-  choices={'sea':['jaw','shell','spike'],'bloop':['bub','wing','glow'],'maja':['horn','crys','orb']}[cls]
+  choices=[id+':1:common' for id in {'sea':['jaw','shell','spike'],'bloop':['bub','wing','glow'],'maja':['horn','crys','orb']}[cls]]
   for slot,organ in zip(['head','back','tail'],choices):page.locator(f'[data-slot="{slot}"][data-organ="{organ}"]').click()
   page.locator('[data-remove="tail"]').click();assert page.evaluate('__evoTest.P.mu.tail') is None
   page.locator(f'[data-organ="{choices[2]}"]').click()
@@ -74,14 +79,16 @@ with sync_playwright() as p:
   page.evaluate('(job)=>{__evoTest.P.job=job;__evoTest.applyJob();__evoTest.save();}',job)
   load();assert page.evaluate('__evoTest.P.ev')==3;assert page.evaluate('__evoTest.P.mu')==saved['mu']
   assert page.evaluate('__evoTest.P.es')==60
+  for item in choices:assert page.evaluate('(id)=>__evoTest.P.inv["eq:"+id]',item)==1
   page.evaluate('window.__cam.dist=9');page.wait_for_timeout(2000)
+  page.locator('#dexb').dispatch_event('pointerdown');page.locator('#equipGear').click();assert page.locator('#evo').is_visible();page.locator('[data-close]').click()
   # Actual healing and whirlpool ticks honor mutation/job multipliers.
   if cls=='bloop':
    page.evaluate("()=>{const t=__evoTest;t.P.hp=10;t.resetCooldown();const want=Math.min(t.P.max,10+t.P.max*.3*t.P.healMul);t.doSlam();if(Math.abs(t.P.hp-want)>1e-8)throw Error('healing multiplier');}")
   if cls=='maja':
    page.evaluate("()=>{const t=__evoTest;t.whirlpool();const m=t.mons[0];m.dead=0;m.hp=10000;m.g.position.copy(t.vortices[0].mesh.position);t.updateMaja(.01);if(Math.abs((10000-m.hp)-(4+t.P.lv)*t.P.dmgMul)>1e-8)throw Error('whirlpool multiplier');}")
   # Kill essence rewards, no backend.
-  rewards=page.evaluate('''()=>{const t=__evoTest,out={};for(const name of ['ray','shark','eel','whale','boss']){const m=t.mons.find(m=>m.ty.n===name),before=t.P.es;t.kill(m);out[name]=t.P.es-before;}return out;}''')
+  rewards=page.evaluate('''()=>{const t=__evoTest,out={};for(const name of ['ray','shark','eel','whale','boss']){const m=t.mons.find(m=>m.ty.n===name),before=t.P.es;const count=()=>Object.entries(t.P.inv).filter(([k])=>k.startsWith('eq:')).reduce((n,[k,v])=>n+v,0),items=count();t.kill(m);if(name==='boss'&&count()!==items+1)throw Error('boss equipment drop');out[name]=t.P.es-before;}return out;}''')
   assert rewards=={'ray':1,'shark':2,'eel':2,'whale':3,'boss':30},rewards
   page.wait_for_timeout(1600);after=page.locator('#debug').inner_text()
   assert not errors,errors;assert not network,network

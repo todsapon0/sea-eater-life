@@ -42,6 +42,7 @@
       if (!isPlain(r[f])) fail('ข้อมูล ' + f + ' ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
       Object.keys(r[f]).forEach(function (k) {
         var v = r[f][k];
+        if (f === 'inv' && k.indexOf('eq:') === 0 && !/^eq:(fang|helm|jaw|bub|horn|scale|fin|shell|wing|crys|whip|rud|spike|glow|orb):([1-9]|1[0-9]|20):(common|rare|epic)$/.test(k)) fail('อุปกรณ์ในเซฟไม่ถูกต้อง');
         if (k.length > 60 || !(f === 'inv' ? isInt(v, 0, 99999) : (v === 1 || v === true))) fail('ข้อมูล ' + f + ' ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
       });
     });

@@ -94,3 +94,8 @@ for (const extra of [{ev:-1},{ev:4},{ev:1.5},{ev:'1'},{ev:null},{es:-1},{es:1e7+
  assert.throws(()=>tools.parseBackup(JSON.stringify(backup({sea:rec(20,extra)}))));
 }
 console.log('PASS: evolution save boundaries, legacy compatibility and mutation validation');
+
+const equipmentSave=backup({sea:rec(20,{ev:0,mu:{head:'fang:8:rare',tail:'whip:20:epic'},inv:{'eq:fang:8:rare':2,'eq:whip:20:epic':1}})});
+assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(equipmentSave)),equipmentSave);
+for(const key of ['eq:fang:0:common','eq:fang:21:rare','eq:fang:1:fake','eq:unknown:1:common'])assert.throws(()=>tools.parseBackup(JSON.stringify(backup({sea:rec(1,{inv:{[key]:1}})}))));
+console.log('PASS: equipment level/rarity stacks and equipped IDs survive backup round trip; invalid equipment rejected');
