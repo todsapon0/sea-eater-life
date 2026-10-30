@@ -56,7 +56,14 @@ window.startAccount = async function startAccount() {
       } catch (err) { error.textContent=err.message || 'เชื่อมต่อไม่สำเร็จ'; submit.disabled=false; }
     };
     function finish(client,userId,row) {
-      if (!['sea','bloop','maja'].includes(row.character_class) || !row.save_data || typeof row.save_data !== 'object' || Array.isArray(row.save_data) || !Number.isInteger(row.revision)) {
+      const record=row.save_data;
+      const object=value=>value && typeof value==='object' && !Array.isArray(value);
+      if (!['sea','bloop','maja'].includes(row.character_class) || !object(record) ||
+          !Number.isInteger(record.lv) || record.lv<1 || record.lv>20 ||
+          !Number.isFinite(record.xp) || record.xp<0 || !Number.isInteger(record.qd) ||
+          record.qd<0 || record.qd>2 || !Number.isInteger(record.q) || record.q<0 ||
+          record.q >= [5,10,20][record.qd] || !object(record.inv) || !object(record.seen) ||
+          !Number.isInteger(row.revision) || row.revision<0) {
         error.textContent='ข้อมูลเซฟบนเซิร์ฟเวอร์ไม่ถูกต้อง กรุณาติดต่อผู้ดูแล'; return;
       }
       const key={sea:'sel01',bloop:'sel01b',maja:'sel01m'}[row.character_class];
