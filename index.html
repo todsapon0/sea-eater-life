@@ -7,13 +7,13 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
-<meta name="theme-color" content="#0a4a58">
+<meta name="theme-color" content="#56cfd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sea Eater">
 <style>
-html,body{height:100%;margin:0;background:#0a4a58;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:system-ui,"Noto Sans Thai",sans-serif;color:#eaf7f5}
+html,body{height:100%;margin:0;background:#56cfd8;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;font-family:system-ui,"Noto Sans Thai",sans-serif;color:#eaf7f5}
 canvas{position:fixed;left:0;top:0;display:block;touch-action:none}
 /* The top button row is nearly full width on a phone, so the HUD sits below it
    rather than running underneath the buttons. Landscape compact mode overrides this. */
@@ -104,6 +104,21 @@ body.hudmin #hud .bar{width:100%;height:5px}
 }
 body.compact #hud{top:calc(6px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));right:auto;max-width:220px;padding:5px 9px 7px}
 body.compact #hud b{display:none}body.compact #hud .bar{width:100%}
+/* v0.5.5: HUD กระจกใส ทันสมัย ไอคอนกลมมุมขวา */
+#hud{display:flex!important;flex-direction:column;left:calc(10px + env(safe-area-inset-left,0px))!important;right:auto!important;top:calc(10px + env(safe-area-inset-top,0px))!important;width:168px;max-width:46vw;box-sizing:border-box;padding:7px 10px 8px!important;border-radius:16px;background:linear-gradient(160deg,rgba(14,78,92,.62),rgba(8,44,58,.5));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.34);box-shadow:0 4px 14px rgba(0,40,60,.28)}
+#hud b,#hud #help{display:none!important}
+#hud #lv{order:0;font:700 12px/1.2 system-ui,"Noto Sans Thai",sans-serif!important;opacity:1!important;margin:0 0 2px!important;color:#fff}
+#hud .bar{width:100%!important;height:7px!important;margin-top:4px!important;border-radius:999px;background:rgba(0,30,40,.55);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+#hud .bar.hp{order:1}#hud .bar:not(.hp){order:2}#hud .bar i{display:block;height:100%;border-radius:999px}
+#hpb{background:linear-gradient(90deg,#3fd98a,#8af0b3)!important}#xpb{background:linear-gradient(90deg,#ffb02e,#ffd95a)!important}
+#hud #qt{order:3;font-size:10px!important;opacity:.92!important;margin-top:6px!important;padding-top:5px;border-top:1px solid rgba(255,255,255,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
+#topbar{gap:6px!important;top:calc(10px + env(safe-area-inset-top,0px))!important}
+#topbar>button{width:38px;min-width:38px!important;height:38px;min-height:38px!important;padding:0!important;border-radius:50%!important;font-size:0!important;display:flex;align-items:center;justify-content:center;background:rgba(10,60,76,.55)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.38)!important;box-shadow:0 3px 10px rgba(0,40,60,.25)}
+#topbar>button::before{font-size:17px;line-height:1;content:'•'}
+#topbar>#soundLevel::before{content:'🔉'}#topbar>#soundToggle::before{content:'🔇'}#topbar>#soundToggle[aria-pressed=true]::before{content:'🔊'}#topbar>#skillhelp::before{content:'❔'}#topbar>#dexb::before{content:'📖'}
+#buffs{position:fixed;z-index:3;top:calc(56px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));display:flex;gap:4px;pointer-events:none}
+.buff{width:38px;height:42px;border-radius:12px;background:rgba(10,60,76,.58);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.38);display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 10px system-ui;color:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25)}.buff span{font-size:15px;line-height:1}
 </style>
 </head>
 <body>
@@ -120,17 +135,21 @@ body.compact #hud b{display:none}body.compact #hud .bar{width:100%}
 (async()=>{const account=await window.startAccount();const gameStorage=account.storage;
 if(!window.THREE){document.getElementById('hud').innerHTML='<b>โหลดเกมไม่สำเร็จ</b><div>เช็กอินเทอร์เน็ตแล้วรีเฟรชหน้า</div>';}
 else{
-const T=THREE,BG=0x0a4a58;
-const scene=new T.Scene();scene.background=new T.Color(BG);scene.fog=new T.Fog(BG,25,95);
+const T=THREE,BG=0x56cfd8;
+const scene=new T.Scene();scene.background=new T.Color(BG);scene.fog=new T.Fog(BG,40,130);
 const cam=new T.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);
 const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight);document.body.prepend(ren.domElement);
-scene.add(new T.HemisphereLight(0xcdf3ff,0x6b5a35,.55));
-const sun=new T.DirectionalLight(0xffffff,.5);sun.position.set(10,25,8);scene.add(sun);
+scene.add(new T.HemisphereLight(0xeaffff,0xd9b873,.62));
+const sun=new T.DirectionalLight(0xfff0cf,.55);sun.position.set(10,25,8);scene.add(sun);
 const h=(x,z)=>Math.sin(x*.15)*Math.cos(z*.13)*.5+Math.sin(x*.4+z*.3)*.1;
 const gg=new T.PlaneGeometry(240,240,60,60);gg.rotateX(-Math.PI/2);
 const gp=gg.attributes.position;for(let i=0;i<gp.count;i++)gp.setY(i,h(gp.getX(i),gp.getZ(i)));gg.computeVertexNormals();
-scene.add(new T.Mesh(gg,new T.MeshStandardMaterial({color:0xb89a62,flatShading:true})));
-const rm=new T.MeshStandardMaterial({color:0x7a8a8c,flatShading:true});
+const sandTex=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='#e0bf82';x.fillRect(0,0,256,256);
+x.strokeStyle='rgba(255,246,214,.5)';x.lineWidth=3;for(let i=0;i<10;i++){x.beginPath();for(let k=0;k<=256;k+=8){const y=i*26+Math.sin(k*.05+i)*6;k?x.lineTo(k,y):x.moveTo(k,y);}x.stroke();}
+x.strokeStyle='rgba(200,160,90,.25)';for(let i=0;i<10;i++){x.beginPath();for(let k=0;k<=256;k+=8){const y=i*26+13+Math.sin(k*.05+i+1)*6;k?x.lineTo(k,y):x.moveTo(k,y);}x.stroke();}
+const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(24,24);return t;})();
+scene.add(new T.Mesh(gg,new T.MeshStandardMaterial({color:0xffffff,map:sandTex,roughness:1})));
+const rm=new T.MeshStandardMaterial({color:0xb9c1c6,flatShading:true});
 for(let i=0;i<45;i++){const x=(Math.random()-.5)*180,z=(Math.random()-.5)*180;if(Math.hypot(x,z)<8)continue;
 const r=new T.Mesh(new T.DodecahedronGeometry(.8+Math.random()*2),rm);r.position.set(x,h(x,z)+.4,z);r.rotation.set(Math.random()*3,Math.random()*3,0);scene.add(r);}
 const cols=[0xe0566b,0xf2a03d,0x8f5fd6];
@@ -157,6 +176,28 @@ const m=new T.Mesh(new T.SphereGeometry(.5*s,14,10),new T.MeshStandardMaterial({
 g.position.set(0,i?0:1.5,i?-.55*Math.pow(.82,i-1):-.8);par.add(g);segs.push(g);par=g;}
 scene.add(sea);
 let CLS='sea';try{CLS=gameStorage.getItem('selcls')||'sea';}catch(e){}const KEY=CLS==='bloop'?'sel01b':CLS==='maja'?'sel01m':'sel01';const P={lv:1,xp:0,hp:100,max:100,q:0,qd:0,inv:{},seen:{},sh:0,shCD:0,tauntT:0,tauntCD:0,devCD:0,bless:0,song:0},qs=[{n:5,xp:40},{n:10,xp:100},{n:20,xp:250}],need=l=>Math.round(20*Math.pow(l,1.5)),maxHp=()=>100+(P.lv-1)*15,$=id=>document.getElementById(id);
+// ===== Sea Eater v2: ตัวขวดนอน ปากทรงไข่ (เฉพาะอาชีพ sea; Bloop/Maja ใช้โมเดลเดิม) =====
+if(CLS==='sea'){(function(){
+  sea.children.slice().forEach(c=>{c.visible=false;});
+  const AXIS=1.6,M=new T.MeshStandardMaterial({color:0xb3bfc4,roughness:.62,metalness:.02,side:T.DoubleSide}),root=new T.Group();root.scale.setScalar(.9);sea.add(root);
+  const raw=[[.42,-2.0],[.55,-1.6],[.85,-.9],[1.08,-.1],[1.18,.7],[1.2,1.5],[1.18,1.78],[1.08,1.85],[.98,1.74],[.95,1.2],[.9,.5],[.74,-.2],[.5,-.7],[0,-.9]];
+  const geo=new T.LatheGeometry(new T.SplineCurve(raw.map(q=>new T.Vector2(q[0],q[1]))).getPoints(72),48);geo.rotateX(Math.PI/2);
+  {const pos=geo.attributes.position;for(let k=0;k<pos.count;k++){let x=pos.getX(k),y=pos.getY(k);const z=pos.getZ(k),w=Math.max(0,Math.min(1,(z+.2)/2)),r=Math.hypot(x,y)||1;x*=.95*(1-.14*w*(y/r));y*=1+.08*w;pos.setXYZ(k,x,y,z);}geo.computeVertexNormals();}
+  const body=new T.Mesh(geo,M);body.position.y=AXIS;root.add(body);
+  const tail=new T.Group();tail.position.set(0,AXIS,-2.0);root.add(tail);let par=tail,sc=1;const newSegs=[];
+  for(let k=0;k<6;k++){const g=new T.Group(),r0=.42*sc,len=.62*sc,m=new T.Mesh(new T.CylinderGeometry(r0*.8,r0,len,20),M);m.rotation.x=Math.PI/2;m.scale.set(1.05,1,.9);m.position.z=-len/2+.05;g.add(m);
+    g.position.z=k?-.6*Math.pow(.84,k-1):0;g.rotation.x=.05;par.add(g);newSegs.push(g);par=g;sc*=.84;}
+  const fs=new T.Shape();fs.moveTo(0,0);fs.quadraticCurveTo(.45,.45,1.35,.78);fs.lineTo(1.05,.2);fs.lineTo(1.4,-.28);fs.quadraticCurveTo(.45,-.05,0,-.12);fs.closePath();
+  const fin=new T.Mesh(new T.ExtrudeGeometry(fs,{depth:.07,bevelEnabled:false}),M);fin.rotation.y=Math.PI/2;fin.position.set(-.035,0,-.22);fin.scale.setScalar(.95);newSegs[5].add(fin);
+  const newLegs=[-1,1].map(side=>{const g=new T.Group();g.position.set(side*1.0,AXIS-.15,.55);root.add(g);const U=1.2,UA=.2;
+    const up=new T.Mesh(new T.CylinderGeometry(.16,.2,U,12),M);up.geometry.translate(0,U/2,0);up.rotation.z=-side*(Math.PI/2+UA);g.add(up);g.add(new T.Mesh(new T.SphereGeometry(.2,14,10),M));
+    const el=new T.Vector3(side*Math.cos(UA)*U,-Math.sin(UA)*U,0),kn=new T.Group();kn.position.copy(el);g.add(kn);kn.add(new T.Mesh(new T.SphereGeometry(.2,14,10),M));
+    const drop=g.position.y+el.y-.12,low=new T.Mesh(new T.CylinderGeometry(.19,.12,drop,12),M);low.geometry.translate(0,-drop/2,0);low.rotation.z=side*.1;kn.add(low);
+    const ft=new T.Group();ft.position.set(Math.sin(.1)*drop*side,-Math.cos(.1)*drop,0);const cone=new T.Mesh(new T.ConeGeometry(.38,.3,12,1,true),M);cone.position.y=.1;ft.add(cone);
+    for(let q=0;q<5;q++){const a=(q/4-.5)*1.5,t=new T.Mesh(new T.CylinderGeometry(.02,.04,.3,6),M);t.position.set(Math.sin(a)*.32,-.04,Math.cos(a)*.32+.05);t.rotation.set(Math.cos(a)*.75,0,-Math.sin(a)*.75);ft.add(t);}
+    kn.add(ft);return g;});
+  legs[0]=newLegs[0];legs[1]=newLegs[1];segs.length=0;newSegs.forEach(g=>segs.push(g));
+})();}
 try{const s=JSON.parse(gameStorage.getItem(KEY));if(s&&s.lv){P.lv=s.lv;P.xp=s.xp||0;P.qd=Number.isInteger(s.qd)&&s.qd>=0&&s.qd<qs.length?s.qd:0;P.q=Number.isInteger(s.q)&&s.q>=0&&s.q<qs[P.qd].n?s.q:0;P.inv=s.inv||{};P.seen=s.seen||{};}}catch(e){}
 P.max=maxHp();P.hp=P.max;let slamCD=0,msgT=0;try{if(!gameStorage.getItem('selcls'))$('pick').style.display='flex';}catch(e){}document.querySelectorAll('#pick button').forEach(b=>b.addEventListener('click',()=>{try{gameStorage.setItem('selcls',b.dataset.c);}catch(e){}location.reload();}));if(CLS==='bloop'){white.color.set(0x7cc8f5);foot.color.set(0x4f9fd6);mo.material=new T.MeshStandardMaterial({color:0x1f4f8f});body.scale.set(1.15,1.05,1.1);mouth.children.slice(1).forEach(c=>c.visible=false);const bell=new T.Mesh(new T.ConeGeometry(.8,.9,16),new T.MeshStandardMaterial({color:0xb9ecff}));bell.position.y=3.95;sea.add(bell);$('bite').textContent='ยิงฟอง';$('slam').textContent='รักษา';$('devour').textContent='พร';$('taunt').textContent='เพลง';$('shield').textContent='โล่ฟอง';}if(CLS==='maja'){
 white.color.set(0x59658e);foot.color.set(0x424c72);mo.material=new T.MeshStandardMaterial({color:0x201b42});
@@ -182,14 +223,74 @@ const safeRadius=28,graceDuration=8;let grace=graceDuration;
 const spawn=m=>{let x,z,valid=false;for(let i=0;i<200;i++){const a=Math.random()*Math.PI*2,r=12+Math.random()*27;x=sea.position.x+Math.cos(a)*r;z=sea.position.z+Math.sin(a)*r;if(Math.abs(x)<=95&&Math.abs(z)<=95&&(m.ty.n==='ray'||Math.hypot(x,z)>=safeRadius)){valid=true;break;}}
 if(!valid){let a=Math.atan2(-sea.position.x,-sea.position.z);x=sea.position.x+Math.sin(a)*12;z=sea.position.z+Math.cos(a)*12;if(m.ty.n!=='ray'&&Math.hypot(x,z)<safeRadius){a=Math.atan2(sea.position.x,sea.position.z);x=Math.sin(a)*(safeRadius+1);z=Math.cos(a)*(safeRadius+1);}}
 m.g.position.set(x,0,z);m.hp=m.ty.hp;m.dead=0;m.aggro=false;m.slow=0;m.flee=0;m.windup=0;m.dash=0;m.dashWait=3;m.cd=1;m.a=Math.random()*6.28;m.g.visible=true;m.bar.visible=true;m.mat.emissive.setHex(0);};
-for(let i=0;i<20;i++){const ty=types[i%4],ray=ty.n==='ray',g=new T.Group(),mat=new T.MeshStandardMaterial({color:ty.c,flatShading:true}),b=new T.Mesh(new T.SphereGeometry(1,16,12),mat);
-b.scale.set(ray?1.3:ty.n==='eel'?.35:.8,ray?.35:ty.n==='eel'?.35:.7,ray?1.1:ty.n==='eel'?2.4:1.5);b.position.y=1;g.add(b);
-const f=new T.Mesh(new T.ConeGeometry(.3,.9,5),mat);if(ray){f.position.set(0,1,-1.7);f.rotation.x=-Math.PI/2;}else f.position.set(0,1.9,-.3);g.add(f);
-[-1,1].forEach(s=>{const e=new T.Mesh(new T.SphereGeometry(.12,8,6),new T.MeshStandardMaterial({color:ray?0x4aa3ff:0x111111}));e.position.set(s*.4,ray?1.3:1.4,ray?.8:1.2);g.add(e);});
-const mo=new T.Mesh(new T.SphereGeometry(.35,10,8),dark);mo.scale.z=.4;mo.position.set(0,ray?.95:.9,ray?1.1:1.45);g.add(mo);
+
+// ===== Monster models v2: smooth, bright, anatomical =====
+function bodyLathe(pts,seg,col,belly,flat){ // pts: [รัศมี, ตำแหน่งตามยาว]; หัวอยู่ +Z
+  const g=new T.LatheGeometry(new T.SplineCurve(pts.map(q=>new T.Vector2(q[0],q[1]))).getPoints(48),seg);g.rotateX(Math.PI/2);
+  const pos=g.attributes.position,cols=new Float32Array(pos.count*3),c1=new T.Color(col),c2=new T.Color(belly);
+  for(let i=0;i<pos.count;i++){let y=pos.getY(i);const r=Math.hypot(pos.getX(i),y)||1;y=y/r; // -1 ท้อง … 1 หลัง
+    const k=Math.min(1,Math.max(0,(y+.35)/.5)),c=c2.clone().lerp(c1,k*k*(3-2*k));cols[i*3]=c.r;cols[i*3+1]=c.g;cols[i*3+2]=c.b;
+    if(flat)pos.setY(i,pos.getY(i)*flat);}
+  g.setAttribute('color',new T.BufferAttribute(cols,3));g.computeVertexNormals();return g;}
+function finShape(pts,depth,mat,bevel){const sh=new T.Shape();sh.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)sh.lineTo(pts[i][0],pts[i][1]);sh.closePath();
+  const g=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelThickness:depth*.4,bevelSize:depth*.4,bevelSegments:2,curveSegments:8});g.translate(0,0,-depth/2);return new T.Mesh(g,mat);}
+function curveFin(a,b,c,d,depth,mat){const sh=new T.Shape();sh.moveTo(a[0],a[1]);sh.quadraticCurveTo(b[0],b[1],c[0],c[1]);sh.quadraticCurveTo(d[0],d[1],a[0],a[1]);
+  const g=new T.ExtrudeGeometry(sh,{depth,bevelEnabled:true,bevelThickness:depth*.35,bevelSize:depth*.35,bevelSegments:2,curveSegments:10});g.translate(0,0,-depth/2);return new T.Mesh(g,mat);}
+const eyeMat=new T.MeshStandardMaterial({color:0x0b0b0b,roughness:.2}),toothMat=new T.MeshStandardMaterial({color:0xfffaf0,roughness:.4}),gumMat=new T.MeshStandardMaterial({color:0xb02a3a,roughness:.7}),gillMat=new T.MeshStandardMaterial({color:0x31424f,roughness:.9});
+function addEyes(g,x,y,z,r,col){[-1,1].forEach(s=>{const e=new T.Mesh(new T.SphereGeometry(r,12,10),col||eyeMat);e.position.set(s*x,y,z);g.add(e);const h=new T.Mesh(new T.SphereGeometry(r*.3,8,6),new T.MeshBasicMaterial({color:0xffffff}));h.position.set(s*x+s*r*.15,y+r*.35,z+r*.6);g.add(h);});}
+function buildShark(mat){
+  const g=new T.Group(),W=new T.MeshStandardMaterial({color:0x7d9bb2,roughness:.55,side:T.DoubleSide});
+  const body=new T.Mesh(bodyLathe([[0,2.0],[.2,1.8],[.46,1.2],[.62,.4],[.6,-.4],[.42,-1.1],[.22,-1.7],[.13,-2.0]],28,0x7592ab,0xf4f7f8,.92),mat);mat.vertexColors=true;mat.flatShading=false;mat.color.set(0xffffff);body.position.y=1.05;g.add(body);
+  // ครีบหลังโค้งเหมือนฉลาม + ครีบหลังเล็ก
+  const d1=curveFin([-.45,0],[-.25,.55],[.15,1.15],[.25,.35],.07,W);d1.rotation.y=Math.PI/2;d1.position.set(0,1.58,.2);g.add(d1);
+  const d2=curveFin([-.15,0],[-.05,.22],[.1,.35],[.12,.1],.05,W);d2.rotation.y=Math.PI/2;d2.position.set(0,1.28,-1.15);g.add(d2);
+  // ครีบอก ขวา/ซ้าย
+  [-1,1].forEach(s=>{const f=curveFin([0,0],[.5,-.1],[1.05,-.75],[.35,-.5],.05,W);f.rotation.x=Math.PI/2;f.rotation.y=-s*.3;f.scale.x=s;f.position.set(s*.5,.82,.7);g.add(f);
+    // เหงือก 4 ขีด
+    for(let k=0;k<4;k++){const gl=new T.Mesh(new T.BoxGeometry(.02,.28,.02),gillMat);gl.position.set(s*.62,1.1,.95-k*.13);gl.rotation.z=s*.12;g.add(gl);}
+  });
+  // หางสองแฉก (แฉกบนใหญ่กว่า) บนกลุ่ม tail ที่แกว่งได้
+  const tail=new T.Group();tail.position.set(0,1.05,-1.9);g.add(tail);
+  const up=curveFin([0,0],[-.2,.6],[-.75,1.3],[-.1,.45],.07,W);up.rotation.y=Math.PI/2;tail.add(up);
+  const lo=curveFin([0,0],[-.15,-.35],[-.5,-.8],[-.05,-.25],.06,W);lo.rotation.y=Math.PI/2;tail.add(lo);
+  // ตา ปาก ฟัน
+  addEyes(g,.4,1.2,1.25,.075);
+  const jaw=new T.Mesh(new T.TorusGeometry(.33,.04,8,20,Math.PI),gumMat);jaw.rotation.set(Math.PI/2+.25,0,Math.PI);jaw.position.set(0,.78,1.45);g.add(jaw);
+  for(let k=0;k<7;k++){const a=(k/6-.5)*2.2,t=new T.Mesh(new T.ConeGeometry(.032,.11,5),toothMat);t.position.set(Math.sin(a)*.3,.78-Math.abs(a)*.03,1.45+Math.cos(a)*.14);t.rotation.x=Math.PI;g.add(t);}
+  return {g,tail};}
+function buildRay(mat){
+  const g=new T.Group(),FM=new T.MeshStandardMaterial({color:0x5aa9d6,roughness:.55,side:T.DoubleSide});mat.vertexColors=true;mat.flatShading=false;mat.color.set(0xffffff);
+  const body=new T.Mesh(bodyLathe([[0,1.5],[.5,1.1],[1.1,.2],[1.2,-.3],[.7,-.9],[.0,-1.3]],36,0x5aa9d6,0xf6f8fa,.22),mat);body.position.y=1.0;body.scale.x=1.0;g.add(body);
+  // ปีกกระเบนแผ่กว้าง
+  [-1,1].forEach(s=>{const w=curveFin([0,.55],[s*1.5,1.05],[s*2.2,-.25],[s*1.0,-1.35],.08,FM);w.rotation.x=Math.PI/2;w.position.set(0,1.0,-.1);w.scale.set(1,1,1);g.add(w);});
+  const tail=new T.Group();tail.position.set(0,1.0,-1.2);g.add(tail);
+  const t=new T.Mesh(new T.CylinderGeometry(.03,.07,2.0,8),FM);t.rotation.x=Math.PI/2;t.position.z=-1.0;tail.add(t);
+  for(let k=0;k<5;k++){const sp=new T.Mesh(new T.SphereGeometry(.09,8,6),new T.MeshStandardMaterial({color:0xffffff}));sp.scale.y=.6;sp.position.set((k%2-.5)*.5,1.12,.15-k*.28);g.add(sp);}
+  addEyes(g,.38,1.15,.95,.08,new T.MeshStandardMaterial({color:0x2a6dff,roughness:.2}));return {g,tail};}
+function buildWhale(mat){
+  const g=new T.Group(),FM=new T.MeshStandardMaterial({color:0x587fae,roughness:.55,side:T.DoubleSide});mat.vertexColors=true;mat.flatShading=false;mat.color.set(0xffffff);
+  const body=new T.Mesh(bodyLathe([[0,2.0],[.55,1.7],[.95,.9],[1.05,-.2],[.8,-1.1],[.4,-1.8],[.2,-2.2]],32,0x587fae,0xe9eef0,.95),mat);body.position.y=1.1;g.add(body);
+  [-1,1].forEach(s=>{const f=curveFin([0,0],[.4,-.1],[1.0,-.7],[.35,-.4],.08,FM);f.rotation.x=Math.PI/2;f.rotation.y=-s*.35;f.scale.x=s;f.position.set(s*.95,.75,.75);g.add(f);});
+  const tail=new T.Group();tail.position.set(0,1.1,-2.1);g.add(tail);
+  [-1,1].forEach(s=>{const f=curveFin([0,0],[s*.7,.2],[s*1.4,.55],[s*.5,-.1],.08,FM);f.rotation.x=Math.PI/2;f.rotation.z=0;tail.add(f);});
+  addEyes(g,.82,1.15,1.1,.09);
+  const m=new T.Mesh(new T.TorusGeometry(.62,.035,6,24,Math.PI*.85),gumMat);m.rotation.set(-.15,0,Math.PI+.2);m.position.set(0,.55,1.55);m.scale.x=1.3;g.add(m);
+  return {g,tail};}
+function buildEel(mat){
+  const g=new T.Group();mat.vertexColors=false;mat.flatShading=false;const segs=[];
+  const bands=[new T.MeshStandardMaterial({color:0x45b56a,roughness:.5}),new T.MeshStandardMaterial({color:0xf0d34a,roughness:.5})];
+  const N=12;const tail=new T.Group();g.add(tail);
+  for(let i=0;i<N;i++){const r=.34*(1-i/N*.7),sp=new T.Mesh(new T.SphereGeometry(r,14,10),i%2?mat:bands[1]);sp.position.set(Math.sin(i*.6)*.18,.7+r*.2,1.2-i*.42);sp.scale.z=1.35;g.add(sp);segs.push(sp);}
+  mat.color.set(0x45b56a);
+  const head=new T.Mesh(new T.SphereGeometry(.4,16,12),mat);head.scale.set(1,.85,1.3);head.position.set(0,.8,1.45);g.add(head);
+  addEyes(g,.24,.98,1.7,.09);
+  const mo=new T.Mesh(new T.SphereGeometry(.2,10,8),gumMat);mo.scale.set(1,.5,.8);mo.position.set(0,.66,1.9);g.add(mo);
+  return {g,tail:null,segs};}
+function buildMonster(ty,mat){return ty.n==='shark'?buildShark(mat):ty.n==='ray'?buildRay(mat):ty.n==='whale'?buildWhale(mat):buildEel(mat);}
+for(let i=0;i<20;i++){const ty=types[i%4],mat=new T.MeshStandardMaterial({color:ty.c,roughness:.55,metalness:.02}),built=buildMonster(ty,mat),g=built.g;
 g.scale.setScalar(ty.s);scene.add(g);
 const bar=new T.Group(),bf=new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0x5cf08a}));bf.position.z=.01;bar.add(new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0})),bf);scene.add(bar);
-const m={g,ty,bar,bf,mat,flash:0,k:Math.random()*6,orbit:i%2?1:-1};mons.push(m);spawn(m);}
+const m={g,ty,bar,bf,mat,tail:built.tail,segs:built.segs,flash:0,k:Math.random()*6,orbit:i%2?1:-1};mons.push(m);spawn(m);}
 const damagePool=Array.from({length:12},()=>{const el=document.createElement('span');el.className='damage-number';document.body.append(el);return {el,time:0,pos:new T.Vector3()};});
 const rings=Array.from({length:6},()=>{const mesh=new T.Mesh(new T.TorusGeometry(1,.08,6,20),new T.MeshBasicMaterial({color:0xa7edff,transparent:true,opacity:.7}));mesh.rotation.x=-Math.PI/2;mesh.visible=false;scene.add(mesh);return {mesh,time:0};});
 let soundOn=false,audioContext=null,soundLevel=1;const soundToggle=$('soundToggle'),soundLevelButton=$('soundLevel');
@@ -231,7 +332,12 @@ function assignPursuers(){const detect=P.tauntT>0?45:(P.lv<=3?9:14),release=dete
 for(const m of mons){const d=Math.hypot(m.g.position.x-sea.position.x,m.g.position.z-sea.position.z);if(m.dead>0||m.flee>0||grace>0||d>release||(m.ty.n!=='ray'&&Math.hypot(sea.position.x,sea.position.z)<safeRadius))m.aggro=false;if(m.aggro)count++;}
 if(grace>0)return;for(const m of mons){if(count>=3)break;if(m.dead>0||m.flee>0||m.aggro||(m.ty.n!=='ray'&&Math.hypot(sea.position.x,sea.position.z)<safeRadius))continue;const d=Math.hypot(m.g.position.x-sea.position.x,m.g.position.z-sea.position.z);if(d<detect){m.aggro=true;count++;}}}
 function separateMonsters(){for(let pass=0;pass<2;pass++)for(let i=0;i<mons.length;i++){const a=mons[i];if(a.dead>0)continue;for(let j=i+1;j<mons.length;j++){const b=mons[j];if(b.dead>0)continue;let dx=b.g.position.x-a.g.position.x,dz=b.g.position.z-a.g.position.z,d=Math.hypot(dx,dz),gap=1.0*(a.ty.s+b.ty.s);if(d>=gap)continue;if(d<1e-6){const angle=(i*11+j*7)*2.4;dx=Math.sin(angle);dz=Math.cos(angle);d=1;}else{dx/=d;dz/=d;}const push=Math.max(0,gap-(Math.hypot(b.g.position.x-a.g.position.x,b.g.position.z-a.g.position.z)))*.5;for(const [m,sign] of [[a,-1],[b,1]]){m.g.position.x=Math.max(-95,Math.min(95,m.g.position.x+dx*push*sign));m.g.position.z=Math.max(-95,Math.min(95,m.g.position.z+dz*push*sign));}}}}
-const game=dt=>{updateFeedback(dt);grace=Math.max(0,grace-dt);if(CLS==='maja')updateMaja(dt);separateMonsters();assignPursuers();slamCD=Math.max(0,slamCD-dt);['devCD','tauntCD','shCD','tauntT','sh','bless','song'].forEach(k=>P[k]=Math.max(0,P[k]-dt));shm.visible=P.sh>0;
+// ===== Buff HUD (แนว Ragnarok: ไอคอนเล็ก + เวลาเหลือ, สูงสุด 2 ช่อง, ตัวใหม่แทนตัวเก่าสุด) =====
+const BUFFS=[['sh','🛡','โล่'],['bless','✨','พร'],['song','🎵','เพลง'],['tauntT','📣','ยั่ว']],buffStart={},buffBox=document.createElement('div');buffBox.id='buffs';document.body.append(buffBox);let buffClock=0,buffKey='';
+function updateBuffHud(dt){buffClock+=dt;const act=[];for(const b of BUFFS){if(P[b[0]]>0){if(buffStart[b[0]]===undefined)buffStart[b[0]]=buffClock;act.push(b);}else delete buffStart[b[0]];}
+act.sort((a,c)=>buffStart[a[0]]-buffStart[c[0]]);const show=act.slice(-2),key=show.map(b=>b[0]+Math.ceil(P[b[0]])).join('|');if(key===buffKey)return;buffKey=key;
+buffBox.innerHTML=show.map(b=>'<div class="buff" role="status" aria-label="'+b[2]+' เหลือ '+Math.ceil(P[b[0]])+' วินาที"><span>'+b[1]+'</span><small>'+Math.ceil(P[b[0]])+'s</small></div>').join('');}
+const game=dt=>{updateFeedback(dt);updateBuffHud(dt);grace=Math.max(0,grace-dt);if(CLS==='maja')updateMaja(dt);separateMonsters();assignPursuers();slamCD=Math.max(0,slamCD-dt);['devCD','tauntCD','shCD','tauntT','sh','bless','song'].forEach(k=>P[k]=Math.max(0,P[k]-dt));shm.visible=P.sh>0;
 mons.forEach(m=>{const g=m.g;if(m.dead>0){m.dead-=dt;if(m.dead<=0)spawn(m);return;}
 // Separate close enemies from the player, keeping them inside the world.
 let dx=sea.position.x-g.position.x,dz=sea.position.z-g.position.z,d=Math.hypot(dx,dz);const minDistance=m.aggro?1.7+.9*m.ty.s:(grace>0?12:7);
@@ -253,7 +359,7 @@ else{m.a+=(Math.random()-.5)*dt*4;g.position.x+=Math.sin(m.a)*.8*dt*speedFactor;
 if(m.ty.n!=='ray'){const sd=Math.hypot(g.position.x,g.position.z);if(sd<safeRadius){const a=sd>1e-6?Math.atan2(g.position.x,g.position.z):m.a;g.position.x=Math.sin(a)*safeRadius;g.position.z=Math.cos(a)*safeRadius;}}
 g.position.x=Math.max(-95,Math.min(95,g.position.x));g.position.z=Math.max(-95,Math.min(95,g.position.z));
 if(!m.aggro){m.windup=0;m.dash=0;}if(m.flash<=0)m.mat.emissive.setHex(m.windup>0?0x693d00:0);
-g.position.y=h(g.position.x,g.position.z)+.3+Math.sin(m.k*2)*.15;g.rotation.y=m.a;
+g.position.y=h(g.position.x,g.position.z)+.3+Math.sin(m.k*2)*.15;g.rotation.y=m.a;if(m.tail)m.tail.rotation.y=Math.sin(m.k*5)*.4;if(m.segs)m.segs.forEach((q,j)=>{q.position.x=Math.sin(m.k*4-j*.6)*.2*(1+j*.1);});
 const r=m.hp/m.ty.hp;m.bar.position.set(g.position.x,g.position.y+2.8*m.ty.s,g.position.z);m.bar.quaternion.copy(cam.quaternion);m.bf.scale.x=Math.max(.001,r);m.bf.position.x=-.8*(1-r);});
 if(P.hp<=0){sea.position.set(0,0,0);P.hp=P.max;grace=graceDuration;mons.forEach(m=>{m.aggro=false;if(m.dead<=0&&Math.hypot(m.g.position.x,m.g.position.z)<12){const a=Math.atan2(m.g.position.x,m.g.position.z)||m.a;m.g.position.x=Math.sin(a)*12;m.g.position.z=Math.cos(a)*12;}});say('สลบ! ฟื้นที่จุดเริ่มต้น');}else P.hp=Math.min(P.max,P.hp+dt*(P.song>0?P.max*.08:1));
 msgT-=dt;if(msgT<=0)$('msg').style.opacity=0;
