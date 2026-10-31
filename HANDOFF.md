@@ -200,3 +200,4 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 - ดูภาพหีบและหอยใน Chromium แนวนอนแล้ว ยังไม่ได้ทดสอบบน iPad จริง; ไม่ merge main ไม่ deploy production
 
 - ✔ Claude 2026-10-31: look v1 (แสง/เงา/ท้องฟ้าการ์ตูน) เสร็จ — HemisphereLight ปรับ, fill light ฟ้าอ่อนไม่มีเงา, sky dome shader ไล่สีตามแมพ, PCFSoftShadowMap เมื่อ gfxHigh, vignette CSS. ยังไม่วัด FPS บน iPad; ถ้าช้าให้ลบ skyDome/fillL ก่อน
+- ✔ Claude 2026-10-31: Maja หางเรียบเนียน (ทรงกระบอกเรียวต่อเนื่อง + ลูกกลมที่ข้อต่อ แบบเดียวกับ Bloop/Sea Eater) ปลดล็อก Maja แล้ว ยังไม่ได้ดูบนไอแพด
