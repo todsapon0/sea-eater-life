@@ -226,8 +226,13 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 @keyframes rfup{from{transform:translateY(0) scale(.8);opacity:1}to{transform:translateY(-34px) scale(1.4);opacity:0}}
 @media(prefers-reduced-motion:reduce){#npcov .rfrow.hit,#npcov .rfrow.ok,#npcov .rfrow.bad,#npcov .rfspark{animation:none}}
 </style>
+<style>/* เล่นแนวนอนเท่านั้น (ผู้ใช้สั่ง): จอแนวตั้งขึ้นข้อความให้หมุนเครื่อง ไม่ปรับ UI แนวตั้ง; เทสต์อัตโนมัติไม่ถูกบัง เว้นแต่ใส่ ?portrait=1 */
+#rotatehint{display:none;position:fixed;inset:0;z-index:99;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:linear-gradient(165deg,#0d5667,#06303f);color:#fff;font:700 22px/1.4 system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+#rotatehint i{font-style:normal;font-size:72px;display:block;animation:rotwob 2.2s ease-in-out infinite}@keyframes rotwob{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}@media(prefers-reduced-motion:reduce){#rotatehint i{animation:none}}
+@media (orientation:portrait){html:not(.norot) #rotatehint{display:flex}}</style>
 </head>
 <body>
+<div id="rotatehint" role="alert"><i>📱</i><div>หมุนเครื่องเป็นแนวนอนเพื่อเล่น</div></div><script>if(navigator.webdriver&&!/[?&]portrait=1/.test(location.search))document.documentElement.classList.add("norot");</script>
 <script>/* เสียงเปิดอัตโนมัติ: iOS ต้องสร้าง/ปลุก AudioContext ตอนแตะครั้งแรก จึงดักการแตะตั้งแต่หน้าเลือกเล่น */window.__ac=null;(function(){const f=()=>{try{const A=window.AudioContext||window.webkitAudioContext;if(A&&!window.__ac)window.__ac=new A();if(window.__ac&&window.__ac.state==='suspended')window.__ac.resume();}catch(e){}window.__sndTap=1;};['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,f,{once:true,passive:true,capture:true}));})();</script>
 <div id="zoomWarn" role="status" style="display:none;position:fixed;left:0;top:0;z-index:30;box-sizing:border-box;padding:8px 12px;background:#b5702cf2;color:#fff;font-size:14px;line-height:1.4;text-align:center;pointer-events:none">หน้าจอถูกซูมเข้าอยู่ ใช้สองนิ้วบีบเพื่อย่อกลับ ปุ่มจะกลับมาครบ</div>
 <div id="hud"><b id="gver">Sea Eater Life v0.8.0-rc1</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><div id="topbar"><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="mapb" aria-label="แผนที่"></button><button id="evob" aria-label="วิวัฒนาการ">🧬</button><button id="dexb">สมุด</button></div>
