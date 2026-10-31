@@ -183,15 +183,17 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #mapov.pop .mapbox{animation:evpop .26s cubic-bezier(.2,1.3,.4,1)}@media(prefers-reduced-motion:reduce){#mapov.pop .mapbox{animation:none}}
 #mapov .mhead{display:flex;width:100%;align-items:center;justify-content:space-between}#mapov .mhead h2{margin:0;font-size:18px}
 #mapov .evx{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.25);color:#fff;font-size:16px;padding:0}
-#mapov .maptabs{display:flex;gap:6px;width:100%}#mapov .maptabs button{flex:1;padding:7px 2px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font:600 12px system-ui,"Noto Sans Thai",sans-serif}#mapov .maptabs button[aria-pressed=true]{background:rgba(255,217,90,.3);border-color:#ffd95a}
+#mapov .maproutes{position:relative;width:100%;aspect-ratio:320/196;flex-shrink:0}
+#mapov .maproutes svg{width:100%;height:100%;position:absolute;inset:0;pointer-events:none}#mapov .maproutes line{stroke:#8bd9d2;stroke-width:2}
+#mapov .maproutes button{position:absolute;transform:translate(-50%,-50%);width:12%;height:14%;padding:0;display:flex;align-items:center;justify-content:center;white-space:nowrap;border-radius:7px;border:1px solid #81b8bd;background:#164b5c;color:#fff;font:16px system-ui;cursor:pointer}#mapov .maproutes button small{font-size:9px;margin-left:1px}#mapov .routekey{position:absolute;font-size:10px;opacity:.85;white-space:nowrap;pointer-events:none}#mapov .maproutes button i{position:absolute;right:-4px;top:-7px;font-size:10px;font-style:normal}#mapov .maproutes button[aria-pressed=true]{background:#685e37;border-color:#ffd95a}#mapov .maptitle{font-size:13px;text-align:center}
 #mapov canvas{position:static;touch-action:auto;width:min(300px,calc(100dvh - 210px),84vw);height:auto;border-radius:14px}
 #mapov .maplg{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:center;font-size:11.5px;opacity:.95}
-@media(orientation:landscape) and (max-height:560px){#mapov .mapbox{width:min(640px,96vw);display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:center}#mapov .mhead,#mapov .maptabs{grid-column:1/-1}#mapov canvas{grid-column:1;grid-row:3;justify-self:center;width:min(240px,calc(100dvh - 150px))}#mapov .maplg{grid-column:2;grid-row:3;flex-direction:column;align-items:flex-start}}
+@media(orientation:landscape) and (max-height:560px){#mapov .mapbox{width:min(680px,96vw);display:grid;grid-template-columns:1fr 1fr;column-gap:12px;align-items:center}#mapov .mhead{grid-column:1/-1}#mapov .maproutes{grid-column:1;grid-row:2/5}#mapov .maptitle{grid-column:2;grid-row:2}#mapov canvas{grid-column:2;grid-row:3;justify-self:center;width:min(260px,calc(100dvh - 140px))}#mapov .maplg{grid-column:2;grid-row:4;font-size:10px}}
 #lockb{position:fixed;z-index:2;right:166px;bottom:calc(30px + env(safe-area-inset-bottom,0px));width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:rgba(10,60,76,.7);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:22px;line-height:1;padding:0;touch-action:none;box-shadow:0 3px 8px rgba(0,0,0,.35)}#lockb:active{background:rgba(255,217,90,.55)}
 @media(orientation:landscape) and (max-height:560px){#lockb{right:calc(158px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:42px;height:42px;font-size:20px}}
 .nametag.locked{color:#ffe45a;font-size:13.5px;text-shadow:0 0 6px #ff9d00,0 1px 3px #000}
 #minimap{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(106px + env(safe-area-inset-top,0px));z-index:2;border-radius:10px;background:rgba(7,38,48,.55);border:1px solid rgba(255,255,255,.4);touch-action:manipulation;box-shadow:0 3px 10px rgba(0,40,60,.3)}
-#mapov .maptabs button{font-size:13px;padding:7px 1px}
+
 #npcov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,30,40,.6);z-index:11;padding:12px;box-sizing:border-box}
 #npcov .mapbox{width:min(340px,94vw);box-sizing:border-box;padding:10px 12px 12px;border-radius:22px;background:linear-gradient(165deg,rgba(18,86,100,.96),rgba(8,44,58,.96));border:1px solid rgba(255,255,255,.4);box-shadow:0 12px 34px rgba(0,0,0,.45);color:#fff;font-family:system-ui,"Noto Sans Thai",sans-serif;display:flex;flex-direction:column;align-items:center;gap:6px;max-height:calc(100dvh - 24px);overflow-y:auto}
 #npcov.pop .mapbox{animation:evpop .26s cubic-bezier(.2,1.3,.4,1)}@media(prefers-reduced-motion:reduce){#npcov.pop .mapbox{animation:none}}
@@ -243,24 +245,45 @@ let gfxReady=false;function setGfx(on,persist){gfxHigh=on;sun.castShadow=on;ren.
 setGfx(gfxHigh,false);
 let gfxN=0,gfxDts=[],gfxAutoDone=false;
 function gfxProbe(dt){gfxReady=true;if(gfxAutoDone||!gfxHigh||navigator.webdriver||document.hidden)return;if(++gfxN<=30)return;gfxDts.push(dt);if(gfxDts.length>=150){gfxAutoDone=true;gfxDts.sort((a,b)=>a-b);if(gfxDts[75]>1/24){setGfx(false,true);say('ภาพช้า จึงปิดเงาให้อัตโนมัติ เปิดกลับได้ในสมุด');if(typeof refreshDisplayUI==='function')refreshDisplayUI();}}}
-// ===== แผนที่แบบ Ragnarok: สนามสี่เหลี่ยมแยกกัน แสดงทีละแมพ (เมือง > หาดตื้น > ป่าสาหร่าย > ถ้ำมืด > ถ้ำราชา) =====
+// ===== แมพสี่ทิศ: เหนือ=-Z, ตะวันตก=-X, ใต้=+Z, ตะวันออก=+X =====
 let curMap=0;
+// id เดิมยังใช้กับหาดตื้น/ป่าสาหร่าย/ถ้ำมืด/ถ้ำราชา; ไม่บันทึกแมพลงเซฟ
 const MAPS=[
- {id:0,n:'เมืองริมหาด',ic:'🏘',rec:0,bg:0x6fd8e0,w:64,d:44,flat:1,safe:1,tint:[1,.96,.82],mc:'#caa86a'},
- {id:1,n:'หาดตื้น',ic:'🏖',rec:1,bg:0x56cfd8,w:100,d:64,tint:[1,1,1],mc:'#2a9fb0'},
- {id:2,n:'ป่าสาหร่าย',ic:'🌿',rec:6,bg:0x39b9a6,w:100,d:64,tint:[.7,.92,.64],mc:'#2f9a6a'},
- {id:3,n:'ถ้ำมืด',ic:'🕳',rec:12,bg:0x22506e,w:100,d:64,tint:[.4,.46,.62],mc:'#3a4a78'},
- {id:4,n:'ถ้ำราชา',ic:'👑',rec:15,bg:0x1b2146,w:56,d:56,tint:[.34,.3,.5],mc:'#4a3a7a'}];
-// ประตูวาร์ปอยู่ริมแมพ: x,z = ตำแหน่งประตู, to = แมพปลายทางและจุดที่ไปโผล่
-const PORTALS=[{map:0,x:28,z:0,to:{map:1,x:-43,z:0}},{map:1,x:-47,z:0,to:{map:0,x:24,z:0}},{map:1,x:47,z:0,to:{map:2,x:-43,z:0}},{map:2,x:-47,z:0,to:{map:1,x:43,z:0}},{map:2,x:47,z:0,to:{map:3,x:-43,z:0}},{map:3,x:-47,z:0,to:{map:2,x:43,z:0}},{map:3,x:47,z:0,to:{map:4,x:-22,z:0}},{map:4,x:-25,z:0,to:{map:3,x:43,z:0}}];
+ {id:0,n:'เมืองริมหาด',ic:'🏘',rec:0,bg:0x6fd8e0,w:64,d:44,flat:1,safe:1,tint:[1,.96,.82],mc:'#caa86a',gx:0,gy:0,theme:'town',tier:0,biome:'town',music:'town'},
+ {id:1,n:'หาดตื้น',ic:'🏖',rec:1,bg:0x56cfd8,tint:[1,1,1],mc:'#2a9fb0',gx:0,gy:1,theme:'normal',tier:1,biome:'shore'},
+ {id:2,n:'ป่าสาหร่าย',ic:'🌿',rec:6,bg:0x39b9a6,tint:[.7,.92,.64],mc:'#2f9a6a',gx:0,gy:-2,theme:'poison',tier:2,biome:'kelp',quest:1},
+ {id:3,n:'ถ้ำมืด',ic:'🕳',rec:12,bg:0x22506e,tint:[.4,.46,.62],mc:'#3a4a78',gx:3,gy:0,theme:'weird',tier:3,biome:'cave',quest:2},
+ {id:4,n:'ถ้ำราชา',ic:'👑',rec:15,bg:0x1b2146,w:56,d:56,tint:[.34,.3,.5],mc:'#4a3a7a',gx:4,gy:0,theme:'boss',tier:4,biome:'lair',music:'lair'},
+ {id:5,n:'บึงงูทะเล',ic:'🐍',rec:1,bg:0x61cba8,tint:[.8,1,.7],mc:'#459e74',gx:0,gy:-1,theme:'poison',tier:1,biome:'kelp'},
+ {id:6,n:'รังพิษลึก',ic:'☠️',rec:12,bg:0x386f72,tint:[.5,.7,.55],mc:'#416b60',gx:0,gy:-3,theme:'poison',tier:3,biome:'kelp'},
+ {id:7,n:'ลานปักเป้า',ic:'🐡',rec:1,bg:0x61c6cc,tint:[1,.9,.75],mc:'#b49a65',gx:-1,gy:0,theme:'spike',tier:1,biome:'shore'},
+ {id:8,n:'แนวปะการังหนาม',ic:'🪸',rec:6,bg:0x639eaf,tint:[.85,.72,.9],mc:'#8f709b',gx:-2,gy:0,theme:'spike',tier:2,biome:'shore'},
+ {id:9,n:'ถ้ำผลึกหนาม',ic:'💎',rec:12,bg:0x455c85,tint:[.55,.55,.85],mc:'#5a568e',gx:-3,gy:0,theme:'spike',tier:3,biome:'cave'},
+ {id:10,n:'อ่าวฉลาม',ic:'🦈',rec:6,bg:0x43b8d2,tint:[.8,.95,1],mc:'#368eaa',gx:0,gy:2,theme:'normal',tier:2,biome:'shore'},
+ {id:11,n:'ทะเลวาฬ',ic:'🐋',rec:12,bg:0x397baf,tint:[.6,.78,.95],mc:'#3f6895',gx:0,gy:3,theme:'normal',tier:3,biome:'shore'},
+ {id:12,n:'หาดประหลาด',ic:'🟣',rec:1,bg:0x8abacb,tint:[1,.85,.95],mc:'#9b7da4',gx:1,gy:0,theme:'weird',tier:1,biome:'shore'},
+ {id:13,n:'ป่ามือผี',ic:'🖐️',rec:6,bg:0x6f94ae,tint:[.75,.7,.95],mc:'#706a9e',gx:2,gy:0,theme:'weird',tier:2,biome:'kelp'}];
+const MAPTHEME={town:'🏘',normal:'↓ 🐟',poison:'↑ ☠️',spike:'← 🐡',weird:'→ 🟣',boss:'👑'};
+MAPS.forEach(d=>{d.w=d.w||100;d.d=d.d||64;d.music=d.music||({shore:'shallows',kelp:'kelp',cave:'cave'}[d.biome]);d.hpScale=[1,1,1.3,1.7,1][d.tier];d.xpScale=[1,1,1.6,2.4,1][d.tier];});
+const MAP_ROUTES=[[0,5],[5,2],[2,6],[0,7],[7,8],[8,9],[0,1],[1,10],[10,11],[0,12],[12,13],[13,3],[3,4]];
+// ประตูคู่ที่ขอบตามทิศจริง จุดลงห่างจากประตู 4 หน่วยและมีคูลดาวน์วาร์ปเดิม
+const PORTALS=[];
+MAP_ROUTES.forEach(([a,b])=>{const A=MAPS[a],B=MAPS[b],dx=Math.sign(B.gx-A.gx),dz=Math.sign(B.gy-A.gy);
+ const edge=(d,inset)=>({x:dx*(d.w/2-inset),z:dz*(d.d/2-inset)}),pa=edge(A,3),pb=edge(B,3),la=edge(A,7),lb=edge(B,7);
+ PORTALS.push({map:a,...pa,to:{map:b,x:-lb.x,z:-lb.z}},{map:b,x:-pb.x,z:-pb.z,to:{map:a,...la}});});
+const portalDeeper=p=>MAPS[p.to.map].tier>MAPS[p.map].tier;
 const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
 const hf=(x,z)=>Math.sin(x*.15)*Math.cos(z*.13)*.5+Math.sin(x*.4+z*.3)*.1;
 const h=(x,z)=>MAPS[curMap].flat?0:hf(x,z);
-// ตารางมอนสเตอร์: ตีตัวหนึ่งเสร็จมีตัวต่อทันที (เกิดเป็นกลุ่ม ๆ จุดเกิดคงที่ตามแมพ)
-const SPAWN=[{map:1,t:'ray',n:14,c:4},{map:2,t:'shark',n:8,c:3},{map:2,t:'eel',n:6,c:2},{map:2,t:'puffer',n:6,c:2},{map:3,t:'whale',n:7,c:3},{map:3,t:'shrimp',n:5,c:2},{map:1,t:'chp1',n:4,c:2},{map:1,t:'crb1',n:4,c:2},{map:1,t:'hnd1',n:3,c:2},{map:1,t:'srp1',n:3,c:2},
-{map:2,t:'chp2',n:3,c:2},{map:2,t:'crb2',n:3,c:2},{map:2,t:'hnd2',n:3,c:2},{map:2,t:'swm1',n:3,c:2},{map:2,t:'tub1',n:3,c:2},
-{map:3,t:'chp3',n:2,c:1},{map:3,t:'crb3',n:2,c:1},{map:3,t:'hnd3',n:2,c:1},{map:3,t:'srp2',n:2,c:1},{map:3,t:'srp3',n:2,c:1},{map:3,t:'swm2',n:2,c:1},{map:3,t:'tub2',n:2,c:1},
-{map:4,t:'boss',n:1,c:1}];
+// ย้าย roster เดิม 90 ตัวตามธีม ไม่เพิ่มโมเดลหรือเปลี่ยนระบบรางวัล
+const SPAWN=[
+ {map:1,t:'ray',n:14,c:4},{map:10,t:'shark',n:8,c:3},{map:11,t:'whale',n:7,c:3},
+ {map:5,t:'eel',n:3,c:2},{map:5,t:'crb2',n:1,c:1},{map:2,t:'eel',n:2,c:1},{map:2,t:'crb2',n:1,c:1},{map:6,t:'eel',n:1,c:1},{map:6,t:'crb2',n:1,c:1},
+ {map:7,t:'puffer',n:3,c:2},{map:8,t:'puffer',n:2,c:1},{map:8,t:'chp2',n:3,c:2},{map:8,t:'shrimp',n:2,c:1},{map:9,t:'puffer',n:1,c:1},{map:9,t:'chp3',n:2,c:1},{map:9,t:'shrimp',n:3,c:2},
+ {map:12,t:'chp1',n:4,c:2},{map:12,t:'crb1',n:4,c:2},{map:12,t:'hnd1',n:3,c:2},{map:12,t:'srp1',n:3,c:2},
+ {map:13,t:'hnd2',n:3,c:2},{map:13,t:'swm1',n:3,c:2},{map:13,t:'tub1',n:3,c:2},
+ {map:3,t:'crb3',n:2,c:1},{map:3,t:'hnd3',n:2,c:1},{map:3,t:'srp2',n:2,c:1},{map:3,t:'srp3',n:2,c:1},{map:3,t:'swm2',n:2,c:1},{map:3,t:'tub2',n:2,c:1},
+ {map:4,t:'boss',n:1,c:1}];
 const monsterRoster=[],monsterMeta=[];
 SPAWN.forEach((sp,si)=>{const def=MAPS[sp.map],rng=mulberry(1000+si*77),centers=[],bx=def.w/2-9,bz=def.d/2-9;
  for(let c=0;c<sp.c;c++){let best=null;for(let tr=0;tr<80&&!best;tr++){const x=(rng()*2-1)*bx,z=(rng()*2-1)*bz;if(PORTALS.some(q=>q.map===sp.map&&Math.hypot(q.x-x,q.z-z)<12))continue;if(centers.some(q=>Math.hypot(q[0]-x,q[1]-z)<16))continue;best=[x,z];}centers.push(best||[(rng()*2-1)*bx,(rng()*2-1)*bz]);}
@@ -285,7 +308,7 @@ function buildMapWorld(def){
  [[0,-D/2,W,0],[0,D/2,W,0],[-W/2,0,D,Math.PI/2],[W/2,0,D,Math.PI/2]].forEach(([x,z,len,ry])=>{const w=new T.Mesh(new T.PlaneGeometry(len,8),wm);w.position.set(x,3.6,z);w.rotation.y=ry;g.add(w);});
  g.add(new T.LineLoop(new T.BufferGeometry().setFromPoints([new T.Vector3(-W/2,.4,-D/2),new T.Vector3(W/2,.4,-D/2),new T.Vector3(W/2,.4,D/2),new T.Vector3(-W/2,.4,D/2)]),new T.LineBasicMaterial({color:0xbff6ff})));
  const rocks=(n,minD)=>{for(let i=0;i<n;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7)||Math.hypot(x,z)<minD)continue;const r=new T.Mesh(rockG,rm);const sc=.8+rng()*2;r.scale.setScalar(sc);r.position.set(x,yAt(x,z)+.4,z);r.rotation.set(rng()*3,rng()*3,0);g.add(r);}};
- if(def.id===0){ // เมืองริมหาด: ลานหิน น้ำพุ บ้าน ต้นปาล์ม
+ if(def.safe){ // เมืองริมหาด: ลานหิน น้ำพุ บ้าน ต้นปาล์ม
   const plaza=new T.Mesh(new T.CircleGeometry(12,40),new T.MeshStandardMaterial({color:0xe3d6b0,roughness:1}));plaza.rotation.x=-Math.PI/2;plaza.position.y=.03;plaza.receiveShadow=true;g.add(plaza);
   const ring=new T.Mesh(new T.TorusGeometry(12,.18,6,60),new T.MeshStandardMaterial({color:0xb99b62}));ring.rotation.x=Math.PI/2;ring.position.y=.1;g.add(ring);
   const fb=new T.Mesh(new T.CylinderGeometry(2.6,2.8,.9,24),new T.MeshStandardMaterial({color:0xcfc7b0}));fb.position.set(0,.45,-6);g.add(fb);
@@ -294,9 +317,9 @@ function buildMapWorld(def){
   [[-17,-12,0xb88a5a,0xc0463a],[17,-12,0x8aa8b8,0x3f7fb8],[-17,12,0xc9a35a,0x7a4a9a]].forEach(([x,z,wc,rc])=>{const b=new T.Mesh(new T.BoxGeometry(7,3.6,5.5),new T.MeshStandardMaterial({color:wc,roughness:.8}));b.position.set(x,1.8,z);g.add(b);const r=new T.Mesh(new T.ConeGeometry(5.4,2.6,4),new T.MeshStandardMaterial({color:rc,roughness:.8}));r.position.set(x,4.9,z);r.rotation.y=Math.PI/4;g.add(r);});
   for(let i=0;i<9;i++){const a=i/9*6.2832+.3,x=Math.cos(a)*22,z=Math.sin(a)*15;if(!free(x,z,6))continue;const tr=new T.Mesh(trunkG,new T.MeshStandardMaterial({color:0x8a6a3a}));tr.scale.y=4;tr.position.set(x,2,z);g.add(tr);for(let k=0;k<5;k++){const lf=new T.Mesh(coneG,kelpM[k%2]);lf.scale.set(.9,2.6,.9);lf.position.set(x,4,z);lf.rotation.set(Math.PI/2.4,k*1.2566,0);g.add(lf);}}
   rocks(8,15);
- }else if(def.id===1){rocks(24,0);for(let i=0;i<28;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7))continue;const c=new T.Mesh(coneG,coralM[i%3]);c.scale.set(.5+rng()*.6,2+rng()*3,.5+rng()*.6);c.position.set(x,yAt(x,z),z);g.add(c);}}
- else if(def.id===2){rocks(10,0);for(let i=0;i<95;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,6))continue;const k=new T.Mesh(kelpG,kelpM[i%2]);k.scale.y=3+rng()*4;k.position.set(x,yAt(x,z),z);k.userData.ph=i;g.add(k);def.kelps.push(k);}}
- else if(def.id===3){rocks(10,0);for(let i=0;i<42;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7))continue;const hh=3+rng()*6,c=new T.Mesh(coneG,stalM);c.scale.set(.7+rng()*1,hh,.7+rng()*1);c.position.set(x,yAt(x,z),z);g.add(c);}
+ }else if(def.biome==='shore'){rocks(24,0);for(let i=0;i<28;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7))continue;const c=new T.Mesh(coneG,coralM[i%3]);c.scale.set(.5+rng()*.6,2+rng()*3,.5+rng()*.6);c.position.set(x,yAt(x,z),z);g.add(c);}}
+ else if(def.biome==='kelp'){rocks(10,0);for(let i=0;i<95;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,6))continue;const k=new T.Mesh(kelpG,kelpM[i%2]);k.scale.y=3+rng()*4;k.position.set(x,yAt(x,z),z);k.userData.ph=i;g.add(k);def.kelps.push(k);}}
+ else if(def.biome==='cave'){rocks(10,0);for(let i=0;i<42;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7))continue;const hh=3+rng()*6,c=new T.Mesh(coneG,stalM);c.scale.set(.7+rng()*1,hh,.7+rng()*1);c.position.set(x,yAt(x,z),z);g.add(c);}
   for(let i=0;i<26;i++){const x=R(W/2-4),z=R(D/2-4),o=new T.Mesh(orbG,orbM);o.position.set(x,1.4+rng()*4,z);o.userData.ph=i;g.add(o);def.orbs.push(o);}}
  else{ // ถ้ำราชา: เสา 8 ต้นรอบลานรูน
   const rune=new T.Mesh(new T.TorusGeometry(12,.22,8,60),new T.MeshBasicMaterial({color:0xb48cff}));rune.rotation.x=Math.PI/2;rune.position.y=.15;g.add(rune);const rune2=new T.Mesh(new T.TorusGeometry(6,.16,8,40),new T.MeshBasicMaterial({color:0xff7ad9}));rune2.rotation.x=Math.PI/2;rune2.position.y=.15;g.add(rune2);
@@ -611,11 +634,11 @@ const NEWT=[
 NEWT.forEach(t=>types.push({n:t[0],nm:t[1],dr:t[2],c:t[3],hp:t[4],xp:t[5],d:t[6],s:t[7],sp:t[8],fam:t[9],o:t[10],like:t[11],ai:t[12]||undefined,zone:t[13],ic:t[14]}));
 const XPMUL=.25,HPMUL=1.8,DMGMUL=1.35;types.forEach(t=>{t.d=Math.round(t.d*DMGMUL);});
 
-// The central training area is reserved for rays. Spawns remain near the player.
+// Spawns remain near their fixed homes; town stays free of monsters.
 const graceDuration=8;let grace=graceDuration;
 const spawn=m=>{let x=0,z=0;const def=MAPS[m.map],bx=def.w/2-2,bz=def.d/2-2;
 for(let i=0;i<30;i++){const a=Math.random()*6.2832,d=m.ty.n==='boss'?0:Math.random()*5;x=Math.max(-bx,Math.min(bx,m.home.x+Math.sin(a)*d));z=Math.max(-bz,Math.min(bz,m.home.z+Math.cos(a)*d));if(m.map!==curMap||Math.hypot(x-sea.position.x,z-sea.position.z)>10)break;}
-m.g.position.set(x,0,z);{const zq=[[1,1],[1,1],[1.3,1.6],[1.7,2.4],[1,1]][m.map]||[1,1];m.zf=m.ty.n==='boss'?1:zq[0];m.xf=m.ty.n==='boss'?1:zq[1];}m.mhp=m.ty.hp*m.zf*HPMUL;m.hp=m.mhp;m.dead=0;m.aggro=false;m.slow=0;m.flee=0;m.windup=0;m.dash=0;m.dashWait=3;m.cd=1;m.a=Math.random()*6.28;m.g.visible=true;m.bar.visible=true;m.mat.emissive.setHex(0);if(m.puff)m.puff.scale.setScalar(1);};
+m.g.position.set(x,0,z);{m.zf=def.hpScale;m.xf=def.xpScale;}m.mhp=m.ty.hp*m.zf*HPMUL;m.hp=m.mhp;m.dead=0;m.aggro=false;m.slow=0;m.flee=0;m.windup=0;m.dash=0;m.dashWait=3;m.cd=1;m.a=Math.random()*6.28;m.g.visible=true;m.bar.visible=true;m.mat.emissive.setHex(0);if(m.puff)m.puff.scale.setScalar(1);};
 
 // ===== Monster models v2: smooth, bright, anatomical =====
 function bodyLathe(pts,seg,col,belly,flat){ // pts: [รัศมี, ตำแหน่งตามยาว]; หัวอยู่ +Z
@@ -803,8 +826,8 @@ function startBgm(){if(!audioContext)return;if(!BGM.master){BGM.master=audioCont
 function stopBgm(){if(audioContext&&BGM.master)BGM.master.gain.setTargetAtTime(0,audioContext.currentTime,.08);}
 function setBgmTrack(name){BGM.want=name;if(!soundOn||!BGM.master||!BGM.tr||BGM.name===name)return;BGM.master.gain.setTargetAtTime(0,audioContext.currentTime,.12);clearTimeout(BGM.sw);
   BGM.sw=setTimeout(()=>{BGM.name=name;BGM.tr=TRACKS[name];BGM.step=0;BGM.nextT=0;bgmApplyVol();},450);}
-function updateBgm(dt){const boss=mons.find(m=>m.ty.n==='boss');if(boss&&curMap===4&&boss.dead<=0&&boss.aggro)BGM.hold=3;else BGM.hold=Math.max(0,BGM.hold-dt);
-  const want=BGM.hold>0?'boss':['town','shallows','kelp','cave','lair'][curMap];if(want!==BGM.want)setBgmTrack(want);}
+function updateBgm(dt){const boss=mons.find(m=>m.ty.n==='boss');if(boss&&curMap===boss.map&&boss.dead<=0&&boss.aggro)BGM.hold=3;else BGM.hold=Math.max(0,BGM.hold-dt);
+  const want=BGM.hold>0?'boss':MAPS[curMap].music;if(want!==BGM.want)setBgmTrack(want);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopBgm();else bgmApplyVol();});
 function feedbackHit(m,amount){if(m.ty.n==='ray'){m.flee=3;m.aggro=false;}const slot=damagePool.find(x=>x.time<=0);if(slot){slot.time=1.15;slot.pos.copy(m.g.position);slot.pos.y+=1.7*m.ty.s;slot.el.textContent=String(Math.round(amount));slot.el.style.display='block';}m.flash=.14;m.mat.emissive.setHex(0x555555);playTone('hit');}
 function feedbackDefeat(m){const slot=rings.find(x=>x.time<=0);if(slot){slot.time=.5;slot.mesh.position.copy(m.g.position);slot.mesh.position.y+=.5;slot.mesh.scale.setScalar(m.ty.s);slot.mesh.material.opacity=.7;slot.mesh.visible=true;}playTone('defeat');}
@@ -897,9 +920,9 @@ if(grace>0)return;for(const m of mons){if(count>=3)break;if(m.ty.n==='boss')cont
 function separateMonsters(){for(let pass=0;pass<2;pass++)for(let i=0;i<mons.length;i++){const a=mons[i];if(a.dead>0)continue;for(let j=i+1;j<mons.length;j++){const b=mons[j];if(b.dead>0)continue;let dx=b.g.position.x-a.g.position.x,dz=b.g.position.z-a.g.position.z,d=Math.hypot(dx,dz),gap=1.0*(a.ty.s+b.ty.s);if(d>=gap)continue;if(d<1e-6){const angle=(i*11+j*7)*2.4;dx=Math.sin(angle);dz=Math.cos(angle);d=1;}else{dx/=d;dz/=d;}const push=Math.max(0,gap-(Math.hypot(b.g.position.x-a.g.position.x,b.g.position.z-a.g.position.z)))*.5;for(const [m,sign] of [[a,-1],[b,1]]){m.g.position.x=Math.max(-95,Math.min(95,m.g.position.x+dx*push*sign));m.g.position.z=Math.max(-95,Math.min(95,m.g.position.z+dz*push*sign));}}}}
 // ===== ถิ่น: ชื่อถิ่น สีน้ำเปลี่ยนตามถิ่น สาหร่ายโยก ลูกแสงลอย =====
 const zb=document.createElement('div');zb.id='zoneb';document.body.append(zb);
-let curZone=-1,zoneT=0,zClock=0;const bgTarget=new T.Color(BG),ZQ={2:1,3:2};
+let curZone=-1,zoneT=0,zClock=0;const bgTarget=new T.Color(BG);
 function updateZone(dt){zClock+=dt;if(jobRing)jobRing.rotation.z+=dt*1.5;const zi=curMap,z=MAPS[zi];
-  if(zi!==curZone){curZone=zi;zb.textContent=z.ic+' '+z.n+(z.safe?' • ปลอดภัย':z.rec>1?' • แนะนำเลเวล '+z.rec+'+':'');zb.style.opacity=1;zoneT=3;bgTarget.setHex(z.bg);if(ZQ[zi])dailyEvent('zone',ZQ[zi]);}
+  if(zi!==curZone){curZone=zi;zb.textContent=z.ic+' '+z.n+(z.safe?' • ปลอดภัย':z.rec>1?' • แนะนำเลเวล '+z.rec+'+':'');zb.style.opacity=1;zoneT=3;bgTarget.setHex(z.bg);if(z.quest)dailyEvent('zone',z.quest);}
   if(zoneT>0){zoneT-=dt;if(zoneT<=0)zb.style.opacity=0;}
   scene.background.lerp(bgTarget,Math.min(1,dt*1.5));scene.fog.color.copy(scene.background);
   if(z.safe)P.hp=Math.min(P.max,P.hp+dt*P.max*.2);
@@ -921,7 +944,7 @@ function updateNames(){const nm=playerName(),txt=nm;if(txt!==myTagText){myTagTex
   placeTag(myTag,sea.position.x,sea.position.y+(CLS==='sea'?3.7:4.9)*sea.scale.x,sea.position.z);
   for(const m of mons){const el=m.tag;if(m.dead>0||!m.g.visible){el.style.display='none';continue;}const dx=m.g.position.x-sea.position.x,dz=m.g.position.z-sea.position.z;if(dx*dx+dz*dz>(m.ty.n==='boss'?4900:1600)){el.style.display='none';continue;}placeTag(el,m.g.position.x,m.g.position.y+3.45*m.ty.s,m.g.position.z);}}
 // ===== ประตูวาร์ป + หน้าจอแผนที่ + มินิแมพ (แนว Ragnarok) =====
-PORTALS.forEach(p=>{const deeper=p.to.map>p.map,col=deeper?0xffd95a:0x7dffb0,g=new T.Group();g.position.set(p.x,h(p.x,p.z),p.z);g.rotation.y=Math.atan2(-p.x,-p.z);
+PORTALS.forEach(p=>{const deeper=portalDeeper(p),col=deeper?0xffd95a:0x7dffb0,g=new T.Group();g.position.set(p.x,MAPS[p.map].flat?0:hf(p.x,p.z),p.z);g.rotation.y=Math.atan2(-p.x,-p.z);
   const ring=new T.Mesh(new T.TorusGeometry(1.5,.16,12,36),new T.MeshBasicMaterial({color:col}));ring.position.y=1.8;g.add(ring);
   const disc=new T.Mesh(new T.CircleGeometry(1.4,32),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.4,side:T.DoubleSide,depthWrite:false}));disc.position.y=1.8;g.add(disc);
   const beam=new T.Mesh(new T.CylinderGeometry(1.3,1.3,8,20,1,true),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.12,side:T.DoubleSide,depthWrite:false}));beam.position.y=4;g.add(beam);
@@ -936,8 +959,10 @@ function updatePortals(dt){warpCD=Math.max(0,warpCD-dt);{const md=MAPS[curMap],b
   const dx=p.x-sea.position.x,dz=p.z-sea.position.z,d2=dx*dx+dz*dz;if(d2<1.9*1.9&&!warpLock&&warpCD<=0)doWarp(p);if(d2<45*45)placeTag(p.tag,p.x,p.g.position.y+4,p.z);}}
 const mapov=document.createElement('div');mapov.id='mapov';mapov.setAttribute('role','dialog');mapov.setAttribute('aria-label','แผนที่');document.body.append(mapov);
 let mapTab=0,mapTimer=null;const MAPICON={ray:'🔷',shark:'🦈',eel:'🐍',puffer:'🐡',whale:'🐋',shrimp:'🦐',boss:'👑'};
-function renderMapUI(){const def=MAPS[mapTab],here=mons.filter(m=>m.map===mapTab),seen={};here.forEach(m=>{seen[m.ty.n]=m.ty.nm;});const k=300/(def.w+6),ch=Math.round((def.d+6)*k);
-  mapov.innerHTML='<div class="mapbox"><div class="mhead"><h2>🗺️ แผนที่</h2><button class="evx" data-mclose aria-label="ปิด">✕</button></div><div class="maptabs">'+MAPS.map((m,i)=>'<button data-mtab="'+i+'" aria-pressed="'+(i===mapTab)+'" aria-label="'+m.n+'">'+m.ic+(i===mapTab?' '+m.n:'')+(i===curMap?'📍':'')+'</button>').join('')+'</div><canvas id="mapcv" width="300" height="'+ch+'" aria-label="แผนที่'+def.n+'"></canvas><div class="maplg">'+Object.keys(seen).map(k2=>'<span>'+MAPICON[k2]+' '+seen[k2]+'</span>').join('')+(def.safe?'<span>🏘 เขตปลอดภัย</span>':'')+'<span>🌀 ประตูวาร์ป</span><span>🔺 ตัวคุณ</span></div></div>';drawMap();}
+function renderMapUI(){const def=MAPS[mapTab],here=mons.filter(m=>m.map===mapTab),seen={};here.forEach(m=>{seen[m.ty.n]=m.ty;});const k=300/(def.w+6),ch=Math.round((def.d+6)*k);
+ const rx=d=>(d.gx+3.5)*40,ry=d=>(d.gy+3.5)*28;
+ const routes='<div class="maproutes" aria-label="เส้นทางสี่ทิศ"><span class="routekey" style="left:53%;top:9%">↑ สัตว์พิษ</span><span class="routekey" style="left:1%;top:32%">← สัตว์หนาม</span><span class="routekey" style="right:1%;top:32%">สัตว์ประหลาด →</span><span class="routekey" style="left:53%;bottom:9%">↓ สัตว์ทั่วไป</span><svg viewBox="0 0 320 196" aria-hidden="true">'+MAP_ROUTES.map(([a,b])=>'<line x1="'+rx(MAPS[a])+'" y1="'+ry(MAPS[a])+'" x2="'+rx(MAPS[b])+'" y2="'+ry(MAPS[b])+'"/>').join('')+'</svg>'+MAPS.map(m=>'<button data-mtab="'+m.id+'" style="left:'+rx(m)/3.2+'%;top:'+ry(m)/1.96+'%" aria-pressed="'+(m.id===mapTab)+'" aria-label="'+m.n+' '+MAPTHEME[m.theme]+(m.safe?' ปลอดภัย':' เลเวล '+m.rec)+'" title="'+m.n+'">'+m.ic+(m.safe||m.theme==='boss'?'':'<small>'+m.rec+'</small>')+(m.id===curMap?'<i>📍</i>':'')+'</button>').join('')+'</div>';
+ mapov.innerHTML='<div class="mapbox"><div class="mhead"><h2>🗺️ แผนที่</h2><button class="evx" data-mclose aria-label="ปิด">✕</button></div>'+routes+'<div class="maptitle">'+MAPTHEME[def.theme]+' '+def.n+(def.safe?' • ปลอดภัย':' • Lv.'+def.rec+'+')+'</div><canvas id="mapcv" width="300" height="'+ch+'" aria-label="แผนที่'+def.n+' เหนืออยู่ด้านบน"></canvas><div class="maplg">'+Object.values(seen).map(t=>'<span>'+(t.ic||MAPICON[t.n]||'●')+' '+t.nm+'</span>').join('')+(def.safe?'<span>🏘 เขตปลอดภัย</span>':'')+'<span>🌀 วาร์ป • ↑ เหนือ</span><span>🔺 ตัวคุณ</span></div></div>';drawMap();}
 function drawMap(){const cv=$('mapcv');if(!cv)return;const c=cv.getContext('2d'),def=MAPS[mapTab],k=300/(def.w+6),X=x=>cv.width/2+x*k,Y=z=>cv.height/2+z*k;c.clearRect(0,0,cv.width,cv.height);
   c.fillStyle='#07303b';c.fillRect(0,0,cv.width,cv.height);c.fillStyle=def.mc;c.fillRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);
   c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1.5;c.setLineDash([4,4]);c.strokeRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);c.setLineDash([]);
@@ -946,7 +971,7 @@ function drawMap(){const cv=$('mapcv');if(!cv)return;const c=cv.getContext('2d')
   for(const m of mons){if(m.map!==mapTab)continue;const waiting=m.parked?m.parkedDead>0:m.dead>0,x=X(m.home.x),y=Y(m.home.z),boss=m.ty.n==='boss';
     c.globalAlpha=waiting?.4:1;c.strokeStyle=boss?'#ffd95a':'rgba(255,255,255,.3)';c.lineWidth=boss?2.5:1;c.beginPath();c.arc(x,y,boss?11:4.5*k/1.2,0,6.2832);c.stroke();
     c.font=(boss?22:13)+'px system-ui';c.fillText(m.ty.ic||MAPICON[m.ty.n]||'●',x,y+1);c.globalAlpha=1;}
-  for(const p of PORTALS){if(p.map!==mapTab)continue;c.font='17px system-ui';c.fillText('🌀',X(p.x),Y(p.z));c.font='12px system-ui';c.fillStyle='#fff';c.fillText(MAPS[p.to.map].ic,X(p.x),Y(p.z)-14);}
+  for(const p of PORTALS){if(p.map!==mapTab)continue;c.font='17px system-ui';c.fillText('🌀',X(p.x),Y(p.z));c.font='12px system-ui';c.fillStyle='#fff';c.fillText(MAPS[p.to.map].ic,X(p.x),Y(p.z)+(p.z<0?14:-14));}
   if(curMap===mapTab){const px=X(sea.position.x),py=Y(sea.position.z);c.save();c.translate(px,py);c.rotate(Math.PI-face);c.fillStyle='#fff';c.strokeStyle='#00b7d6';c.lineWidth=2;c.beginPath();c.moveTo(0,-8);c.lineTo(6,6);c.lineTo(-6,6);c.closePath();c.fill();c.stroke();c.restore();}}
 function openMap(){mapTab=curMap;renderMapUI();mapov.style.display='flex';mapov.classList.add('pop');setTimeout(()=>mapov.classList.remove('pop'),400);clearInterval(mapTimer);mapTimer=setInterval(drawMap,300);}
 function closeMap(){mapov.style.display='none';clearInterval(mapTimer);}
@@ -954,11 +979,11 @@ $('mapb').addEventListener('click',openMap);
 mapov.addEventListener('click',e=>{const b=e.target.closest('button');if(e.target===mapov){closeMap();return;}if(!b)return;if(b.hasAttribute('data-mclose')){closeMap();return;}if(b.dataset.mtab!==undefined){mapTab=+b.dataset.mtab;renderMapUI();}});
 // มินิแมพมุมจอ: เห็นมอนสเตอร์ที่ยังมีชีวิตแบบสด ๆ ตีเสร็จมองหาตัวต่อไปได้ทันที แตะเพื่อเปิดแผนที่เต็ม
 const mini=document.createElement('canvas');mini.id='minimap';mini.setAttribute('role','button');mini.setAttribute('aria-label','แผนที่ย่อ แตะเพื่อเปิดแผนที่');document.body.append(mini);let miniT=0;
-function updateMini(dt){miniT-=dt;if(miniT>0)return;miniT=.2;const def=MAPS[curMap],k=Math.min(118/(def.w+4),84/(def.d+4)),cw=Math.round((def.w+4)*k),ch=Math.round((def.d+4)*k);
+function updateMini(dt){miniT-=dt;if(miniT>0)return;miniT=.2;const def=MAPS[curMap],k=Math.min(118/(def.w+4),84/(def.d+4)),cw=Math.round((def.w+4)*k),ch=Math.round((def.d+4)*k)+14;
   if(mini.style.width!==cw+'px'||mini.style.height!==ch+'px'){mini.width=cw*2;mini.height=ch*2;mini.style.width=cw+'px';mini.style.height=ch+'px';}
-  const c=mini.getContext('2d'),X=x=>(x+def.w/2+2)*k,Y=z=>(z+def.d/2+2)*k;c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,cw,ch);
-  c.fillStyle=def.mc;c.globalAlpha=.8;c.fillRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);c.globalAlpha=1;
-  for(const p of PORTALS){if(p.map!==curMap)continue;c.fillStyle=p.to.map>p.map?'#ffd95a':'#7dffb0';c.beginPath();c.arc(X(p.x),Y(p.z),3,0,6.2832);c.fill();}
+  const c=mini.getContext('2d'),X=x=>(x+def.w/2+2)*k,Y=z=>(z+def.d/2+2)*k+14;c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,cw,ch);
+  c.fillStyle='#fff';c.font='10px system-ui';c.textAlign='left';c.fillText(MAPTHEME[def.theme]+(def.safe?'':' '+def.rec+'+')+'  ↑ N',4,11);c.fillStyle=def.mc;c.globalAlpha=.8;c.fillRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);c.globalAlpha=1;
+  for(const p of PORTALS){if(p.map!==curMap)continue;c.fillStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.beginPath();c.arc(X(p.x),Y(p.z),3,0,6.2832);c.fill();}
   for(const m of mons){if(m.map!==curMap||m.dead>0||!m.g.visible)continue;const boss=m.ty.n==='boss';c.fillStyle=boss?'#ffd95a':(m===lockM?'#ffffff':'#ff5a4a');c.beginPath();c.arc(X(m.g.position.x),Y(m.g.position.z),boss?4:m===lockM?2.6:1.8,0,6.2832);c.fill();}
   c.save();c.translate(X(sea.position.x),Y(sea.position.z));c.rotate(Math.PI-face);c.fillStyle='#fff';c.strokeStyle='#00b7d6';c.lineWidth=1.2;c.beginPath();c.moveTo(0,-5);c.lineTo(3.6,3.6);c.lineTo(-3.6,3.6);c.closePath();c.fill();c.stroke();c.restore();}
 mini.addEventListener('click',openMap);
@@ -1136,9 +1161,9 @@ function exportSaveBackup(){
     setTimeout(()=>URL.revokeObjectURL(url),60000);say('เริ่มดาวน์โหลดเซฟ โปรดตรวจไฟล์ในอุปกรณ์');
   }catch(e){if(url)URL.revokeObjectURL(url);say('สำรองเซฟไม่สำเร็จ: '+(e&&e.message?e.message:'ไม่สามารถอ่านเซฟได้'));}
 }
-const ZN={ray:'หาดตื้น',shark:'ป่าสาหร่าย',eel:'ป่าสาหร่าย',whale:'ถ้ำมืด',boss:'ถ้ำราชา',puffer:'ป่าสาหร่าย',shrimp:'ถ้ำมืด'};
+const ZN={};SPAWN.forEach(sp=>{const n=MAPS[sp.map].n;ZN[sp.t]=ZN[sp.t]?ZN[sp.t]+(ZN[sp.t].split(' / ').includes(n)?'':' / '+n):n;});
 const dailyHtml=()=>{const evolution='<b>🧬 ขั้น '+P.ev+'/3 • เอสเซนส์ '+P.es+'</b><br>';const d=P.dly;if(!d||!Array.isArray(d.qs))return evolution;return evolution+'<b>🎯 ภารกิจวันนี้</b> (ล็อกอินต่อเนื่อง '+d.s+' วัน)<br>'+d.qs.map((q,i)=>(d.f[i]?'✅ ':'⬜ ')+QTXT[q.e](q.n)+(q.n>1?' ('+d.k[i]+'/'+q.n+')':'')).join('<br>')+'<br>'+(d.b?'🎉 ครบทุกภารกิจแล้ว':'ทำครบทั้ง 3 ข้อ รับโบนัสเพิ่ม')+'<hr style="border:0;border-top:1px solid #ffffff2e">';};
-const renderDex=()=>{$('dex').innerHTML=dailyHtml()+'<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' • '+(ZN[t.n]||t.zone||'')+' • ล้มแล้ว '+(P.kc[t.n]||0)+' (ดรอป: '+t.dr+')'+(t.hint?'<br><small>'+t.hint+'</small>':''):'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b> <button id="equipGear">🎒 สวมอุปกรณ์</button><br>'+(Object.keys(P.inv).map(k=>inventoryLabel(k)+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="renameBtn">✏️ ตั้งชื่อ</button> <button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="gfxBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button> <button id="zoomIn">ซูมเข้า +</button> <button id="zoomOut">ซูมออก −</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วหนึ่งนิ้วบนพื้นน้ำเพื่อหมุนกล้อง 360° บีบสองนิ้วเพื่อซูมเข้า-ออก ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: ล้อเมาส์ หรือ - = ซูม, Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='equipGear'){$('dex').style.display='none';renderEvo();evo.style.display='flex';$('gearTitle').scrollIntoView({block:'start'});return;}if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){location.reload();return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
+const renderDex=()=>{$('dex').innerHTML=dailyHtml()+'<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><br>'+types.map(t=>P.seen[t.n]?t.nm+' • '+(ZN[t.n]||t.zone||'')+' • ล้มแล้ว '+(P.kc[t.n]||0)+' (ดรอป: '+t.dr+')'+(t.hint?'<br><small>'+t.hint+'</small>':''):'??? ยังไม่พบ').join('<br>')+'<br><b>กระเป๋า</b> <button id="equipGear">🎒 สวมอุปกรณ์</button><br>'+(Object.keys(P.inv).map(k=>inventoryLabel(k)+' x'+P.inv[k]).join('<br>')||'ว่าง')+'<br><button id="renameBtn">✏️ ตั้งชื่อ</button> <button id="swc">เปลี่ยนตัวละคร</button> <button id="exportSave">สำรองเซฟ</button><br><button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea><div class="seg"><b>การแสดงผล</b><br><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="gfxBtn"></button> <button id="fpsBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button> <button id="zoomIn">ซูมเข้า +</button> <button id="zoomOut">ซูมออก −</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วหนึ่งนิ้วบนพื้นน้ำเพื่อหมุนกล้อง 360° บีบสองนิ้วเพื่อซูมเข้า-ออก ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: ล้อเมาส์ หรือ - = ซูม, Z X หมุน, C กลับหลังตัว)</div></div>';refreshDisplayUI();};$('dex').addEventListener('click',e=>{if(e.target.id==='equipGear'){$('dex').style.display='none';renderEvo();evo.style.display='flex';$('gearTitle').scrollIntoView({block:'start'});return;}if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){location.reload();return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
 // Fullscreen / PWA / HUD. iPhone Safari has no Fullscreen API, so there the honest answer
 // is Add to Home Screen, which gives a real fullscreen standalone window.
 const standalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
@@ -1150,6 +1175,7 @@ let hudMin=false;try{hudMin=localStorage.getItem('hudmin')==='1';}catch(e){}
 document.body.classList.toggle('hudmin',hudMin);
 function refreshDisplayUI(){
   const f=$('fsBtn'),hb=$('hudBtn'),hint=$('dispHint');if(!f)return;
+  const fb=$('fpsBtn'),db=$('debug');if(fb){const on=!!db&&db.style.display!=='none';fb.textContent='FPS: '+(on?'เปิด':'ปิด');fb.setAttribute('aria-pressed',String(on));}
   hb.textContent=document.body.classList.contains('hudmin')?'ขยาย HUD':'ย่อ HUD';const gb=$('gfxBtn');if(gb)gb.textContent=gfxHigh?'เงา: เปิด':'เงา: ปิด (ประหยัด)';
   if(standalone()){f.textContent='เต็มจออยู่แล้ว';f.disabled=true;hint.textContent='เปิดจากไอคอนบนหน้าจอโฮม จึงเต็มจอให้อยู่แล้ว';return;}
   f.disabled=false;
@@ -1164,6 +1190,7 @@ $('dex').addEventListener('click',e=>{
   if(id==='zoomIn'){zoomCam(1/1.25);return;}
   if(id==='zoomOut'){zoomCam(1.25);return;}
   if(id==='renameBtn'){const cur=playerName(),v=prompt('ตั้งชื่อตัวละคร (ไม่เกิน 12 ตัวอักษร)',cur);if(v===null)return;const clean=v.replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,12);try{if(clean)localStorage.setItem('pname_'+CLS,clean);else localStorage.removeItem('pname_'+CLS);}catch(x){}say('ตั้งชื่อเป็น '+playerName()+' แล้ว');return;}
+  if(id==='fpsBtn'){setFps(!fpsEnabled,true);refreshDisplayUI();return;}
   if(id==='gfxBtn'){setGfx(!gfxHigh,true);refreshDisplayUI();say(gfxHigh?'เปิดเงาแล้ว':'ปิดเงาแล้ว ภาพเบาลง');return;}
   if(id==='hudBtn'){const on=!document.body.classList.contains('hudmin');document.body.classList.toggle('hudmin',on);try{localStorage.setItem('hudmin',on?'1':'0');}catch(x){}refreshDisplayUI();return;}
   if(id!=='fsBtn')return;
@@ -1253,9 +1280,12 @@ applyViewportSoon();
 
 // loop
 const clock=new T.Clock();let t=0,face=0;cam.position.set(0,10,15);
-const debugEnabled=new URLSearchParams(location.search).get('debug')==='1';let debugFrames=0,debugStart=performance.now(),debugNode=null;
-if(debugEnabled){debugNode=document.createElement('div');debugNode.id='debug';debugNode.style.cssText='position:fixed;left:8px;top:calc(120px + env(safe-area-inset-top,0px));z-index:8;background:#001b22bb;color:white;font:12px monospace;padding:3px 6px;pointer-events:none';debugNode.textContent='FPS: --';document.body.append(debugNode);}
-function loop(){requestAnimationFrame(loop);if(debugNode){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;gfxProbe(dt);
+const debugEnabled=new URLSearchParams(location.search).get('debug')==='1';let fpsEnabled=debugEnabled,debugFrames=0,debugStart=performance.now();
+try{fpsEnabled=fpsEnabled||localStorage.getItem('fps')==='1';}catch(e){}
+const debugNode=document.createElement('div');debugNode.id='debug';debugNode.setAttribute('role','status');debugNode.style.cssText='position:fixed;left:50%;bottom:calc(6px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:8;background:#001b22bb;color:white;font:12px monospace;padding:3px 6px;pointer-events:none;white-space:nowrap';document.body.append(debugNode);
+function setFps(on,persist){fpsEnabled=on;debugNode.style.display=on?'block':'none';debugNode.textContent='FPS: --';debugFrames=0;debugStart=performance.now();if(persist)try{localStorage.setItem('fps',on?'1':'0');}catch(e){}}
+setFps(fpsEnabled,false);
+function loop(){requestAnimationFrame(loop);if(fpsEnabled){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+(debugEnabled?' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact'):'');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;gfxProbe(dt);
 let x=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),z=jz+((keys.KeyS||keys.ArrowDown)?1:0)-((keys.KeyW||keys.ArrowUp)?1:0);
 const l=Math.hypot(x,z);if(l>1){x/=l;z/=l;}const mv=l>.12;
 // Movement is relative to where the camera is looking, so "up" on the stick is always

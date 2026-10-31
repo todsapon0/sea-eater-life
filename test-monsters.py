@@ -29,7 +29,7 @@ with sync_playwright() as p:
   page.goto(url,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__mt');page.evaluate('window.__pauseTest=true');page.add_style_tag(content='#debug,#msg,#zoneb{visibility:hidden!important}')
  load()
  report=page.evaluate('''()=>{const t=__mt;if(t.mons.length!==90||t.types.length!==23)throw Error('roster size');const counts={};for(const m of t.mons)counts[m.ty.n]=(counts[m.ty.n]||0)+1;
-  for(const name of ['puffer','shrimp']){const m=t.mons.find(m=>m.ty.n===name),d=t.MAPS[m.map];for(let i=0;i<50;i++){t.spawn(m);if(Math.abs(m.g.position.x)>d.w/2||Math.abs(m.g.position.z)>d.d/2)throw Error('spawn bounds');}}
+  for(const m of t.mons.filter(m=>['puffer','shrimp'].includes(m.ty.n))){const d=t.MAPS[m.map];for(let i=0;i<50;i++){t.spawn(m);if(Math.abs(m.g.position.x)>d.w/2||Math.abs(m.g.position.z)>d.d/2)throw Error('spawn bounds');}}
   for(const m of t.mons){const d=t.MAPS[m.map];if(!m.home||Math.abs(m.home.x)>d.w/2||Math.abs(m.home.z)>d.d/2)throw Error('home outside map');}
   t.stopGrace();t.sea.position.set(40,0,0);for(const m of t.mons){m.aggro=false;m.dead=0;m.flee=0;m.g.position.set(42,0,0);}t.assignPursuers();if(t.mons.filter(m=>m.aggro&&m.ty.n!=='boss').length>3)throw Error('pursuer cap');return counts;}''')
  assert report['ray']==14 and report['boss']==1 and sum(report.values())==90,report
@@ -54,6 +54,6 @@ with sync_playwright() as p:
   page.evaluate('''()=>{const t=__mt;for(const m of t.mons){m.g.visible=false;m.bar.visible=false;}t.sea.position.set(0,0,0);t.sea.rotation.set(0,0,0);t.cam.position.set(8,4.5,4);t.cam.lookAt(0,1.8,0);t.ren.render(t.scene,t.cam);}''')
   page.screenshot(path=str(artifacts/f'new-gear-{cls}.png'))
  assert not errors,errors
- print(json.dumps({'result':'PASS','roster':report,'essence':result['essence'],'spawn_checks':100,'views':8,'gear_species_views':3,'console_errors':errors}),flush=True)
+ print(json.dumps({'result':'PASS','roster':report,'essence':result['essence'],'spawn_checks':550,'views':8,'gear_species_views':3,'console_errors':errors}),flush=True)
  browser.close()
 server.shutdown()
