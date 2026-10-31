@@ -230,6 +230,9 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #rotatehint{display:none;position:fixed;inset:0;z-index:99;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:linear-gradient(165deg,#0d5667,#06303f);color:#fff;font:700 22px/1.4 system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
 #rotatehint i{font-style:normal;font-size:72px;display:block;animation:rotwob 2.2s ease-in-out infinite}@keyframes rotwob{0%,100%{transform:rotate(0)}50%{transform:rotate(-90deg)}}@media(prefers-reduced-motion:reduce){#rotatehint i{animation:none}}
 @media (orientation:portrait){html:not(.norot) #rotatehint{display:flex}}</style>
+<style>/* ขนาดตัวอักษรให้เท่ากันทั้งสมุด + ข้อความแจ้งเตือนเล็กลงไม่ทับตัวละคร (ผู้ใช้แจ้ง 2026-10-31) */
+#dex{font-size:14px}#dex .booksection{font-size:14px;line-height:1.55}#dex .booksection b{font-size:15px}#dex .booksection small{font-size:12px}
+#msg{top:calc(96px + env(safe-area-inset-top,0px));left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(520px,66vw);padding:6px 16px;border-radius:999px;background:rgba(7,38,48,.82);border:1px solid rgba(255,255,255,.25);font-size:16px;line-height:1.35;text-shadow:none;z-index:6}</style>
 </head>
 <body>
 <div id="rotatehint" role="alert"><i>📱</i><div>หมุนเครื่องเป็นแนวนอนเพื่อเล่น</div></div><script>if(navigator.webdriver&&!/[?&]portrait=1/.test(location.search))document.documentElement.classList.add("norot");</script>

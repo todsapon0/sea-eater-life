@@ -36,6 +36,10 @@ const treasureBackup = backup({ sea: rec(5, { tr: ['c1', 'p13'] }) }, 'sea');
 assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(treasureBackup)).characters.sea.tr, ['c1', 'p13']);
 for (const tr of [['c1','c1'], ['c14'], ['__proto__'], [1], 'c1']) throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(5, { tr }) }))), 'สมบัติ');
 
+// Daily arena date `ar` is optional; an empty string (never played) and a real date must round-trip, anything else is rejected.
+for (const ar of ['', '2026-10-31']) assert.strictEqual(tools.decodeCode(tools.encodeCode(backup({ sea: rec(5, { ar }) }, 'sea'))).characters.sea.ar, ar);
+for (const ar of ['yesterday', '2026-1-1', 5, null, '2026-10-31x']) throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(5, { ar }) }))), 'สนามคลื่น');
+
 // 3) Rejects bad input with a Thai message and never returns partial data.
 throwsMsg(() => tools.decodeCode(''), 'ไม่มีรหัส');
 throwsMsg(() => tools.decodeCode('hello'), 'SEL1.');
