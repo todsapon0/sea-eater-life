@@ -24,6 +24,7 @@
       if (!isPlain(r[f])) fail('ตีบวกของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
       Object.keys(r[f]).forEach(function (k) { if (['head', 'back', 'tail'].indexOf(k) < 0 || !isInt(r[f][k], 0, 10)) fail('ตีบวกของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง'); });
     });
+    if (r.ta !== undefined && !(typeof r.ta === 'string' && r.ta.length <= 20)) fail('ฉายาของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.ev !== undefined && !isInt(r.ev, 0, 3)) fail('ขั้นวิวัฒนาการไม่ถูกต้อง');
     if (r.es !== undefined && !isInt(r.es, 0, 1e7)) fail('เอสเซนส์ไม่ถูกต้อง');
     if (r.mu !== undefined) {
