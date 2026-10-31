@@ -15,7 +15,9 @@ const throwsMsg = (fn, part) => { try { fn(); } catch (e) { assert(String(e.mess
 const html = fs.readFileSync('index.html', 'utf8');
 const m = html.match(/function makeSaveBackup\([\s\S]*?\n\}\nfunction exportSaveBackup/);
 assert(m, 'makeSaveBackup not found in index.html');
-const makeSaveBackup = new Function(m[0].replace(/\nfunction exportSaveBackup$/, '') + '; return makeSaveBackup;')();
+const gv = html.match(/const GAME_VERSION='([^']+)'/);
+assert(gv, 'GAME_VERSION not found in index.html');
+const makeSaveBackup = new Function('GAME_VERSION', m[0].replace(/\nfunction exportSaveBackup$/, '') + '; return makeSaveBackup;')(gv[1]);
 const src = mem({ selcls: 'bloop', sel01: JSON.stringify(rec(4)), sel01b: JSON.stringify(rec(7)) });
 const exported = makeSaveBackup(src, 'https://example.test', '2026-10-30T00:00:00Z');
 const parsed = tools.parseBackup(JSON.stringify(exported));

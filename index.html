@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Sea Eater Life v0.5.4</title>
+<title>Sea Eater Life v0.8.0-rc1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
@@ -230,7 +230,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 <body>
 <script>/* เสียงเปิดอัตโนมัติ: iOS ต้องสร้าง/ปลุก AudioContext ตอนแตะครั้งแรก จึงดักการแตะตั้งแต่หน้าเลือกเล่น */window.__ac=null;(function(){const f=()=>{try{const A=window.AudioContext||window.webkitAudioContext;if(A&&!window.__ac)window.__ac=new A();if(window.__ac&&window.__ac.state==='suspended')window.__ac.resume();}catch(e){}window.__sndTap=1;};['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,f,{once:true,passive:true,capture:true}));})();</script>
 <div id="zoomWarn" role="status" style="display:none;position:fixed;left:0;top:0;z-index:30;box-sizing:border-box;padding:8px 12px;background:#b5702cf2;color:#fff;font-size:14px;line-height:1.4;text-align:center;pointer-events:none">หน้าจอถูกซูมเข้าอยู่ ใช้สองนิ้วบีบเพื่อย่อกลับ ปุ่มจะกลับมาครบ</div>
-<div id="hud"><b>Sea Eater Life v0.5.4</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><div id="topbar"><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="mapb" aria-label="แผนที่"></button><button id="evob" aria-label="วิวัฒนาการ">🧬</button><button id="dexb">สมุด</button></div>
+<div id="hud"><b id="gver">Sea Eater Life v0.8.0-rc1</b><div id="lv"></div><div class="bar"><i id="xpb"></i></div><div class="bar hp"><i id="hpb"></i></div><div id="qt"></div><div id="help">กัด = ปุ่มแดง, ทุบพื้น = ปุ่มฟ้า (คอม: WASD, Space, E, Q, R, F)</div></div><div id="msg"></div><div id="topbar"><button id="soundLevel" aria-label="ระดับเสียง">ดัง: ปกติ</button><button id="soundToggle" aria-pressed="false">เสียง: ปิด</button><button id="skillhelp" aria-label="คำอธิบายสกิล">สกิล ?</button><button id="mapb" aria-label="แผนที่"></button><button id="evob" aria-label="วิวัฒนาการ">🧬</button><button id="dexb">สมุด</button></div>
 <div id="movezone" role="group" aria-label="จอยเดิน: ลากนิ้วในพื้นที่มุมซ้ายล่าง"><div id="stick"><div id="knob"></div></div></div>
 <button id="slam">ทุบพื้น</button><button id="devour" class="sk">กิน</button><button id="taunt" class="sk">ยั่ว</button><button id="shield" class="sk">โล่</button><div id="skillinfo" role="dialog" aria-modal="true" aria-label="คำอธิบายสกิล"><div class="card"><b>สกิลของตัวละคร</b><div id="skilltext"></div><button id="closehelp">ปิด</button></div></div><div id="dex"></div><div id="pick"><b>เลือกตัวละคร</b><button data-c="sea">Sea Eater<br><small>Warrior / Tank — กัดระยะประชิด</small></button><button data-c="bloop">Bloop<br><small>Healer / Support — ยิงฟอง รักษา</small></button><button data-c="maja">El Gran Maja<br><small>Mage / DPS — โจมตีไกล ควบคุมศัตรู</small></button></div><button id="lockb" aria-label="เปลี่ยนเป้าหมาย">🎯</button><button id="bite">กัด</button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -368,6 +368,7 @@ for(let i=0;i<5;i++){const s=Math.pow(.82,i),g=new T.Group();
 const m=new T.Mesh(new T.SphereGeometry(.5*s,14,10),new T.MeshStandardMaterial({color:i%2?0xf0d9cf:0xf5f2ea}));m.scale.set(1,.85,1.2);m.position.z=-.2*s;g.add(m);
 g.position.set(0,i?0:1.5,i?-.55*Math.pow(.82,i-1):-.8);par.add(g);segs.push(g);par=g;}
 scene.add(sea);
+const GAME_VERSION='v0.8.0-rc1'; // ตัวเดียวทั้งไฟล์: ป้าย HUD, title, ไฟล์สำรองเซฟ, หน้ามีอะไรใหม่ (ตอนปล่อยจริงเปลี่ยนเป็น v0.8.0)
 let CLS='sea';try{CLS=gameStorage.getItem('selcls')||'sea';}catch(e){}const KEY=CLS==='bloop'?'sel01b':CLS==='maja'?'sel01m':'sel01';const P={lv:1,xp:0,hp:100,max:100,q:0,qd:0,inv:{},seen:{},kc:{},dly:null,job:'',ta:'',dy:0,rf:{head:0,back:0,tail:0},rp:{head:0,back:0,tail:0},st:0,ev:0,es:0,mu:{},spMul:1,hpMul:1,dmgMul:1,dmgTaken:1,cdr:1,shMul:1,blMul:1,healMul:1,sh:0,shCD:0,tauntT:0,tauntCD:0,devCD:0,bless:0,song:0},qs=[{n:5,xp:40},{n:10,xp:100},{n:20,xp:250}],need=l=>Math.round(20*Math.pow(l,1.5)),maxHp=()=>Math.round((100+(P.lv-1)*15)*P.hpMul),$=id=>document.getElementById(id);
 // ===== Sea Eater v2: ตัวขวดนอน ปากทรงไข่ (เฉพาะอาชีพ sea; Bloop/Maja ใช้โมเดลเดิม) =====
 if(CLS==='sea'){(function(){
@@ -1191,6 +1192,15 @@ function npcBody(col,x,z){const g=new T.Group();g.position.set(x,0,z);const m=ne
   [0xff6a5a,0xffe05a,0x4fb4ff].forEach((c,i)=>{const bk=new T.Mesh(new T.CylinderGeometry(.3,.26,.5,24),new T.MeshStandardMaterial({color:c}));bk.position.set(1.5+i*.65,.25,0);g.add(bk);});
   town.add(g);NPCS.push({id:'dye',n:'ช่างย้อมสี',ic:'🎨',x:-9,z:7,g});}
  NPCS.forEach(n=>{n.tag=mkTag('portal',n.ic+' '+n.n);});}
+// ===== เลขเวอร์ชันจุดเดียว + หน้า "มีอะไรใหม่" (โชว์ครั้งเดียวต่อเวอร์ชัน) =====
+const WHATSNEW=[['🗺️','แมพใหม่ 14 แห่ง เดินไปได้ทั้ง 4 ทิศ'],['🐙','สัตว์ประหลาดใหม่ 16 ชนิด'],['⚒️','เมืองมีช่างตีเหล็ก พ่อครัว ช่างย้อมสี'],['🏅','ฉายา 15 แบบ ใส่เหนือชื่อได้'],['🎵','ดนตรีประกอบทุกแมพ'],['💾','เซฟเดิมยังเล่นต่อได้']];
+{const st=document.createElement('style');st.textContent='#whatsnew{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,30,40,.7);z-index:30;padding:12px;box-sizing:border-box}#whatsnew .wbox{width:min(340px,94vw);box-sizing:border-box;padding:14px;border-radius:22px;background:linear-gradient(165deg,rgba(18,86,100,.97),rgba(8,44,60,.97));border:1px solid rgba(255,255,255,.3);color:#fff;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.45)}#whatsnew h2{margin:0 0 8px;font-size:20px}#whatsnew .wrow{display:flex;align-items:center;gap:10px;margin:6px 0;padding:6px 10px;border-radius:14px;background:rgba(255,255,255,.1);text-align:left;font-size:14px}#whatsnew .wrow i{font-style:normal;font-size:24px;width:30px;text-align:center}#whatsnew button{margin-top:10px;width:100%;min-height:48px;border:0;border-radius:16px;font:inherit;font-size:17px;font-weight:700;color:#4a2a00;background:linear-gradient(#ffe066,#ffb347)}';document.head.append(st);}
+const whatsnew=document.createElement('div');whatsnew.id='whatsnew';whatsnew.setAttribute('role','dialog');whatsnew.setAttribute('aria-modal','true');whatsnew.innerHTML='<div class="wbox"><h2>🎉 มีอะไรใหม่ '+GAME_VERSION+'</h2>'+WHATSNEW.map(r=>'<div class="wrow"><i>'+r[0]+'</i><span>'+r[1]+'</span></div>').join('')+'<button id="wnok">ไปเล่นกัน!</button></div>';document.body.append(whatsnew);
+const gverEl=document.getElementById('gver');if(gverEl)gverEl.textContent='Sea Eater Life '+GAME_VERSION;document.title='Sea Eater Life '+GAME_VERSION;
+{let seen='';try{seen=localStorage.getItem('seenver')||'';}catch(e){}
+ const force=/[?&]whatsnew=1/.test(location.search),auto=!navigator.webdriver;
+ if(force||(auto&&seen!==GAME_VERSION)){const t=setInterval(()=>{const pk=$('pick');if(pk&&pk.style.display==='flex')return;clearInterval(t);whatsnew.style.display='flex';},500);}
+ $('wnok').addEventListener('click',()=>{whatsnew.style.display='none';try{localStorage.setItem('seenver',GAME_VERSION);}catch(e){}});}
 const npcBtn=document.createElement('button');npcBtn.id='npcbtn';document.body.append(npcBtn);let npcNear=null;
 npcBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(npcNear)openNpc(npcNear.id);});
 function updateNpcs(dt){let best=null,bd=4.6;for(const n of NPCS){const here=curMap===0;n.tag.style.display='none';if(!here)continue;const dx=sea.position.x-n.x,dz=sea.position.z-n.z,d=Math.hypot(dx,dz);n.g.position.y=Math.sin(zClock*2+n.x)*.06;if(d<12)n.g.rotation.y+=((Math.atan2(dx,dz)-n.g.rotation.y+Math.PI*3)%(Math.PI*2)-Math.PI)*Math.min(1,dt*5);if(d<40)placeTag(n.tag,n.x,3.3,n.z);if(d<bd){bd=d;best=n;}}
@@ -1306,7 +1316,7 @@ $('slam').addEventListener('pointerdown',e=>{e.preventDefault();doSlam();});cons
   for(const [name,key] of mapping){const raw=storage.getItem(key);if(raw===null)continue;let record;try{record=JSON.parse(raw);}catch(e){throw new Error('เซฟ '+name+' เสียหรือไม่ใช่ JSON');}if(!record||typeof record!=='object'||Array.isArray(record))throw new Error('รูปแบบเซฟ '+name+' ไม่ถูกต้อง');characters[name]=record;}
   if(!Object.keys(characters).length)throw new Error('ไม่พบเซฟที่สำรองได้');
   if(selected!==null&&!Object.prototype.hasOwnProperty.call(characters,selected))throw new Error('ไม่พบเซฟของตัวละครที่เลือก');
-  const backup={format:'sea-eater-save',version:1,exportedAt:now,source:{gameVersion:'v0.5.3',origin},characters};
+  const backup={format:'sea-eater-save',version:1,exportedAt:now,source:{gameVersion:GAME_VERSION,origin},characters};
   if(selected!==null)backup.selectedClass=selected;
   return backup;
 }
