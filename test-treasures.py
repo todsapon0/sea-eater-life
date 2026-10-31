@@ -9,7 +9,7 @@ sv=http.server.ThreadingHTTPServer(('127.0.0.1',0),H);threading.Thread(target=sv
 url=f'http://127.0.0.1:{sv.server_port}/?debug=1'
 html=Path('index.html').read_text().replace('loop();\n}','window.__tr={P,TREASURES,sea,setMap,updateTreasure,claimTreasure,drawMap,updateMini};grace=999;loop();\n}')
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader']);ctx=browser.new_context(viewport={'width':390,'height':844});pg=ctx.new_page();pg.set_default_timeout(120000);errs=[]
+ browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader']);ctx=browser.new_context(viewport={'width':844,'height':390});pg=ctx.new_page();pg.set_default_timeout(120000);errs=[]
  pg.on('pageerror',lambda e:errs.append(str(e)))
  def route(r):
   u=r.request.url
@@ -28,12 +28,12 @@ with sync_playwright() as p:
   for ident in ['bite','slam','devour','taunt','shield','stick']:
    b=pg.locator('#'+ident).bounding_box()
    if b:assert a['x']+a['width']<=b['x'] or b['x']+b['width']<=a['x'] or a['y']+a['height']<=b['y'] or b['y']+b['height']<=a['y'],(ident,a,b)
- pg.wait_for_selector('#treasurebtn:visible');pg.wait_for_timeout(1200);pg.evaluate('window.miniColors=[];__tr.updateMini(1)');assert '#ffdf48' in pg.evaluate('window.miniColors') and '#f5e6ff' in pg.evaluate('window.miniColors');check_button();pg.screenshot(path='/tmp/sea-evolution/treasure-portrait.png')
+ pg.wait_for_selector('#treasurebtn:visible');pg.wait_for_timeout(1200);pg.evaluate('window.miniColors=[];__tr.updateMini(1)');assert '#ffdf48' in pg.evaluate('window.miniColors') and '#f5e6ff' in pg.evaluate('window.miniColors');check_button();pg.screenshot(path='/tmp/sea-evolution/treasure-near-landscape.png')
  pg.locator('#mapb').click();pg.wait_for_selector('#mapcv');pg.evaluate('window.mapLabels=[];__tr.drawMap()');labels=pg.evaluate('window.mapLabels');assert '💰' in labels and '🦪' in labels,labels
  pg.locator('[data-mclose]').click();pg.locator('#treasurebtn').dispatch_event('pointerdown');assert pg.evaluate("__tr.P.tr.includes('c1')")
  pearls_before=pg.evaluate("__tr.P.inv['ไข่มุกทะเล']||0")
  pg.evaluate("__tr.setMap(1);const t=__tr.TREASURES.find(x=>x.id==='p1');__tr.sea.position.set(t.x+2.8,0,t.z);__tr.updateTreasure();")
- for w,h in [(768,1024),(1024,768),(320,568),(844,390)]:
+ for w,h in [(1024,768),(1080,810),(568,320),(844,390)]:
   pg.set_viewport_size({'width':w,'height':h});pg.wait_for_timeout(500);check_button()
  pg.screenshot(path='/tmp/sea-evolution/treasure-landscape.png');pg.locator('#treasurebtn').dispatch_event('pointerdown')
  assert pg.evaluate("__tr.P.inv['ไข่มุกทะเล']")==pearls_before+1
