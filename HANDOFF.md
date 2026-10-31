@@ -201,3 +201,5 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 
 - ✔ Claude 2026-10-31: look v1 (แสง/เงา/ท้องฟ้าการ์ตูน) เสร็จ — HemisphereLight ปรับ, fill light ฟ้าอ่อนไม่มีเงา, sky dome shader ไล่สีตามแมพ, PCFSoftShadowMap เมื่อ gfxHigh, vignette CSS. ยังไม่วัด FPS บน iPad; ถ้าช้าให้ลบ skyDome/fillL ก่อน
 - ↩ Claude 2026-10-31: ลองปรับหาง Maja ให้เรียบเนียนแล้ว user ว่าแบบเดิมสวยกว่า → ย้อนกลับเป็นแบบเดิม (ห้ามปรับหาง Maja ซ้ำถ้า user ไม่สั่ง) ปลดล็อก Maja
+- ✔ Claude 2026-10-31: ปรับความยาก (user: Lv5 ล้ม Lv12 ได้ง่ายไป) — เลเวลต่ำกว่า rec ของแมพ: เราตีเบาลง 10%/เลเวล (ต่ำสุด 30%) โดนแรงขึ้น 8%/เลเวล (สูงสุด 2×) + `dmgScale` ตาม tier [1,1,1.2,1.5,1.3] ผ่าน `hurtP`/`gapOut`; ค่าอยู่ที่ `lvGap/gapOut/gapIn` ก่อน `hit` (ปรับสมดุลตรงนี้ได้) ยังไม่ทดสอบเล่นจริงบนไอแพด
+
