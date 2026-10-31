@@ -120,7 +120,7 @@ with sync_playwright() as p:
  load(normal_url)
  page.add_style_tag(content='#debug{visibility:visible!important}')
  assert not page.locator('#debug').is_visible()
- page.locator('#dexb').dispatch_event('pointerdown');page.locator('#fpsBtn').click()
+ page.locator('#dexb').dispatch_event('pointerdown');page.locator('[data-book-tab=settings]').click();page.locator('#fpsBtn').click()
  assert page.locator('#fpsBtn').get_attribute('aria-pressed')=='true'
  page.locator('#dexb').dispatch_event('pointerdown')
  page.evaluate('window.__pauseTest=false')
@@ -128,7 +128,7 @@ with sync_playwright() as p:
  page.screenshot(path=str(artifacts/'fps-enabled-390x844.png'))
  load(normal_url);page.add_style_tag(content='#debug{visibility:visible!important}')
  assert page.locator('#debug').is_visible()
- page.locator('#dexb').dispatch_event('pointerdown');page.locator('#fpsBtn').click()
+ page.locator('#dexb').dispatch_event('pointerdown');page.locator('[data-book-tab=settings]').click();page.locator('#fpsBtn').click()
  assert not page.locator('#debug').is_visible()
  load(normal_url);assert not page.locator('#debug').is_visible()
  # Fresh child device: select a character directly, without any password field.
