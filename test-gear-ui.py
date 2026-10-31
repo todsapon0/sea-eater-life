@@ -25,7 +25,7 @@ with sync_playwright() as p:
  ctx.route('**/*',route)
  page.add_init_script("""if(!localStorage.seeded){localStorage.seeded='1';localStorage.selcls='sea';localStorage.sel01=JSON.stringify({lv:8,xp:0,qd:0,q:0,ev:0,inv:{'eq:fang:1:common':1,'eq:fang:8:rare':1,'eq:fang:20:epic':1,'eq:helm:1:common':1},seen:{},mu:{head:'fang:1:common'}});} """)
  def load():
-  page.goto(url,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__gearUI')
+  page.goto(url,wait_until='networkidle');assert page.locator('#accountGate').count()==0;page.wait_for_function('window.__gearUI')
  def open_gear():
   page.locator('#dexb').dispatch_event('pointerdown');page.locator('#equipGear').click()
  load();open_gear();inventory=page.evaluate('JSON.stringify(__gearUI.inv)')

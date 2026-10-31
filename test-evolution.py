@@ -34,7 +34,7 @@ with sync_playwright() as p:
   seed={'lv':20,'xp':0,'q':0,'qd':0,'inv':{},'seen':{},'job':job,'st':2,'es':600,'mu':{'head':'fang'}}
   page.add_init_script(f"if(!localStorage.getItem('seeded')){{localStorage.setItem('seeded','1');localStorage.setItem('selcls',{json.dumps(cls)});localStorage.setItem({json.dumps(key)},JSON.stringify({json.dumps(seed)}));}}")
   def load():
-   page.goto(url,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__evoTest && document.querySelector("canvas")')
+   page.goto(url,wait_until='networkidle');assert page.locator('#accountGate').count()==0;page.wait_for_function('window.__evoTest && document.querySelector("canvas")')
   load();page.evaluate('''()=>{const t=__evoTest,P=t.P,seed={...P};for(const c of [{ev:0,lv:7,es:600,job:seed.job,want:false},{ev:0,lv:8,es:39,job:seed.job,want:false},{ev:0,lv:8,es:40,job:seed.job,want:true},{ev:1,lv:13,es:600,job:seed.job,want:false},{ev:2,lv:20,es:600,job:'',want:false},{ev:2,lv:20,es:600,job:'__proto__',want:false},{ev:2,lv:20,es:600,job:'invalid',want:false},{ev:2,lv:20,es:360,job:seed.job,want:true}]){Object.assign(P,c);if(t.evoReady()!==c.want)throw Error('requirements gate');}Object.assign(P,seed);t.applyJob();}''');page.evaluate('window.__cam.dist=9');page.wait_for_timeout(2500)
   baseline=page.locator('#debug').inner_text()
   page.locator('#evob').click();assert page.locator('[data-evolve]').is_enabled()

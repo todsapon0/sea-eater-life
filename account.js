@@ -1,5 +1,7 @@
 /* Server account mode is opt-in. Legacy saves remain in localStorage. */
-window.startAccount = async function startAccount() {
+window.startAccount = async function startAccount({ online = false } = {}) {
+  // Child-friendly default: no login DOM, password autofill or account requests.
+  if (!online) return { storage: localStorage, remote: false };
   const root = document.createElement('section');
   root.id = 'accountGate';
   root.innerHTML = '<div class="account-card"><h1>Sea Eater Life</h1><p>บัญชีผู้เล่น</p><p id="accountError" role="alert"></p><form id="accountForm"><label>อีเมล <input id="accountEmail" type="email" autocomplete="username" required></label><label>รหัสผ่าน <input id="accountPassword" type="password" autocomplete="current-password" required></label><button type="submit">เข้าสู่ระบบ</button></form><button id="localPlay" type="button">เล่นแบบในเครื่อง</button><p>เซฟในเครื่องแยกจากเซฟบัญชี และไม่ถูกย้ายอัตโนมัติ</p></div>';

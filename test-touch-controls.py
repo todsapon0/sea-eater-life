@@ -19,7 +19,7 @@ url=f'http://127.0.0.1:{server.server_port}/?debug=1'
 html=(root/'index.html').read_text().replace('loop();\n}', 'window.__touchTest=()=>({jx,jz,sid,biteT});loop();\n}')
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
- for width,height in [(390,844),(844,390),(320,568)]:
+ for width,height in [(390,844),(844,390),(320,568),(768,1024),(1024,768),(844,500)]:
   context=browser.new_context(viewport={'width':width,'height':height},has_touch=True,is_mobile=True)
   page=context.new_page();errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
@@ -33,7 +33,19 @@ with sync_playwright() as p:
    else:r.continue_()
   context.route('**/*',route)
   page.add_init_script("localStorage.setItem('selcls','sea');localStorage.setItem('sel01',JSON.stringify({lv:1,xp:0,q:0,qd:0,inv:{},seen:{}}));")
-  page.goto(url,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__touchTest')
+  page.goto(url,wait_until='networkidle');assert page.locator('#accountGate').count()==0;page.wait_for_function('window.__touchTest')
+  # Every action stays independently tappable on phones AND iPad dimensions.
+  controls=['#bite','#slam','#devour','#taunt','#shield','#lockb','#stick']
+  boxes={sel:page.locator(sel).bounding_box() for sel in controls}
+  for sel,a in boxes.items():
+   assert a['x']>=0 and a['y']>=0 and a['x']+a['width']<=width and a['y']+a['height']<=height,(sel,a)
+   for other,b in boxes.items():
+    if sel>=other:continue
+    overlap=min(a['x']+a['width'],b['x']+b['width'])>max(a['x'],b['x']) and min(a['y']+a['height'],b['y']+b['height'])>max(a['y'],b['y'])
+    assert not overlap,('controls overlap',sel,other,a,b)
+   if sel!='#stick':
+    hit=page.evaluate('([x,y])=>document.elementFromPoint(x,y).id',[a['x']+a['width']/2,a['y']+a['height']/2])
+    assert hit==sel[1:],('control obscured',sel,hit)
   cdp=context.new_cdp_session(page)
   def pt(i,x,y):return {'id':i,'x':x,'y':y,'radiusX':7,'radiusY':7,'force':1}
   def touch(kind,*points):cdp.send('Input.dispatchTouchEvent',{'type':kind,'touchPoints':list(points)})

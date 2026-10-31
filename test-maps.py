@@ -31,7 +31,7 @@ with sync_playwright() as p:
  ctx.route('**/*',route)
  page.add_init_script('if(!localStorage.seeded){localStorage.seeded="1";localStorage.selcls="sea";localStorage.snd="0";localStorage.sel01=JSON.stringify('+json.dumps(legacy)+');}')
  def load(target=url):
-  page.goto(target,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__maps');page.evaluate('window.__pauseTest=true');page.add_style_tag(content='#debug,#msg,#zoneb{visibility:hidden!important}')
+  page.goto(target,wait_until='networkidle');assert page.locator('#accountGate').count()==0;page.wait_for_function('window.__maps');page.evaluate('window.__pauseTest=true');page.add_style_tag(content='#debug,#msg,#zoneb{visibility:hidden!important}')
  load()
  assert page.evaluate('__maps.current')==0
  assert page.evaluate('__maps.P.inv["ครีบกระเบน"]')==7
@@ -109,7 +109,30 @@ with sync_playwright() as p:
  page.locator('#dexb').dispatch_event('pointerdown');page.locator('#fpsBtn').click()
  assert not page.locator('#debug').is_visible()
  load(normal_url);assert not page.locator('#debug').is_visible()
+ # Fresh child device: select a character directly, without any password field.
+ fresh=browser.new_context(viewport={'width':768,'height':1024})
+ fresh.route('**/*',route);fp=fresh.new_page();fp.set_default_timeout(120000)
+ fp.on('pageerror',lambda e:errors.append(str(e)))
+ fp.add_init_script("""window.__loginFieldsSeen=false;new MutationObserver(()=>{if(document.querySelector('input[type=password],#accountForm'))window.__loginFieldsSeen=true;}).observe(document,{subtree:true,childList:true});""")
+ fp.goto(normal_url,wait_until='networkidle');fp.wait_for_function('window.__maps');fp.evaluate('window.__pauseTest=true')
+ assert fp.locator('#pick').is_visible()
+ assert fp.locator('#accountGate,input[type=password],#accountEmail').count()==0
+ fp.screenshot(path=str(artifacts/'no-login-picker-768x1024.png'))
+ fp.locator('[data-c="bloop"]').click();fp.wait_for_function('window.__maps && localStorage.selcls==="bloop"');fp.evaluate('window.__pauseTest=true')
+ assert not fp.locator('#pick').is_visible()
+ assert fp.evaluate('window.__loginFieldsSeen') is False
+ # Existing daily login reward may level a newly selected character immediately.
+ assert fp.evaluate('localStorage.selcls')=='bloop'
+ assert fp.evaluate('__maps.P.lv===JSON.parse(localStorage.sel01b).lv && __maps.P.lv>=1')
+ for width,height in [(768,1024),(1024,768)]:
+  fp.set_viewport_size({'width':width,'height':height});fp.wait_for_timeout(1200)
+  fp.evaluate('__maps.ren.render(__maps.scene,__maps.cam)')
+  fp.screenshot(path=str(artifacts/f'no-login-playing-{width}x{height}.png'))
+ fp.reload(wait_until='networkidle');fp.wait_for_function('window.__maps')
+ assert fp.locator('#accountGate,input[type=password]').count()==0
+ assert fp.evaluate('localStorage.selcls')=='bloop'
+ fresh.close()
  assert not errors,errors
- print(json.dumps({'result':'PASS','portal_trips':len(portals),'maps':14,'screen_sizes':5,'legacy_save':'loaded/reloaded','fps_toggle':'no query string, numeric counter, persists on/off','console_errors':errors}),flush=True)
+ print(json.dumps({'result':'PASS','portal_trips':len(portals),'maps':14,'screen_sizes':5,'legacy_save':'loaded/reloaded','fps_toggle':'no query string, numeric counter, persists on/off','local_start':'fresh picker, character selection, returning player; no password form','console_errors':errors}),flush=True)
  browser.close()
 server.shutdown()

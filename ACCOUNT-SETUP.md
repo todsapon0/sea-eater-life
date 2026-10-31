@@ -1,5 +1,7 @@
 # Test-only player accounts and server saves
 
+**Temporary local-play default (owner request, 31 Oct 2026):** `startAccount()` immediately returns localStorage and does not create a login/password form or inspect auth sessions. The account implementation and account-scoped save journals remain intact. To restore the account entry screen later, explicitly call `startAccount({online:true})` from the game bootstrap after the owner requests re-enabling it; the backend configuration and validation requirements below still apply. No local or server saves are deleted or migrated by this switch.
+
 This is a draft integration, not an operational backend until the owner provisions a dedicated Supabase project and verifies it. The owner must approve project creation and any preview configuration separately. Do not connect this draft to real player accounts until security and failure tests pass.
 
 1. In an approved Free test project, run `account-schema.sql` once in the SQL editor. Verify table permissions and RLS; do not use a service-role key in a browser or repository.

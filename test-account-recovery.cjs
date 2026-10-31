@@ -23,7 +23,7 @@ async function open(id,cls,viaSession){
  user=id;const made=[];const body=new Element('body');const document={body,createElement:tag=>{const e=new Element(tag);made.push(e);return e;}};
  const window={SEA_ACCOUNT_CONFIG:{url:'https://example.supabase.co',publishableKey:'sb_publishable_test'},supabase:{createClient:client},addEventListener(){}};
  const ctx={window,document,localStorage,queueMicrotask,setTimeout:()=>1,clearTimeout(){},Blob,URL,atob,location:{reload(){}}};vm.runInNewContext(code,ctx);
- saved=viaSession?id:null;const p=window.startAccount();const root=body.children[0];
+ saved=viaSession?id:null;const p=window.startAccount({online:true});const root=body.children[0];
  if(!viaSession)await root.elements['#accountForm'].onsubmit({preventDefault(){}});
  await tick();await tick();
  const label={sea:'Sea Eater',bloop:'Bloop',maja:'El Gran Maja'}[cls];
@@ -31,6 +31,20 @@ async function open(id,cls,viaSession){
  assert.ok(btn,'picker shows '+label);const text=btn.textContent;btn.click();return {session:await p,body,text};
 }
 (async()=>{
+ map.set('sel01',JSON.stringify(data(7)));map.set('selcls','sea');map.set('sel-account-pending-v2:untouched','pending');
+ // Default play never builds a password form or touches auth, even if configured.
+ for(const cfg of [{},{url:'',publishableKey:''},{url:'https://example.supabase.co',publishableKey:'sb_publishable_test'}]){
+  const before=JSON.stringify([...map]);
+  const window={SEA_ACCOUNT_CONFIG:cfg};
+  Object.defineProperty(window,'supabase',{get(){throw new Error('auth must not be touched');}});
+  const document={createElement(){throw new Error('login DOM must not be created');}};
+  vm.runInNewContext(code,{window,document,localStorage});
+  const session=await window.startAccount();
+  assert.equal(session.storage,localStorage);assert.equal(session.remote,false);
+  assert.equal(JSON.stringify([...map]),before,'default startup leaves saves/journals unchanged');
+ }
+ map.clear();
+ console.log('PASS: login-free local startup, no auth/credential form, no save changes even with configured account');
  page=await open('A','sea');assert.equal(page.text,'Sea Eater Lv.1');online=false;page.session.storage.setItem('sel01',JSON.stringify(data(2)));await tick();
  assert.equal(rows.A.sea.save_data.lv,1);assert.equal(map.size,1);
  online=true;page=await open('B','bloop');await tick();assert.equal(page.session.storage.getItem('sel01b'),JSON.stringify(data(1)));assert.equal(rows.B.bloop.revision,0);assert.equal(map.size,1);

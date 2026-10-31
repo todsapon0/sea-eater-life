@@ -26,7 +26,7 @@ with sync_playwright() as p:
  ctx.route('**/*',route)
  page.add_init_script("if(!localStorage.seeded){localStorage.seeded='1';localStorage.selcls='sea';localStorage.sel01=JSON.stringify({lv:19,xp:0,q:0,qd:0,inv:{},seen:{}});}")
  def load():
-  page.goto(url,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__mt');page.evaluate('window.__pauseTest=true');page.add_style_tag(content='#debug,#msg,#zoneb{visibility:hidden!important}')
+  page.goto(url,wait_until='networkidle');assert page.locator('#accountGate').count()==0;page.wait_for_function('window.__mt');page.evaluate('window.__pauseTest=true');page.add_style_tag(content='#debug,#msg,#zoneb{visibility:hidden!important}')
  load()
  report=page.evaluate('''()=>{const t=__mt;if(t.mons.length!==90||t.types.length!==23)throw Error('roster size');const counts={};for(const m of t.mons)counts[m.ty.n]=(counts[m.ty.n]||0)+1;
   for(const m of t.mons.filter(m=>['puffer','shrimp'].includes(m.ty.n))){const d=t.MAPS[m.map];for(let i=0;i<50;i++){t.spawn(m);if(Math.abs(m.g.position.x)>d.w/2||Math.abs(m.g.position.z)>d.d/2)throw Error('spawn bounds');}}
