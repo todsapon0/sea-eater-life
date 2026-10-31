@@ -373,7 +373,7 @@ let CLS='sea';try{CLS=gameStorage.getItem('selcls')||'sea';}catch(e){}const KEY=
 // ===== Sea Eater v2: ตัวขวดนอน ปากทรงไข่ (เฉพาะอาชีพ sea; Bloop/Maja ใช้โมเดลเดิม) =====
 if(CLS==='sea'){(function(){
   sea.children.slice().forEach(c=>{c.visible=false;});
-  const AXIS=1.6,M=new T.MeshStandardMaterial({color:0xb3bfc4,roughness:.62,metalness:.02,side:T.DoubleSide}),root=new T.Group();root.scale.setScalar(.9);sea.add(root);sea.userData.mainMat=M;
+  const AXIS=1.6,M=new T.MeshStandardMaterial({color:0xb3bfc4,roughness:.62,metalness:.02,side:T.DoubleSide}),root=new T.Group();root.scale.setScalar(.9);sea.add(root);sea.userData.root=root;sea.userData.mainMat=M;
   const raw=[[.42,-2.0],[.55,-1.6],[.85,-.9],[1.08,-.1],[1.18,.7],[1.2,1.5],[1.18,1.78],[1.08,1.85],[.98,1.74],[.95,1.2],[.9,.5],[.74,-.2],[.5,-.7],[0,-.9]];
   const geo=new T.LatheGeometry(new T.SplineCurve(raw.map(q=>new T.Vector2(q[0],q[1]))).getPoints(72),48);geo.rotateX(Math.PI/2);
   {const pos=geo.attributes.position;for(let k=0;k<pos.count;k++){let x=pos.getX(k),y=pos.getY(k);const z=pos.getZ(k),w=Math.max(0,Math.min(1,(z+.2)/2)),r=Math.hypot(x,y)||1;x*=.95*(1-.14*w*(y/r));y*=1+.08*w;pos.setXYZ(k,x,y,z);}geo.computeVertexNormals();}
