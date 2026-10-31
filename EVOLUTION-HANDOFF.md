@@ -160,3 +160,12 @@ starter-area exclusion, pursuer cap, essence/discovery, new equipment awards,
 backup-compatible save/reload, 4 views per monster and gear on all 3 species.
 Model screenshots pause simulation and hide transient messages/debug output;
 they are not FPS benchmarks. Images stay in `/tmp/sea-evolution`, outside git.
+
+## Maps, warp portals and map screen (Claude, 31 Oct 2026)
+
+- Three separate maps share one scene as concentric rings: map 0 shallows r 0-27, map 1 kelp forest r 29-61, map 2 dark cave r 63-95. Translucent walls at r=28/62; the player and monsters are clamped to the current map's ring (`MAPR`, `ZR`).
+- Species live in one map each (`MAPOF`): rays map 0; sharks, eels, puffers map 1; whales, shrimp and the Cave King boss map 2. Monsters of other maps are "parked" (`m.parked`, `m.dead=1e9`, hidden) by `setMap(i)`, so nothing is hit or aggroed through walls and the draw/update load drops. Dead timers freeze while parked.
+- Spawn points are fixed: each monster has `m.home`; respawns happen within 5 units of it (not on top of the player). Boss home is (0,-82).
+- Four portals (`PORTALS`, glowing rings with labels). Entering one fades out, teleports to the paired side and gives 3 s of protection; 2 s warp cooldown. Dying always returns to map 0. The current map is not saved (always starts in map 0).
+- Map screen: round map button in the top bar, tabs per map, shows spawn points (dimmed while waiting to respawn), boss crown, portals and the player arrow when viewing the current map.
+- Tests: all `test-*.cjs`, `test-gear-ui.py`, `test-evolution.py`, `test-monsters.py` pass. Frame-rate caveat: timers use game dt, so under slow rendering a 2 s cooldown can last longer in real time.
