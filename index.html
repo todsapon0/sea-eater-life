@@ -552,8 +552,14 @@ function buildShark(mat,top,belly,fin){
   const lo=curveFin([0,0],[-.15,-.35],[-.5,-.8],[-.05,-.25],.06,W);lo.rotation.y=Math.PI/2;tail.add(lo);
   // ตา ปาก ฟัน
   addEyes(g,.4,1.2,1.25,.075);
-  const jaw=new T.Mesh(new T.TorusGeometry(.33,.04,8,20,Math.PI),gumMat);jaw.rotation.set(Math.PI/2+.25,0,Math.PI);jaw.position.set(0,.78,1.45);g.add(jaw);
-  for(let k=0;k<7;k++){const a=(k/6-.5)*2.2,t=new T.Mesh(new T.ConeGeometry(.032,.11,5),toothMat);t.position.set(Math.sin(a)*.3,.78-Math.abs(a)*.03,1.45+Math.cos(a)*.14);t.rotation.x=Math.PI;g.add(t);}
+  // ปากฉลาม: โพรงมืดใต้ปลายหัว + ริมแดงต่อเนื่อง + ฟันบน/ล่างเรียงชิดตามโค้งเดียวกัน
+  {const arc=(r,zr,y,n,a0)=>Array.from({length:n},(_,i)=>{const a=(i/(n-1)-.5)*a0;return new T.Vector3(Math.sin(a)*r,y,1.3+Math.cos(a)*zr-zr*.5);});
+   const mouth=new T.Group();g.add(mouth);
+   const cav=new T.Mesh(new T.SphereGeometry(1,20,12),new T.MeshStandardMaterial({color:0x3a0c10,roughness:.8}));cav.scale.set(.34,.075,.2);cav.position.set(0,.8,1.34);mouth.add(cav);
+   const lipU=arc(.37,.24,.865,15,2.3),lipL=arc(.33,.22,.735,15,2.3);
+   [lipU,lipL].forEach((pts,j)=>{const m=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),30,j?.022:.026,8,false),gumMat);mouth.add(m);});
+   const teeth=(pts,up,sz)=>pts.forEach((v,i)=>{const t=new T.Mesh(new T.ConeGeometry(sz*.38,sz,5),toothMat);t.position.set(v.x,v.y+(up?sz*.5:-sz*.5),v.z);if(up)t.rotation.z=0;else t.rotation.x=Math.PI;mouth.add(t);});
+   teeth(arc(.35,.23,.862,17,2.2),false,.15);teeth(arc(.31,.21,.738,15,2.1),true,.12);}
   return {g,tail};}
 function buildRay(mat){
   const g=new T.Group(),FM=new T.MeshStandardMaterial({color:0x5aa9d6,roughness:.55,side:T.DoubleSide});mat.vertexColors=true;mat.flatShading=false;mat.color.set(0xffffff);
