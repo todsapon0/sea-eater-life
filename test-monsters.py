@@ -10,7 +10,7 @@ class H(http.server.SimpleHTTPRequestHandler):
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),H);threading.Thread(target=server.serve_forever,daemon=True).start()
 url=f'http://127.0.0.1:{server.server_port}/?debug=1'
 html=Path('index.html').read_text().replace('function loop(){requestAnimationFrame(loop);','function loop(){requestAnimationFrame(loop);if(window.__pauseTest)return;')
-html=html.replace('loop();\n}', 'window.__mt={P,sea,scene,ren,cam,mons,types,ZR,spawn,game,kill,awardGear,save,organFor,applyJob,assignPursuers,renderEvo,stopGrace:()=>{grace=0;}};loop();\n}')
+html=html.replace('loop();\n}', 'window.__mt={P,sea,scene,ren,cam,mons,types,MAPS,spawn,game,kill,awardGear,save,organFor,applyJob,assignPursuers,renderEvo,stopGrace:()=>{grace=0;}};loop();\n}')
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  ctx=browser.new_context(viewport={'width':900,'height':650});page=ctx.new_page();errors=[]
@@ -28,10 +28,11 @@ with sync_playwright() as p:
  def load():
   page.goto(url,wait_until='networkidle');page.locator('#localPlay').click();page.wait_for_function('window.__mt');page.evaluate('window.__pauseTest=true');page.add_style_tag(content='#debug,#msg,#zoneb{visibility:hidden!important}')
  load()
- report=page.evaluate('''()=>{const t=__mt;if(t.mons.length!==21||t.types.length!==7)throw Error('roster size');const counts={};for(const m of t.mons)counts[m.ty.n]=(counts[m.ty.n]||0)+1;
-  for(const name of ['puffer','shrimp']){const m=t.mons.find(m=>m.ty.n===name);for(let i=0;i<50;i++){t.spawn(m);const r=Math.hypot(m.g.position.x,m.g.position.z);if(r<t.ZR[name][0]||r>t.ZR[name][1])throw Error('spawn bounds');}t.sea.position.set(0,0,0);m.g.position.set(1,0,1);m.aggro=true;t.game(.05);if(Math.hypot(m.g.position.x,m.g.position.z)<t.ZR[name][0]-1e-6)throw Error('habitat leak');}
+ report=page.evaluate('''()=>{const t=__mt;if(t.mons.length!==47||t.types.length!==7)throw Error('roster size');const counts={};for(const m of t.mons)counts[m.ty.n]=(counts[m.ty.n]||0)+1;
+  for(const name of ['puffer','shrimp']){const m=t.mons.find(m=>m.ty.n===name),d=t.MAPS[m.map];for(let i=0;i<50;i++){t.spawn(m);if(Math.abs(m.g.position.x)>d.w/2||Math.abs(m.g.position.z)>d.d/2)throw Error('spawn bounds');}}
+  for(const m of t.mons){const d=t.MAPS[m.map];if(!m.home||Math.abs(m.home.x)>d.w/2||Math.abs(m.home.z)>d.d/2)throw Error('home outside map');}
   t.stopGrace();t.sea.position.set(40,0,0);for(const m of t.mons){m.aggro=false;m.dead=0;m.flee=0;m.g.position.set(42,0,0);}t.assignPursuers();if(t.mons.filter(m=>m.aggro&&m.ty.n!=='boss').length>3)throw Error('pursuer cap');return counts;}''')
- assert report=={'ray':5,'shark':4,'whale':4,'eel':4,'puffer':2,'shrimp':1,'boss':1},report
+ assert report=={'ray':14,'shark':8,'whale':7,'eel':6,'puffer':6,'shrimp':5,'boss':1},report
  for name in ['puffer','shrimp']:
   page.evaluate('''(name)=>{const t=__mt;for(const m of t.mons){m.g.visible=m.ty.n===name;m.bar.visible=false;}t.sea.visible=false;const m=t.mons.find(m=>m.ty.n===name);m.g.position.set(0,0,0);m.g.rotation.set(0,0,0);m.g.updateMatrixWorld(true);window.__model=m;}''',name)
   for i,yaw in enumerate([0,math.pi/2,math.pi,3*math.pi/2]):

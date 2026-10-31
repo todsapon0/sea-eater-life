@@ -161,11 +161,11 @@ backup-compatible save/reload, 4 views per monster and gear on all 3 species.
 Model screenshots pause simulation and hide transient messages/debug output;
 they are not FPS benchmarks. Images stay in `/tmp/sea-evolution`, outside git.
 
-## Maps, warp portals and map screen (Claude, 31 Oct 2026)
+## Rectangular maps, portals, minimap, more monsters (Claude, 31 Oct 2026)
 
-- Three separate maps share one scene as concentric rings: map 0 shallows r 0-27, map 1 kelp forest r 29-61, map 2 dark cave r 63-95. Translucent walls at r=28/62; the player and monsters are clamped to the current map's ring (`MAPR`, `ZR`).
-- Species live in one map each (`MAPOF`): rays map 0; sharks, eels, puffers map 1; whales, shrimp and the Cave King boss map 2. Monsters of other maps are "parked" (`m.parked`, `m.dead=1e9`, hidden) by `setMap(i)`, so nothing is hit or aggroed through walls and the draw/update load drops. Dead timers freeze while parked.
-- Spawn points are fixed: each monster has `m.home`; respawns happen within 5 units of it (not on top of the player). Boss home is (0,-82).
-- Four portals (`PORTALS`, glowing rings with labels). Entering one fades out, teleports to the paired side and gives 3 s of protection; 2 s warp cooldown. Dying always returns to map 0. The current map is not saved (always starts in map 0).
-- Map screen: round map button in the top bar, tabs per map, shows spawn points (dimmed while waiting to respawn), boss crown, portals and the player arrow when viewing the current map.
-- Tests: all `test-*.cjs`, `test-gear-ui.py`, `test-evolution.py`, `test-monsters.py` pass. Frame-rate caveat: timers use game dt, so under slow rendering a 2 s cooldown can last longer in real time.
+- Five separate rectangular maps (Ragnarok style) share one scene; only the current one is visible (`MAPS`, `buildMapWorld`): town (64x44, safe, plaza/fountain/houses, regenerates HP), shallows, kelp forest, dark cave (100x64 each) and the boss lair (56x56). Player and monsters are clamped to the map rectangle; translucent walls mark the edge. There is no obstacle collision yet.
+- Portals sit at map edges (`PORTALS`: x, z, `to:{map,x,z}`), fade + teleport, 2 s cooldown, 3 s protection on arrival. Dying returns to the town. The current map is not saved (always starts in the town).
+- Monsters belong to one map each and are "parked" (hidden, `m.dead=1e9`) while the player is elsewhere (`setMap`). Spawn table `SPAWN`: shallows rays 14; kelp forest sharks 8, eels 6, puffers 6; cave whales 7, shrimp 5; lair boss. They spawn in clusters (seeded fixed homes, `m.home`), 47 in total; respawn within 5 units of home, never on the player.
+- Zone scaling: kelp forest HP x1.3 / XP x1.6, cave HP x1.7 / XP x2.4. `XPMUL=.3` slows levelling (estimate only: about 2-3 h to Lv20 at constant fighting); daily/login XP halved; normal gear drop 12% (boss 100%).
+- UI: minimap under the HUD card (live monsters, portals, player; tap = full map), full map screen with tabs, spawn points (dimmed while waiting) and the boss crown. Target lock-on: ring under the locked monster, attacks auto-aim, shots home in, round target button switches.
+- Tests: all `test-*.cjs`, `test-gear-ui.py`, `test-evolution.py`, `test-monsters.py` pass (monster tests updated for the new roster and rectangular bounds). Under slow rendering, game timers use capped dt so cooldowns last longer in real time.
