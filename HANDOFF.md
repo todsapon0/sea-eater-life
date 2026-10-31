@@ -80,13 +80,14 @@ Claude กับ Codex ทำงานเหมือนคนละแผน �
 5. เขียนผลลง `✔ ตรวจโดย ...` ใต้ข้อ แล้ว commit เฉพาะ HANDOFF.md
 
 **หมายเหตุเครื่องมือตรวจ:** test-evolution.py ใช้เวลา ~281 วินาทีในเครื่องจำลอง (3 คลาส) review.sh เดิมตั้ง timeout 280 จึงขึ้น FAIL ปลอม — ปรับเป็น 600 แล้ว ยืนยันด้วยการรันเดี่ยว: ผ่านทั้ง sea/bloop/maja exit=0
+**ข้อสังเกต Codex ต่อ review.sh:** การตัด executable_path ทำให้เครื่องนี้หา Chromium ไม่เจอ; 600 วินาทีอาจยังไม่พอกับวิวัฒนาการบนเครื่องนี้ ส่งกลับ Claude ตรวจความเข้ากันได้ก่อนใช้
 
 ## วิธีรันเทสต์ (ต้องผ่านทุกไฟล์ก่อน push)
 ```
-node test-save-tools.cjs && node test-account-recovery.cjs && node test-equipment.cjs && node test-monsters.cjs && node test-refine.cjs && node test-maps.cjs && node test-performance.cjs
+node test-save-tools.cjs && node test-account-recovery.cjs && node test-equipment.cjs && node test-monsters.cjs && node test-refine.cjs && node test-maps.cjs && node test-performance.cjs && node test-perf-report.cjs
 # เทสต์หน้าจอ (Playwright + Chromium, ต้องมี three.min.js r128 ในเครื่อง):
 export THREE_JS_PATH=/path/to/three.min.js   # three@0.128.0 จาก npm
-python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py && python3 test-touch-controls.py && python3 test-maps.py && python3 test-book.py && python3 test-cooking.py && python3 test-titles.py && python3 test-dye.py
+python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py && python3 test-touch-controls.py && python3 test-maps.py && python3 test-book.py && python3 test-cooking.py && python3 test-titles.py && python3 test-dye.py && python3 test-perf-report.py && python3 test-dye.py
 ```
 `test-*.py` เรียก `/usr/bin/chromium` ถ้าเครื่องไม่มี ให้แก้พาธชั่วคราว (อย่า commit การแก้พาธ)
 
@@ -152,4 +153,5 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 - ไม่โหลด Supabase SDK ในโหมดเล่นในเครื่องที่ปิดล็อกอินชั่วคราว; เมื่อเปิดบัญชีอย่างชัดแจ้งในอนาคตจึงโหลด SDK เดิม โค้ดบัญชีและเซฟยังคงอยู่
 - เครื่องทดสอบ Chromium แบบ software: geometry 1,390 → 311 ชุด; วัดสร้างมอนสเตอร์ 3 รอบต่อแบบ ค่ากลางราว 432 → 226 มิลลิวินาที ตัวเลขผันผวนและไม่ใช่ผลวัด iPad หรือการรับประกัน FPS
 - เพิ่ม test-performance.cjs ตรวจกราฟิกอัตโนมัติ, test-monsters ตรวจ geometry ร่วมแต่แอนิเมชัน/สีแยกและการแยกตัวเมื่อมีมอนสเตอร์จอดอยู่; test-account-recovery ตรวจโหลด SDK เฉพาะเมื่อเปิดออนไลน์ และ test-maps ตรวจว่าโหมดในเครื่องไม่โหลด SDK
-- กำลังตรวจเทสต์ครบทุกชุดและภาพจริง ก่อนปลดล็อก/ส่งพรีวิว; ยังไม่ได้วัด FPS ซ้ำบน iPad จริง
+- ผู้ใช้เพิ่ม: ปุ่มเริ่ม/หยุดบันทึกและคัดลอกรายงานประสิทธิภาพในสมุด สรุป FPS รายแมพเป็นช่วง 1 วินาที (ตกเมื่อต่ำกว่า 24), มอนสเตอร์และจำนวนที่อยู่ในมุมกล้องโดยประมาณ, calls/triangles, ขนาดภาพ, เวลาเริ่มถึงภาพแรกและเวลาเปลี่ยนแมพ; ข้อมูลอยู่ในหน่วยความจำ ไม่ส่งออกและไม่ใส่ข้อมูลส่วนบุคคล มีช่องเลือกคัดลอกเองเมื่อคลิปบอร์ดไม่ได้; ไม่เก็บตัวอย่างเมื่อปิด
+- เทสต์ test-perf-report.cjs และ test-perf-report.py ผ่านกรณีเปิด/ปิด สองแมพ คลิปบอร์ด/สำรอง ไม่ส่งเครือข่ายและไม่มีชื่อผู้เล่น; กำลังตรวจเทสต์ครบทุกชุดก่อนปลดล็อก/ส่งพรีวิว; ยังไม่ได้วัด FPS ซ้ำบน iPad จริง
