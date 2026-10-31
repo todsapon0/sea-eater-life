@@ -577,7 +577,9 @@ function buildWhale(mat){
   const tail=new T.Group();tail.position.set(0,1.1,-2.1);g.add(tail);
   [-1,1].forEach(s=>{const f=curveFin([0,.1],[s*.9,.55],[s*1.5,.2],[s*.7,-.55],.09,FM);f.rotation.x=Math.PI/2;f.rotation.z=0;tail.add(f);});
   addEyes(g,.82,1.15,1.1,.09);
-  const m=new T.Mesh(new T.TorusGeometry(.62,.035,6,24,Math.PI*.85),gumMat);m.rotation.set(-.15,0,Math.PI+.2);m.position.set(0,.55,1.55);m.scale.x=1.3;g.add(m);
+  {const mg=new T.Group();g.add(mg);const arcw=(R,Z,y,n,a0)=>Array.from({length:n},(_,i)=>{const a=(i/(n-1)-.5)*a0;return new T.Vector3(Math.sin(a)*R,y,1.52+Math.cos(a)*Z-Z*.55);});
+   const cav=new T.Mesh(new T.SphereGeometry(1,20,12),new T.MeshStandardMaterial({color:0x3a1216,roughness:.8}));cav.scale.set(.62,.065,.3);cav.position.set(0,.74,1.46);mg.add(cav);
+   [[arcw(.66,.3,.8,17,2.2),.03],[arcw(.62,.28,.68,17,2.2),.026]].forEach(([pts,r])=>mg.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),32,r,8,false),gumMat)));}
   return {g,tail};}
 function buildEel(mat){
   const g=new T.Group();mat.vertexColors=false;mat.flatShading=false;const segs=[];
