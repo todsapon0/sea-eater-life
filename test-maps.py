@@ -73,7 +73,7 @@ with sync_playwright() as p:
   assert page.evaluate('__cam.yaw')==0
  # In every map, exercise actual spawn/scaling and clamps, including empty town.
  page.evaluate('''()=>{const t=__maps;for(const d of t.MAPS){t.setMap(d.id);t.sea.position.set(0,0,0);
-  for(const m of t.mons.filter(m=>m.map===d.id)){t.spawn(m);if(m.hp!==m.ty.hp*d.hpScale*1.8||m.xf!==d.xpScale)throw Error('tier scaling');if(m.parked||!m.g.visible)throw Error('active spawn');}
+  for(const m of t.mons.filter(m=>m.map===d.id)){t.spawn(m);if(m.hp!==m.ty.hp*d.hpScale*1.8*(m.mvp?6:1)||m.xf!==d.xpScale)throw Error('tier scaling');if(m.parked||!m.g.visible)throw Error('active spawn');}
   t.sea.position.set(999,0,-999);t.updatePortals(0);const active=t.MAPS[t.current];if(Math.abs(t.sea.position.x)>active.w/2-1||Math.abs(t.sea.position.z)>active.d/2-1)throw Error('player bounds');
  }const boss=t.mons.find(m=>m.ty.n==='boss');t.setMap(boss.map);boss.aggro=true;t.updateBgm(.1);if(t.BGM.want!=='boss')throw Error('boss music');t.setMap(0);t.updateBgm(4);if(t.BGM.want!=='town')throw Error('town music');
  // Preserve a respawn timer while away, restore it when returning.

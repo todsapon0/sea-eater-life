@@ -52,7 +52,7 @@ with sync_playwright() as p:
    page.evaluate('''(yaw)=>{const t=__mt;t.cam.position.set(Math.sin(yaw)*6,3.4,Math.cos(yaw)*6);t.cam.lookAt(0,1,0);t.ren.render(t.scene,t.cam);}''',yaw)
    page.screenshot(path=str(artifacts/f'monster-{name}-{i}.png'))
  # Verify killed new monsters contribute essence/discovery/materials and loot is saved.
- result=page.evaluate('''()=>{const t=__mt,out={};for(const name of ['puffer','shrimp']){const m=t.mons.find(m=>m.ty.n===name),before=t.P.es;t.kill(m);out[name]=t.P.es-before;if(t.P.kc[name]!==1||t.P.seen[name]!==1)throw Error('discovery');}
+ result=page.evaluate('''()=>{const t=__mt,out={};for(const name of ['puffer','shrimp']){const m=t.mons.find(m=>m.ty.n===name&&!m.mvp),before=t.P.es;t.kill(m);out[name]=t.P.es-before;if(t.P.kc[name]!==1||t.P.seen[name]!==1)throw Error('discovery');}
   for(const id of ['crest','spine','lance']){const monster=id==='lance'?'shrimp':'puffer',rolls=[0,id==='spine'?.6:0,0,0],o=t.awardGear(monster,()=>rolls.shift());if(o.org!==id)throw Error('new loot');const slot=id==='crest'?'head':id==='spine'?'back':'tail';t.P.mu[slot]=o.id;}t.applyJob();t.save();return {essence:out,mu:{...t.P.mu},inv:{...t.P.inv}};}''')
  assert result['essence']=={'puffer':2,'shrimp':3}
  page.locator('#dexb').dispatch_event('pointerdown');page.locator('.bookcard summary[aria-label="ปลาปักเป้าตะไคร่"]').click();page.locator('.bookcard summary[aria-label="กุ้งหอกผลึก"]').click();assert 'พองตัวก่อนโจมตีหนาม' in page.locator('#dex').inner_text();assert 'ง้างก่อนพุ่ง' in page.locator('#dex').inner_text();page.locator('#equipGear').click()
