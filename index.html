@@ -233,6 +233,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 <style>/* ขนาดตัวอักษรให้เท่ากันทั้งสมุด + ข้อความแจ้งเตือนเล็กลงไม่ทับตัวละคร (ผู้ใช้แจ้ง 2026-10-31) */
 #dex{font-size:14px}#dex .booksection{font-size:14px;line-height:1.55}#dex .booksection b{font-size:15px}#dex .booksection small{font-size:12px}
 #msg{top:max(calc(12px + env(safe-area-inset-top,0px)),calc(18% - 46px));left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(520px,66vw);padding:6px 16px;border-radius:999px;background:rgba(7,38,48,.82);border:1px solid rgba(255,255,255,.25);font-size:16px;line-height:1.35;text-shadow:none;z-index:6}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,0) 55%,rgba(5,50,70,.22) 100%)}</style>
 </head>
 <body>
