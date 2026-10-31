@@ -41,11 +41,11 @@ with sync_playwright() as p:
    const before=b.mat.emissive.getHex();a.mat.emissive.setHex(0xff0000);if(b.mat.emissive.getHex()!==before)throw Error('damage flash shared');a.mat.emissive.setHex(0);pairs++;
   }return pairs;}""")
  assert cache>=20,cache
- report=page.evaluate('''()=>{const t=__mt;if(t.mons.length!==90||t.types.length!==23)throw Error('roster size');const counts={};for(const m of t.mons)counts[m.ty.n]=(counts[m.ty.n]||0)+1;
+ report=page.evaluate('''()=>{const t=__mt;if(t.mons.length!==98||t.types.length!==23)throw Error('roster size');const counts={};for(const m of t.mons)counts[m.ty.n]=(counts[m.ty.n]||0)+1;
   for(const m of t.mons.filter(m=>['puffer','shrimp'].includes(m.ty.n))){const d=t.MAPS[m.map];for(let i=0;i<50;i++){t.spawn(m);if(Math.abs(m.g.position.x)>d.w/2||Math.abs(m.g.position.z)>d.d/2)throw Error('spawn bounds');}}
   for(const m of t.mons){const d=t.MAPS[m.map];if(!m.home||Math.abs(m.home.x)>d.w/2||Math.abs(m.home.z)>d.d/2)throw Error('home outside map');}
   t.stopGrace();t.sea.position.set(40,0,0);for(const m of t.mons){m.aggro=false;m.dead=0;m.flee=0;m.g.position.set(42,0,0);}t.assignPursuers();if(t.mons.filter(m=>m.aggro&&m.ty.n!=='boss').length>3)throw Error('pursuer cap');return counts;}''')
- assert report['ray']==14 and report['boss']==1 and sum(report.values())==90,report
+ assert report['ray']==17 and report['boss']==1 and sum(report.values())==98,report
  for name in ['puffer','shrimp']:
   page.evaluate('''(name)=>{const t=__mt;for(const m of t.mons){m.g.visible=m.ty.n===name;m.bar.visible=false;}t.sea.visible=false;const m=t.mons.find(m=>m.ty.n===name);m.g.position.set(0,0,0);m.g.rotation.set(0,0,0);m.g.updateMatrixWorld(true);window.__model=m;}''',name)
   for i,yaw in enumerate([0,math.pi/2,math.pi,3*math.pi/2]):
