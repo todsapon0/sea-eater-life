@@ -636,7 +636,7 @@ if(CLS==='bloop'){(function(){
     TM=new T.MeshStandardMaterial({color:0xeef3e4,roughness:.4}),root=new T.Group(),AX=1.75,FZ=2.0;
   root.scale.setScalar(.95);sea.add(root);sea.userData.root=root;sea.userData.mainMat=M;
   const P0=[[0,2.02],[1.15,2.0],[1.5,1.6],[1.55,.8],[1.4,-.3],[1.05,-1.2],[.62,-2.15]],rAt=z=>{for(let i=0;i<P0.length-1;i++){const a=P0[i],b=P0[i+1];if(z<=a[1]&&z>=b[1])return a[0]+(b[0]-a[0])*(a[1]-z)/(a[1]-b[1]);}return .6;};
-  const bg=bodyLathe(P0,56,0x24433a,0xd3e4d0,1),bp=bg.attributes.position,bc=bg.attributes.color,pale=new T.Color(0xb7d0b2),tmp=new T.Color();
+  const bg=bodyLathe(P0,56,0x2d4d42,0x3d6a56,1),bp=bg.attributes.position,bc=bg.attributes.color,pale=new T.Color(0x3a6652),tmp=new T.Color();
   for(let i=0;i<bp.count;i++){const k=Math.min(1,Math.max(0,(bp.getZ(i)-.5)/1.3));tmp.setRGB(bc.getX(i),bc.getY(i),bc.getZ(i)).lerp(pale,k*.85);const z=bp.getZ(i),ang=Math.atan2(bp.getY(i),bp.getX(i)),fold=.9+.1*Math.sin(ang*5+z*7+Math.sin(z*3)*2)+.05*Math.sin(z*17+ang*3);tmp.multiplyScalar(fold);bc.setXYZ(i,tmp.r,tmp.g,tmp.b);}
   const body=new T.Mesh(bg,M);body.scale.set(1.0,.93,1);body.position.y=AX;root.add(body);
   // ผิวย่น (ใช้ลายสีบนผิวแทนวัตถุ ไม่เพิ่มรูปทรง)
