@@ -31,6 +31,11 @@ assert.deepStrictEqual(tools.decodeCode(code), parsed);
 assert.deepStrictEqual(tools.decodeCode('  ' + code.slice(0, 20) + '\n' + code.slice(20) + '  '), parsed);
 assert.deepStrictEqual(tools.decodeCode(JSON.stringify(exported)), parsed); // raw JSON pasted into the code box also works
 
+// Treasure flags are optional for legacy saves and survive export/import without duplication.
+const treasureBackup = backup({ sea: rec(5, { tr: ['c1', 'p13'] }) }, 'sea');
+assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(treasureBackup)).characters.sea.tr, ['c1', 'p13']);
+for (const tr of [['c1','c1'], ['c14'], ['__proto__'], [1], 'c1']) throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(5, { tr }) }))), 'สมบัติ');
+
 // 3) Rejects bad input with a Thai message and never returns partial data.
 throwsMsg(() => tools.decodeCode(''), 'ไม่มีรหัส');
 throwsMsg(() => tools.decodeCode('hello'), 'SEL1.');
