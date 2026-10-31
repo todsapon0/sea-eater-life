@@ -198,3 +198,5 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 - เก็บได้ครั้งเดียวต่อตัวละคร แสดง/ซ่อนตามสถานะ; เพิ่มฟิลด์ tr เป็นตัวเลือกในเซฟและตรวจข้อมูลนำเข้า เซฟเก่าที่ไม่มีฟิลด์โหลดได้ ไม่ทับฟิลด์เดิม
 - เทสต์ครบ Node 8 ชุดและ Python 13 ชุด โดยปรับ viewport ของเทสต์เดิมในหน่วยความจำเป็นแนวนอนและตัดกรณีแนวตั้งตามคำสั่งผู้ใช้; รวม test-treasures.py ตรวจ 26 จุด, แผนที่/มินิแมพ, รางวัลไม่ซ้ำหลังโหลด, เซฟเก่า, ปุ่มไม่ทับที่ 844×390, 1024×768, 1080×810, 568×320 และ test-whatsnew.py; ผ่านทั้งหมด
 - ดูภาพหีบและหอยใน Chromium แนวนอนแล้ว ยังไม่ได้ทดสอบบน iPad จริง; ไม่ merge main ไม่ deploy production
+
+- ✔ Claude 2026-10-31: look v1 (แสง/เงา/ท้องฟ้าการ์ตูน) เสร็จ — HemisphereLight ปรับ, fill light ฟ้าอ่อนไม่มีเงา, sky dome shader ไล่สีตามแมพ, PCFSoftShadowMap เมื่อ gfxHigh, vignette CSS. ยังไม่วัด FPS บน iPad; ถ้าช้าให้ลบ skyDome/fillL ก่อน
