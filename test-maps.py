@@ -24,6 +24,7 @@ with sync_playwright() as p:
  def route(r):
   u=r.request.url
   if 'three.min.js' in u:r.fulfill(path=str(three),content_type='application/javascript')
+  elif 'supabase-js' in u:raise AssertionError('local play must not load the account SDK')
   elif 'cdn.jsdelivr.net' in u:r.fulfill(body='',content_type='application/javascript')
   elif '.supabase.co' in u:raise AssertionError('unexpected backend request')
   elif u.split('?')[0]==url.split('?')[0]:r.fulfill(body=html,content_type='text/html')

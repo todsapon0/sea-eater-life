@@ -83,7 +83,7 @@ Claude กับ Codex ทำงานเหมือนคนละแผน �
 
 ## วิธีรันเทสต์ (ต้องผ่านทุกไฟล์ก่อน push)
 ```
-node test-save-tools.cjs && node test-account-recovery.cjs && node test-equipment.cjs && node test-monsters.cjs && node test-refine.cjs && node test-maps.cjs
+node test-save-tools.cjs && node test-account-recovery.cjs && node test-equipment.cjs && node test-monsters.cjs && node test-refine.cjs && node test-maps.cjs && node test-performance.cjs
 # เทสต์หน้าจอ (Playwright + Chromium, ต้องมี three.min.js r128 ในเครื่อง):
 export THREE_JS_PATH=/path/to/three.min.js   # three@0.128.0 จาก npm
 python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py && python3 test-touch-controls.py && python3 test-maps.py && python3 test-book.py && python3 test-cooking.py && python3 test-titles.py && python3 test-dye.py
@@ -144,3 +144,12 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 - เก็บ IDs และตัวจัดการของเซฟ ตั้งค่า ภารกิจ อุปกรณ์ไว้ ใช้ตัวแปรหน้าสมุดในหน่วยความจำ ไม่เพิ่มฟิลด์เซฟ; ปรับเทสต์มอนสเตอร์/แผนที่ตามการกดการ์ดและแท็บตั้งค่า
 - เพิ่ม test-book.py ตรวจหน้า แท็บ การ์ด รายละเอียด ปุ่มเก่า คัดลอกรหัสเซฟจริง และขนาดจอ 4 แบบ; ตรวจภาพแนวตั้งและแนวนอนแล้ว
 - ผ่านครบ Node 6 ไฟล์และ Chromium 6 ไฟล์ รวมวิวัฒนาการสามตัว/หกอาชีพ/สี่มุม (action timeout 120 วินาทีชั่วคราว) ไม่มี console error; ยังไม่ได้ทดสอบหน้าสมุดนี้บน iPad จริง ไม่ merge main และไม่ deploy production
+
+## รอบกำลังทำ Codex — ลดหน่วงและเวลาเริ่มเกม
+- ผู้ใช้ทดสอบบน iPad แล้วแจ้งเริ่มช้าและมีกระตุกเล็กน้อย; ยังไม่มีตัวเลข FPS จากเครื่องจริง
+- มอนสเตอร์ชนิดเดียวกันใช้ geometry ร่วมกัน แต่แยก mesh, transform, animation nodes, material กะพริบโดนตี และสถานะของแต่ละตัว; ไม่ลดจำนวน/เปลี่ยนชนิด 90 ตัว
+- ลดงานตรวจชนและไล่เป้าต่อเฟรมโดยข้ามมอนสเตอร์ที่ตายหรืออยู่ต่างแมพ; โหมดลดกราฟิกอัตโนมัติยังใช้เกณฑ์เดิม แต่ใช้ตัวอย่าง 60 เฟรมหลังอุ่นเครื่อง 30 เฟรมแทน 150 เพื่อช่วยเครื่องที่หน่วงได้เร็วขึ้น
+- ไม่โหลด Supabase SDK ในโหมดเล่นในเครื่องที่ปิดล็อกอินชั่วคราว; เมื่อเปิดบัญชีอย่างชัดแจ้งในอนาคตจึงโหลด SDK เดิม โค้ดบัญชีและเซฟยังคงอยู่
+- เครื่องทดสอบ Chromium แบบ software: geometry 1,390 → 311 ชุด; วัดสร้างมอนสเตอร์ 3 รอบต่อแบบ ค่ากลางราว 432 → 226 มิลลิวินาที ตัวเลขผันผวนและไม่ใช่ผลวัด iPad หรือการรับประกัน FPS
+- เพิ่ม test-performance.cjs ตรวจกราฟิกอัตโนมัติ, test-monsters ตรวจ geometry ร่วมแต่แอนิเมชัน/สีแยกและการแยกตัวเมื่อมีมอนสเตอร์จอดอยู่; test-account-recovery ตรวจโหลด SDK เฉพาะเมื่อเปิดออนไลน์ และ test-maps ตรวจว่าโหมดในเครื่องไม่โหลด SDK
+- กำลังตรวจเทสต์ครบทุกชุดและภาพจริง ก่อนปลดล็อก/ส่งพรีวิว; ยังไม่ได้วัด FPS ซ้ำบน iPad จริง

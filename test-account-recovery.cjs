@@ -44,6 +44,16 @@ async function open(id,cls,viaSession){
   assert.equal(JSON.stringify([...map]),before,'default startup leaves saves/journals unchanged');
  }
  map.clear();
+ // Explicit future online mode can still load its SDK on demand, then offer local play.
+ {
+  const body=new Element('body');let sdkRequests=0;
+  const window={SEA_ACCOUNT_CONFIG:{url:'https://example.supabase.co',publishableKey:'sb_publishable_test'},addEventListener(){}};
+  const document={body,createElement:tag=>new Element(tag),head:{append(script){sdkRequests++;assert.equal(script.src,'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');queueMicrotask(()=>{window.supabase={createClient:client};script.onload();});}}};
+  const ctx={window,document,localStorage,queueMicrotask,setTimeout:()=>1,clearTimeout(){},Blob,URL,atob,location:{reload(){}}};vm.runInNewContext(code,ctx);
+  saved=null;const pending=window.startAccount({online:true});await tick();await tick();assert.equal(sdkRequests,1);
+  assert.ok(body.children[0]);body.children[0].elements['#localPlay'].click();const session=await pending;assert.equal(session.remote,false);
+ }
+ console.log('PASS: explicit online mode loads its SDK only when needed');
  console.log('PASS: login-free local startup, no auth/credential form, no save changes even with configured account');
  page=await open('A','sea');assert.equal(page.text,'Sea Eater Lv.1');online=false;page.session.storage.setItem('sel01',JSON.stringify(data(2)));await tick();
  assert.equal(rows.A.sea.save_data.lv,1);assert.equal(map.size,1);

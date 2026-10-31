@@ -28,6 +28,19 @@ with sync_playwright() as p:
  def load():
   page.goto(url,wait_until='networkidle');assert page.locator('#accountGate').count()==0;page.wait_for_function('window.__mt');page.evaluate('window.__pauseTest=true');page.add_style_tag(content='#debug,#msg,#zoneb{visibility:hidden!important}')
  load()
+ # Shared geometry must not share per-monster materials, animation nodes or state.
+ cache=page.evaluate("""()=>{const t=__mt,counts={};for(const m of t.mons)(counts[m.ty.n]??=[]).push(m);
+  let pairs=0;for(const list of Object.values(counts)){if(list.length<2)continue;const [a,b]=list;
+   if(a.g===b.g||a.mat===b.mat||a.bf===b.bf||a.bf.geometry!==b.bf.geometry)throw Error('monster state or health bar geometry');
+   const oldScale=b.bf.scale.x;a.bf.scale.x=.37;if(b.bf.scale.x!==oldScale)throw Error('health bar state shared');a.bf.scale.x=1;const ga=[],gb=[];
+   a.g.traverse(o=>{if(o.isMesh)ga.push(o)});b.g.traverse(o=>{if(o.isMesh)gb.push(o)});
+   if(ga.length!==gb.length||!ga.some((o,i)=>o.geometry===gb[i].geometry))throw Error('geometry not reused');
+   if(ga.some((o,i)=>o===gb[i]))throw Error('mesh node shared');
+   for(const key of ['tail','puff'])if(a[key]&&(!b[key]||a[key]===b[key]))throw Error(key+' shared');
+   if(a.segs&&(!b.segs||a.segs.some((o,i)=>o===b.segs[i])))throw Error('segments shared');
+   const before=b.mat.emissive.getHex();a.mat.emissive.setHex(0xff0000);if(b.mat.emissive.getHex()!==before)throw Error('damage flash shared');a.mat.emissive.setHex(0);pairs++;
+  }return pairs;}""")
+ assert cache>=20,cache
  report=page.evaluate('''()=>{const t=__mt;if(t.mons.length!==90||t.types.length!==23)throw Error('roster size');const counts={};for(const m of t.mons)counts[m.ty.n]=(counts[m.ty.n]||0)+1;
   for(const m of t.mons.filter(m=>['puffer','shrimp'].includes(m.ty.n))){const d=t.MAPS[m.map];for(let i=0;i<50;i++){t.spawn(m);if(Math.abs(m.g.position.x)>d.w/2||Math.abs(m.g.position.z)>d.d/2)throw Error('spawn bounds');}}
   for(const m of t.mons){const d=t.MAPS[m.map];if(!m.home||Math.abs(m.home.x)>d.w/2||Math.abs(m.home.z)>d.d/2)throw Error('home outside map');}

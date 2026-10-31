@@ -234,7 +234,6 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 <div id="movezone" role="group" aria-label="จอยเดิน: ลากนิ้วในพื้นที่มุมซ้ายล่าง"><div id="stick"><div id="knob"></div></div></div>
 <button id="slam">ทุบพื้น</button><button id="devour" class="sk">กิน</button><button id="taunt" class="sk">ยั่ว</button><button id="shield" class="sk">โล่</button><div id="skillinfo" role="dialog" aria-modal="true" aria-label="คำอธิบายสกิล"><div class="card"><b>สกิลของตัวละคร</b><div id="skilltext"></div><button id="closehelp">ปิด</button></div></div><div id="dex"></div><div id="pick"><b>เลือกตัวละคร</b><button data-c="sea">Sea Eater<br><small>Warrior / Tank — กัดระยะประชิด</small></button><button data-c="bloop">Bloop<br><small>Healer / Support — ยิงฟอง รักษา</small></button><button data-c="maja">El Gran Maja<br><small>Mage / DPS — โจมตีไกล ควบคุมศัตรู</small></button></div><button id="lockb" aria-label="เปลี่ยนเป้าหมาย">🎯</button><button id="bite">กัด</button>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="account-config.js"></script>
 <script src="account.js"></script>
 <script src="save-tools.js"></script>
@@ -254,7 +253,7 @@ sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-22,righ
 let gfxReady=false;function setGfx(on,persist){gfxHigh=on;sun.castShadow=on;ren.setPixelRatio(on?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1.25));if(gfxReady)applyViewportSoon();else ren.setSize(innerWidth,innerHeight);if(persist){try{localStorage.setItem('gfx',on?'1':'0');}catch(e){}}}
 setGfx(gfxHigh,false);
 let gfxN=0,gfxDts=[],gfxAutoDone=false;
-function gfxProbe(dt){gfxReady=true;if(gfxAutoDone||!gfxHigh||navigator.webdriver||document.hidden)return;if(++gfxN<=30)return;gfxDts.push(dt);if(gfxDts.length>=150){gfxAutoDone=true;gfxDts.sort((a,b)=>a-b);if(gfxDts[75]>1/24){setGfx(false,true);say('ภาพช้า จึงปิดเงาให้อัตโนมัติ เปิดกลับได้ในสมุด');if(typeof refreshDisplayUI==='function')refreshDisplayUI();}}}
+function gfxProbe(dt){gfxReady=true;if(gfxAutoDone||!gfxHigh||navigator.webdriver||document.hidden)return;if(++gfxN<=30)return;gfxDts.push(dt);if(gfxDts.length>=60){gfxAutoDone=true;gfxDts.sort((a,b)=>a-b);if(gfxDts[30]>1/24){setGfx(false,true);say('ภาพช้า จึงปิดเงาให้อัตโนมัติ เปิดกลับได้ในสมุด');if(typeof refreshDisplayUI==='function')refreshDisplayUI();}}}
 // ===== แมพสี่ทิศ: เหนือ=-Z, ตะวันตก=-X, ใต้=+Z, ตะวันออก=+X =====
 let curMap=0;
 // id เดิมยังใช้กับหาดตื้น/ป่าสาหร่าย/ถ้ำมืด/ถ้ำราชา; ไม่บันทึกแมพลงเซฟ
@@ -852,10 +851,19 @@ function famTube(ty,mat){const o=ty.o,{L,put,V,E,bar}=famKit(),cy=o.r+.55;mat.si
   return {g:famMerge(L,mat,ty)};}
 const FAM={chomper:famChomper,crab:famCrab,hand:famHand,serpent:famSerpent,swimmer:famSwimmer,tube:famTube};
 function buildMonster(ty,mat){if(ty.fam)return FAM[ty.fam](ty,mat);return ty.n==='puffer'?buildPuffer(mat):ty.n==='shrimp'?buildShrimp(mat):ty.n==='boss'?buildShark(mat,0x4a4f8c,0xd9d2e8,0x3b3f78):ty.n==='shark'?buildShark(mat):ty.n==='ray'?buildRay(mat):ty.n==='whale'?buildWhale(mat):buildEel(mat);}
-// Keep 21 active monsters and five starter rays; replace one shark/eel/whale with new encounters.
-for(let i=0;i<monsterRoster.length;i++){const ty=types.find(t=>t.n===monsterRoster[i]),mat=new T.MeshStandardMaterial({color:ty.c,roughness:.55,metalness:.02}),built=buildMonster(ty,mat),g=built.g;
+// Reuse immutable geometry by species; each creature keeps its own transforms and flash material.
+const monsterTemplates=new Map();
+function makeMonsterInstance(ty){let template=monsterTemplates.get(ty.n);
+ if(!template){const mat=new T.MeshStandardMaterial({color:ty.c,roughness:.55,metalness:.02}),built=buildMonster(ty,mat);template={mat,built};monsterTemplates.set(ty.n,template);return {mat,built};}
+ const mat=template.mat.clone(),original=[],copies=[],g=template.built.g.clone(true);
+ template.built.g.traverse(o=>original.push(o));g.traverse(o=>copies.push(o));
+ for(const o of copies)if(o.isMesh&&o.material===template.mat)o.material=mat;
+ const remap=o=>o?copies[original.indexOf(o)]:o,b=template.built;
+ return {mat,built:{g,tail:remap(b.tail),puff:remap(b.puff),segs:b.segs&&b.segs.map(remap)}};}
+const monsterBarGeometry=new T.PlaneGeometry(1.6,.18),monsterBarFill=new T.MeshBasicMaterial({color:0x5cf08a}),monsterBarBack=new T.MeshBasicMaterial({color:0});
+for(let i=0;i<monsterRoster.length;i++){const ty=types.find(t=>t.n===monsterRoster[i]),{mat,built}=makeMonsterInstance(ty),g=built.g;
 g.scale.setScalar(ty.s);scene.add(g);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});
-const bar=new T.Group(),bf=new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0x5cf08a}));bf.position.z=.01;bar.add(new T.Mesh(new T.PlaneGeometry(1.6,.18),new T.MeshBasicMaterial({color:0})),bf);scene.add(bar);
+const bar=new T.Group(),bf=new T.Mesh(monsterBarGeometry,monsterBarFill);bf.position.z=.01;bar.add(new T.Mesh(monsterBarGeometry,monsterBarBack),bf);scene.add(bar);
 const m={g,ty,bar,bf,mat,tail:built.tail,segs:built.segs,puff:built.puff,flash:0,k:Math.random()*6,orbit:i%2?1:-1};m.map=monsterMeta[i].map;m.home=monsterMeta[i].home;mons.push(m);spawn(m);}
 const damagePool=Array.from({length:12},()=>{const el=document.createElement('span');el.className='damage-number';document.body.append(el);return {el,time:0,pos:new T.Vector3()};});
 const rings=Array.from({length:6},()=>{const mesh=new T.Mesh(new T.TorusGeometry(1,.08,6,20),new T.MeshBasicMaterial({color:0xa7edff,transparent:true,opacity:.7}));mesh.rotation.x=-Math.PI/2;mesh.visible=false;scene.add(mesh);return {mesh,time:0};});
@@ -987,9 +995,9 @@ function specialMonsterAI(m,dt,dx,dz,d,speedFactor){
 }
 function clampNewHabitat(m){const def=MAPS[m.map];if(!def)return;const p=m.g.position,bx=def.w/2-1.5,bz=def.d/2-1.5;p.x=Math.max(-bx,Math.min(bx,p.x));p.z=Math.max(-bz,Math.min(bz,p.z));}
 function assignPursuers(){const detect=P.tauntT>0?45:(P.lv<=3?9:14),release=detect+4;let count=0;
-for(const m of mons){if(m.ty.n==='boss')continue;const d=Math.hypot(m.g.position.x-sea.position.x,m.g.position.z-sea.position.z);if(m.dead>0||m.flee>0||grace>0||d>release)m.aggro=false;if(m.aggro)count++;}
+for(const m of mons){if(m.ty.n==='boss')continue;if(m.dead>0){m.aggro=false;continue;}const d=Math.hypot(m.g.position.x-sea.position.x,m.g.position.z-sea.position.z);if(m.flee>0||grace>0||d>release)m.aggro=false;if(m.aggro)count++;}
 if(grace>0)return;for(const m of mons){if(count>=3)break;if(m.ty.n==='boss')continue;if(m.dead>0||m.flee>0||m.aggro)continue;const d=Math.hypot(m.g.position.x-sea.position.x,m.g.position.z-sea.position.z);if(d<detect){m.aggro=true;count++;}}}
-function separateMonsters(){for(let pass=0;pass<2;pass++)for(let i=0;i<mons.length;i++){const a=mons[i];if(a.dead>0)continue;for(let j=i+1;j<mons.length;j++){const b=mons[j];if(b.dead>0)continue;let dx=b.g.position.x-a.g.position.x,dz=b.g.position.z-a.g.position.z,d=Math.hypot(dx,dz),gap=1.0*(a.ty.s+b.ty.s);if(d>=gap)continue;if(d<1e-6){const angle=(i*11+j*7)*2.4;dx=Math.sin(angle);dz=Math.cos(angle);d=1;}else{dx/=d;dz/=d;}const push=Math.max(0,gap-(Math.hypot(b.g.position.x-a.g.position.x,b.g.position.z-a.g.position.z)))*.5;for(const [m,sign] of [[a,-1],[b,1]]){m.g.position.x=Math.max(-95,Math.min(95,m.g.position.x+dx*push*sign));m.g.position.z=Math.max(-95,Math.min(95,m.g.position.z+dz*push*sign));}}}}
+function separateMonsters(){const active=[];for(let i=0;i<mons.length;i++)if(mons[i].dead<=0)active.push(i);for(let pass=0;pass<2;pass++)for(let ai=0;ai<active.length;ai++){const i=active[ai],a=mons[i];for(let aj=ai+1;aj<active.length;aj++){const j=active[aj],b=mons[j];let dx=b.g.position.x-a.g.position.x,dz=b.g.position.z-a.g.position.z,d=Math.hypot(dx,dz),gap=1.0*(a.ty.s+b.ty.s);if(d>=gap)continue;if(d<1e-6){const angle=(i*11+j*7)*2.4;dx=Math.sin(angle);dz=Math.cos(angle);d=1;}else{dx/=d;dz/=d;}const push=Math.max(0,gap-(Math.hypot(b.g.position.x-a.g.position.x,b.g.position.z-a.g.position.z)))*.5;for(const [m,sign] of [[a,-1],[b,1]]){m.g.position.x=Math.max(-95,Math.min(95,m.g.position.x+dx*push*sign));m.g.position.z=Math.max(-95,Math.min(95,m.g.position.z+dz*push*sign));}}}}
 // ===== ถิ่น: ชื่อถิ่น สีน้ำเปลี่ยนตามถิ่น สาหร่ายโยก ลูกแสงลอย =====
 const zb=document.createElement('div');zb.id='zoneb';document.body.append(zb);
 let curZone=-1,zoneT=0,zClock=0;const bgTarget=new T.Color(BG);

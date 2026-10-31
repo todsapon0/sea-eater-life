@@ -22,3 +22,12 @@ for(const {t:n,map} of SPAWN.filter(sp=>['puffer','shrimp'].includes(sp.t)))for(
  const m=monster(n);m.map=map;m.g.position={x,z};clamp(m);const d=MAPS[m.map],bx=d.w/2-1.5,bz=d.d/2-1.5;assert(Math.abs(m.g.position.x)<=bx+1e-8&&Math.abs(m.g.position.z)<=bz+1e-8,'habitat rectangle');
 }
 console.log('PASS: telegraphed puffer attacks, dodging, shrimp windup/dash/single hit/recovery, legacy AI and rectangular map limits');
+// Parked/dead monsters never influence the live separation pass.
+const separateSrc=html.slice(html.indexOf('function separateMonsters()'),html.indexOf('// ===== ถิ่น:'));
+const liveA=monster('ray'),liveB=monster('ray'),parked=monster('ray');
+for(const m of [liveA,liveB,parked]){m.g.position={x:0,z:0};m.dead=0;}
+parked.dead=1e9;const pool=[liveA,parked,liveB];
+new Function('mons',separateSrc+';separateMonsters();')(pool);
+assert(Math.hypot(liveA.g.position.x-liveB.g.position.x,liveA.g.position.z-liveB.g.position.z)>1.99);
+assert.deepEqual(parked.g.position,{x:0,z:0});
+console.log('PASS: live monsters separate while parked monsters remain untouched');

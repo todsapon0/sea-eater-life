@@ -2,6 +2,12 @@
 window.startAccount = async function startAccount({ online = false } = {}) {
   // Child-friendly default: no login DOM, password autofill or account requests.
   if (!online) return { storage: localStorage, remote: false };
+  // The online SDK is optional and is fetched only when account mode is explicitly enabled.
+  if (!window.supabase) await new Promise(resolve => {
+    const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve();};
+    const timer=setTimeout(finish,10000);script.onload=script.onerror=finish;document.head.append(script);
+  });
   const root = document.createElement('section');
   root.id = 'accountGate';
   root.innerHTML = '<div class="account-card"><h1>Sea Eater Life</h1><p>บัญชีผู้เล่น</p><p id="accountError" role="alert"></p><form id="accountForm"><label>อีเมล <input id="accountEmail" type="email" autocomplete="username" required></label><label>รหัสผ่าน <input id="accountPassword" type="password" autocomplete="current-password" required></label><button type="submit">เข้าสู่ระบบ</button></form><button id="localPlay" type="button">เล่นแบบในเครื่อง</button><p>เซฟในเครื่องแยกจากเซฟบัญชี และไม่ถูกย้ายอัตโนมัติ</p></div>';
