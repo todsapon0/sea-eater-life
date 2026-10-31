@@ -234,6 +234,19 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #dex{font-size:14px}#dex .booksection{font-size:14px;line-height:1.55}#dex .booksection b{font-size:15px}#dex .booksection small{font-size:12px}
 #msg{top:max(calc(12px + env(safe-area-inset-top,0px)),calc(18% - 46px));left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:min(520px,66vw);padding:6px 16px;border-radius:999px;background:rgba(7,38,48,.82);border:1px solid rgba(255,255,255,.25);font-size:16px;line-height:1.35;text-shadow:none;z-index:6}
 #goal{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;max-width:min(340px,38vw);padding:6px 14px;border-radius:999px;background:rgba(7,38,48,.82);border:1px solid rgba(255,255,255,.25);font-size:13px;line-height:1.3;color:#fff;pointer-events:none;z-index:3}#goal #gar{font-size:20px;color:#ffd34e;display:inline-block;transition:none}
+/* ===== UI v2: สไตล์เกมมือถือ (ปุ่มนูนมีขอบขาว+เงาล่าง, กรอบทอง, แถบเงางาม) — CSS ล้วน ไม่เปลี่ยนตำแหน่ง/ขนาด ===== */
+#bite,#slam,.sk,#bite:active,#slam:active,.sk:active{background-image:linear-gradient(rgba(255,255,255,.4),rgba(255,255,255,0) 52%,rgba(0,0,0,.2))}
+#bite,#slam,.sk{border:3px solid #fff;box-shadow:0 4px 0 rgba(0,0,0,.3),0 7px 12px rgba(0,0,0,.35),inset 0 -4px 6px rgba(0,0,0,.22);text-shadow:0 2px 0 rgba(0,0,0,.4);font-weight:800}
+#bite:active,#slam:active,.sk:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.3),0 3px 6px rgba(0,0,0,.3),inset 0 -2px 4px rgba(0,0,0,.22)}
+#stick{background:radial-gradient(circle,rgba(255,255,255,.2),rgba(5,30,38,.4));border:3px solid rgba(255,255,255,.8);box-shadow:0 4px 12px rgba(0,0,0,.3),inset 0 0 16px rgba(255,255,255,.22)}
+#knob{background:radial-gradient(circle at 35% 30%,#fff,#dff2f5 55%,#9fcad4);border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+#hud{background:linear-gradient(#117086f0,#0a4455f0);border:2px solid #ffe08a;box-shadow:0 3px 0 rgba(0,0,0,.28),0 7px 14px rgba(0,0,0,.35)}
+.bar{border:1px solid rgba(255,255,255,.45);box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.bar i{background-image:linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,0) 60%)}
+#topbar>button{background:linear-gradient(#26a3bb,#0f6377);border:2px solid #fff;box-shadow:0 3px 0 rgba(0,0,0,.3),0 5px 8px rgba(0,0,0,.3)}
+#topbar>button:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+#msg,#goal{border:2px solid #ffe08a;box-shadow:0 3px 0 rgba(0,0,0,.25),0 5px 10px rgba(0,0,0,.3)}
+#dex{background:linear-gradient(#0e5368f5,#08303bf5);border:3px solid #ffe08a;border-radius:22px;box-shadow:0 4px 0 rgba(0,0,0,.3),0 10px 26px rgba(0,0,0,.5)}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,0) 55%,rgba(5,50,70,.22) 100%)}</style>
 </head>
