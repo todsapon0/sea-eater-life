@@ -686,15 +686,12 @@ if(CLS==='maja'){(function(){
   const ring=new T.Mesh(new T.TorusGeometry(.34,.1,10,28),red);mouth.add(ring);const disc=new T.Mesh(new T.CircleGeometry(.3,24),new T.MeshStandardMaterial({color:0x5a0d0a,side:T.DoubleSide}));disc.position.z=-.04;mouth.add(disc);
   for(let k=0;k<26;k++){const a=k/26*Math.PI*2,t=new T.Mesh(new T.ConeGeometry(.032,.13,6),tm);t.position.set(Math.cos(a)*.3,Math.sin(a)*.3,.05);t.rotation.z=a+Math.PI/2;mouth.add(t);}
   // ข้อกระดูกสันหลัง 14 ข้อ เรียวถึงปลายแหลม
-  const tail=new T.Group();tail.position.set(0,AX,-.45);root.add(tail);let par=tail;const ns=[];
-  // เรียบเนียน: ทุกข้อเป็นทรงกระบอกเต็มวงที่ปลายหลังเท่ากับต้นข้อถัดไป + ลูกกลมปิดรอยต่อ (ระยะห่างข้อ = ความยาวข้อ)
-  const RAD=k=>.5*Math.pow(.93,k),LEN=k=>.4*Math.pow(.93,k);
-  for(let k=0;k<14;k++){const g=new T.Group(),r=RAD(k),r2=RAD(k+1),len=LEN(k);
-    const cg=new T.CylinderGeometry(r,r2,len,20,1,false);cg.rotateX(Math.PI/2);cg.translate(0,0,-len/2);
-    const m=new T.Mesh(cg,M);m.scale.set(1,.85,1);g.add(m);
-    const jt=new T.Mesh(new T.SphereGeometry(r2,16,12),M);jt.position.z=-len;jt.scale.y=.85;g.add(jt);
-    g.position.z=k?-LEN(k-1):0;par.add(g);ns.push(g);par=g;}
-  const tipc=new T.Mesh(new T.ConeGeometry(.18,.5,16),M);tipc.rotation.x=-Math.PI/2;tipc.position.z=-LEN(13)-.25;tipc.scale.x=1;ns[13].add(tipc);
+  const tail=new T.Group();tail.position.set(0,AX,-.45);root.add(tail);let par=tail,sc=1;const ns=[];
+  for(let k=0;k<14;k++){const g=new T.Group(),r=.5*sc,len=.38*sc;
+    const m=new T.Mesh(new T.CylinderGeometry(r*.78,r,len,18,1,false,0,Math.PI*1.55),M);m.rotation.set(Math.PI/2,0,0);m.rotation.y=-Math.PI*.78;m.scale.set(1,1,.8);m.position.z=-len/2;g.add(m);
+    const core=new T.Mesh(new T.CylinderGeometry(r*.28,r*.28,len*1.1,8),M2);core.rotation.x=Math.PI/2;core.position.z=-len/2;g.add(core);
+    g.position.z=k?-.4*Math.pow(.935,k-1):0;par.add(g);ns.push(g);par=g;sc*=.93;}
+  const tipc=new T.Mesh(new T.ConeGeometry(.12,.45,8),M);tipc.rotation.x=-Math.PI/2;tipc.position.z=-.3;ns[13].add(tipc);
   legs[0]=new T.Group();legs[1]=new T.Group();root.add(legs[0],legs[1]);segs.length=0;ns.forEach(g=>segs.push(g));
 })();}
 const skillDescriptions={sea:'กัด: โจมตีด้านหน้า • ทุบพื้น: โจมตีรอบตัว (รอ 5 วิ) • กิน: ฟื้นเลือดและจัดการศัตรูที่เลือดน้อย (รอ 8 วิ) • ยั่ว: เรียกศัตรูเข้าหา (รอ 10 วิ) • โล่: ลดความเสียหาย 5 วิ (รอ 12 วิ)',bloop:'ยิงฟอง: โจมตีด้านหน้า • รักษา: ฟื้นเลือด (รอ 6 วิ) • พร: เพิ่มพลังโจมตี (รอ 14 วิ) • เพลง: ฟื้นเลือดต่อเนื่อง (รอ 12 วิ) • โล่ฟอง: ลดความเสียหาย 5 วิ (รอ 12 วิ)',maja:'ยิง: ยิงพลังไปด้านหน้า • น้ำวน: สร้างความเสียหายและชะลอศัตรู (รอ 10 วิ) • บลาสต์: ยิงพลังระยะไกล (รอ 7 วิ)'};
