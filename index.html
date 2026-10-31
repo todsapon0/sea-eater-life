@@ -386,11 +386,11 @@ if(CLS==='sea'){(function(){
   const fs=new T.Shape();fs.moveTo(0,0);fs.quadraticCurveTo(.45,.45,1.35,.78);fs.lineTo(1.05,.2);fs.lineTo(1.4,-.28);fs.quadraticCurveTo(.45,-.05,0,-.12);fs.closePath();
   const fin=new T.Mesh(new T.ExtrudeGeometry(fs,{depth:.07,bevelEnabled:false}),M);fin.rotation.y=Math.PI/2;fin.position.set(-.035,0,-.22);fin.scale.setScalar(.95);newSegs[5].add(fin);
   const newLegs=[-1,1].map(side=>{const g=new T.Group();g.position.set(side*1.0,AXIS-.15,.55);root.add(g);const U=1.2,UA=.2;
-    const up=new T.Mesh(new T.CylinderGeometry(.16,.2,U,12),M);up.geometry.translate(0,U/2,0);up.rotation.z=-side*(Math.PI/2+UA);g.add(up);g.add(new T.Mesh(new T.SphereGeometry(.2,14,10),M));
-    const el=new T.Vector3(side*Math.cos(UA)*U,-Math.sin(UA)*U,0),kn=new T.Group();kn.position.copy(el);g.add(kn);kn.add(new T.Mesh(new T.SphereGeometry(.2,14,10),M));
-    const drop=g.position.y+el.y-.12,low=new T.Mesh(new T.CylinderGeometry(.19,.12,drop,12),M);low.geometry.translate(0,-drop/2,0);low.rotation.z=side*.1;kn.add(low);
-    const ft=new T.Group();ft.position.set(Math.sin(.1)*drop*side,-Math.cos(.1)*drop,0);const cone=new T.Mesh(new T.ConeGeometry(.38,.3,12,1,true),M);cone.position.y=.1;ft.add(cone);
-    for(let q=0;q<5;q++){const a=(q/4-.5)*1.5,t=new T.Mesh(new T.CylinderGeometry(.02,.04,.3,6),M);t.position.set(Math.sin(a)*.32,-.04,Math.cos(a)*.32+.05);t.rotation.set(Math.cos(a)*.75,0,-Math.sin(a)*.75);ft.add(t);}
+    const up=new T.Mesh(new T.CylinderGeometry(.16,.2,U,22),M);up.geometry.translate(0,U/2,0);up.rotation.z=-side*(Math.PI/2+UA);g.add(up);g.add(new T.Mesh(new T.SphereGeometry(.2,22,16),M));
+    const el=new T.Vector3(side*Math.cos(UA)*U,-Math.sin(UA)*U,0),kn=new T.Group();kn.position.copy(el);g.add(kn);kn.add(new T.Mesh(new T.SphereGeometry(.2,22,16),M));
+    const drop=g.position.y+el.y-.12,low=new T.Mesh(new T.CylinderGeometry(.19,.12,drop,22),M);low.geometry.translate(0,-drop/2,0);low.rotation.z=side*.1;kn.add(low);
+    const ft=new T.Group();ft.position.set(Math.sin(.1)*drop*side,-Math.cos(.1)*drop,0);const cone=new T.Mesh(new T.ConeGeometry(.38,.3,24,1,true),M);cone.position.y=.1;ft.add(cone);
+    for(let q=0;q<5;q++){const a=(q/4-.5)*1.5,t=new T.Mesh(new T.CylinderGeometry(.02,.04,.3,10),M);t.position.set(Math.sin(a)*.32,-.04,Math.cos(a)*.32+.05);t.rotation.set(Math.cos(a)*.75,0,-Math.sin(a)*.75);ft.add(t);}
     kn.add(ft);return g;});
   legs[0]=newLegs[0];legs[1]=newLegs[1];segs.length=0;newSegs.forEach(g=>segs.push(g));
 })();}
@@ -804,51 +804,51 @@ function mergeParts(parts){let n=0;const gs=parts.map(p=>{const g=p.g.index?p.g.
 const FQ0=new T.Quaternion(),FUP=new T.Vector3(0,1,0);
 function famKit(){const L={body:[],dark:[],tooth:[],eye:[]},V=(x,y,z)=>new T.Vector3(x,y,z),E=(x,y,z)=>new T.Quaternion().setFromEuler(new T.Euler(x,y,z));
   const put=(k,geo,pos,quat,scale)=>{L[k].push({g:geo,m:new T.Matrix4().compose(pos,quat||FQ0,scale||new T.Vector3(1,1,1))});};
-  const bar=(k,a,b,r0,r1)=>{const d=b.clone().sub(a),len=d.length(),mid=a.clone().add(b).multiplyScalar(.5);put(k,new T.CylinderGeometry(r1,r0,1,7),mid,new T.Quaternion().setFromUnitVectors(FUP,d.clone().normalize()),V(1,len,1));};
+  const bar=(k,a,b,r0,r1)=>{const d=b.clone().sub(a),len=d.length(),mid=a.clone().add(b).multiplyScalar(.5);put(k,new T.CylinderGeometry(r1,r0,1,14),mid,new T.Quaternion().setFromUnitVectors(FUP,d.clone().normalize()),V(1,len,1));};
   return {L,put,V,E,bar};}
 function famMerge(L,mat,ty){const g=new T.Group(),mats={body:mat,dark:new T.MeshStandardMaterial({color:new T.Color(ty.c).multiplyScalar(.5),roughness:.7}),tooth:toothMat,eye:eyeMat};
   for(const k of Object.keys(L)){if(!L[k].length)continue;g.add(new T.Mesh(mergeParts(L[k]),mats[k]));}return g;}
 function famChomper(ty,mat){const o=ty.o,{L,put,V,E,bar}=famKit(),r=o.r,cy=r*1.25+.55;
   put('body',new T.SphereGeometry(r,18,14),V(0,cy,0));
-  for(let i=0;i<o.limbs;i++){const a=i/o.limbs*6.2832+.4,c=Math.cos(a),s=Math.sin(a),S=V(c*r*.8,cy-r*.45,s*r*.8),K=V(c*r*1.9,cy+r*.25,s*r*1.9),F=V(c*r*2.5,.08,s*r*2.5);bar('body',S,K,r*.22,r*.16);bar('body',K,F,r*.16,r*.1);put('dark',new T.SphereGeometry(r*.2,8,6),K);}
-  put('dark',new T.CircleGeometry(r*.55,20),V(0,cy,r*.97));put('dark',new T.TorusGeometry(r*.57,r*.1,8,24),V(0,cy,r*.95));
-  const nt=o.teeth||12;for(let k=0;k<nt;k++){const a=k/nt*6.2832;put('tooth',new T.ConeGeometry(r*.075,r*.3,5),V(Math.cos(a)*r*.5,cy+Math.sin(a)*r*.5,r*.95),E(0,0,a+1.5708));}
-  for(let k=0;k<(o.spike||0);k++){const a=k/o.spike*6.2832;put('tooth',new T.ConeGeometry(r*.13,r*.55,5),V(Math.cos(a)*r*.6,cy+r*.85,Math.sin(a)*r*.6-.1*r),E(Math.sin(a)*.5,0,-Math.cos(a)*.5));}
-  [-1,1].forEach(sd=>put('eye',new T.SphereGeometry(r*.1,8,6),V(sd*r*.38,cy+r*.7,r*.55)));
+  for(let i=0;i<o.limbs;i++){const a=i/o.limbs*6.2832+.4,c=Math.cos(a),s=Math.sin(a),S=V(c*r*.8,cy-r*.45,s*r*.8),K=V(c*r*1.9,cy+r*.25,s*r*1.9),F=V(c*r*2.5,.08,s*r*2.5);bar('body',S,K,r*.22,r*.16);bar('body',K,F,r*.16,r*.1);put('dark',new T.SphereGeometry(r*.2,16,12),K);}
+  put('dark',new T.CircleGeometry(r*.55,20),V(0,cy,r*.97));put('dark',new T.TorusGeometry(r*.57,r*.1,12,40),V(0,cy,r*.95));
+  const nt=o.teeth||12;for(let k=0;k<nt;k++){const a=k/nt*6.2832;put('tooth',new T.ConeGeometry(r*.075,r*.3,12),V(Math.cos(a)*r*.5,cy+Math.sin(a)*r*.5,r*.95),E(0,0,a+1.5708));}
+  for(let k=0;k<(o.spike||0);k++){const a=k/o.spike*6.2832;put('tooth',new T.ConeGeometry(r*.13,r*.55,12),V(Math.cos(a)*r*.6,cy+r*.85,Math.sin(a)*r*.6-.1*r),E(Math.sin(a)*.5,0,-Math.cos(a)*.5));}
+  [-1,1].forEach(sd=>put('eye',new T.SphereGeometry(r*.1,16,12),V(sd*r*.38,cy+r*.7,r*.55)));
   return {g:famMerge(L,mat,ty)};}
 function famCrab(ty,mat){const o=ty.o,{L,put,V,E,bar}=famKit(),r=o.r,cy=.95;
-  put('body',new T.CylinderGeometry(r,r*1.08,.5,24),V(0,cy,0));put('body',new T.SphereGeometry(r*.9,16,8,0,6.2832,0,1.5708),V(0,cy+.25,0),null,V(1,.5,1));put('dark',new T.TorusGeometry(r*.78,.07,6,24),V(0,cy+.45,0),E(1.5708,0,0));
-  const n=o.legs;for(let i=0;i<n;i++){const side=i%2?1:-1,row=Math.floor(i/2),zz=(row-(n/4-.5))*r*.6,S=V(side*r*.95,cy,zz),K=V(side*r*1.9,cy+.9,zz+(row-1)*.1),F=V(side*r*2.6,.06,zz+(row-1)*.35);bar('body',S,K,.1,.07);bar('body',K,F,.07,.035);put('dark',new T.SphereGeometry(.1,6,5),K);}
-  [-1,1].forEach(sd=>{bar('body',V(sd*r*.4,cy+.3,r*.8),V(sd*r*.5,cy+.85,r*1.05),.06,.05);put('eye',new T.SphereGeometry(.13,8,6),V(sd*r*.5,cy+.92,r*1.08));});
-  put('dark',new T.BoxGeometry(r*.8,.2,.35),V(0,cy-.05,r*.98));for(let k=0;k<6;k++)put('tooth',new T.ConeGeometry(.05,.16,4),V((k-2.5)*r*.14,cy-.15,r*1.02),E(3.1416,0,0));
+  put('body',new T.CylinderGeometry(r,r*1.08,.5,24),V(0,cy,0));put('body',new T.SphereGeometry(r*.9,16,8,0,6.2832,0,1.5708),V(0,cy+.25,0),null,V(1,.5,1));put('dark',new T.TorusGeometry(r*.78,.07,10,40),V(0,cy+.45,0),E(1.5708,0,0));
+  const n=o.legs;for(let i=0;i<n;i++){const side=i%2?1:-1,row=Math.floor(i/2),zz=(row-(n/4-.5))*r*.6,S=V(side*r*.95,cy,zz),K=V(side*r*1.9,cy+.9,zz+(row-1)*.1),F=V(side*r*2.6,.06,zz+(row-1)*.35);bar('body',S,K,.1,.07);bar('body',K,F,.07,.035);put('dark',new T.SphereGeometry(.1,16,12),K);}
+  [-1,1].forEach(sd=>{bar('body',V(sd*r*.4,cy+.3,r*.8),V(sd*r*.5,cy+.85,r*1.05),.06,.05);put('eye',new T.SphereGeometry(.13,16,12),V(sd*r*.5,cy+.92,r*1.08));});
+  put('dark',new T.BoxGeometry(r*.8,.2,.35),V(0,cy-.05,r*.98));for(let k=0;k<6;k++)put('tooth',new T.ConeGeometry(.05,.16,12),V((k-2.5)*r*.14,cy-.15,r*1.02),E(3.1416,0,0));
   return {g:famMerge(L,mat,ty)};}
 function famHand(ty,mat){const o=ty.o,{L,put,V,E,bar}=famKit();
-  for(let i=0;i<6;i++){const sc=1-i*.12;put('body',new T.SphereGeometry(.55*sc,12,8),V(0,.75*sc+.15,-.2-i*.55),null,V(1,.85,1.3));if(i)put('dark',new T.TorusGeometry(.5*sc,.05,6,12),V(0,.75*sc+.15,-.2-i*.55),E(0,1.5708,0));}
-  put('body',new T.SphereGeometry(.65,14,10),V(0,.9,.35));
-  const wrist=V(0,2.3*o.len*.8+.4,.9),elbow=V(0,1.6,.6);bar('body',V(0,1.0,.45),elbow,.32,.26);bar('body',elbow,wrist,.26,.22);put('dark',new T.SphereGeometry(.3,10,8),wrist);
-  const palm=wrist.clone().add(V(0,.35,.1));put('body',new T.SphereGeometry(.42*o.len,12,8),palm,null,V(1.1,.7,.8));
-  const n=o.fingers,l=o.len;for(let f=0;f<n;f++){const sp=(f/(n-1)-.5)*1.7,base=palm.clone().add(V(Math.sin(sp)*.35*l,.12,0)),mid=base.clone().add(V(Math.sin(sp)*.55*l,.65*l,.05)),tip=mid.clone().add(V(Math.sin(sp)*.35*l,.5*l,.35*l));bar('body',base,mid,.1*l,.085*l);bar('body',mid,tip,.085*l,.05*l);put('dark',new T.SphereGeometry(.09*l,6,5),mid);}
-  [-1,1].forEach(sd=>put('eye',new T.SphereGeometry(.08,8,6),V(sd*.3,.95,.85)));
+  for(let i=0;i<6;i++){const sc=1-i*.12;put('body',new T.SphereGeometry(.55*sc,16,12),V(0,.75*sc+.15,-.2-i*.55),null,V(1,.85,1.3));if(i)put('dark',new T.TorusGeometry(.5*sc,.05,6,12),V(0,.75*sc+.15,-.2-i*.55),E(0,1.5708,0));}
+  put('body',new T.SphereGeometry(.65,16,12),V(0,.9,.35));
+  const wrist=V(0,2.3*o.len*.8+.4,.9),elbow=V(0,1.6,.6);bar('body',V(0,1.0,.45),elbow,.32,.26);bar('body',elbow,wrist,.26,.22);put('dark',new T.SphereGeometry(.3,16,12),wrist);
+  const palm=wrist.clone().add(V(0,.35,.1));put('body',new T.SphereGeometry(.42*o.len,16,12),palm,null,V(1.1,.7,.8));
+  const n=o.fingers,l=o.len;for(let f=0;f<n;f++){const sp=(f/(n-1)-.5)*1.7,base=palm.clone().add(V(Math.sin(sp)*.35*l,.12,0)),mid=base.clone().add(V(Math.sin(sp)*.55*l,.65*l,.05)),tip=mid.clone().add(V(Math.sin(sp)*.35*l,.5*l,.35*l));bar('body',base,mid,.1*l,.085*l);bar('body',mid,tip,.085*l,.05*l);put('dark',new T.SphereGeometry(.09*l,16,12),mid);}
+  [-1,1].forEach(sd=>put('eye',new T.SphereGeometry(.08,16,12),V(sd*.3,.95,.85)));
   return {g:famMerge(L,mat,ty)};}
 function famSerpent(ty,mat){const o=ty.o,g=new T.Group(),segs=[],dark=new T.MeshStandardMaterial({color:new T.Color(ty.c).multiplyScalar(.5),roughness:.7});
-  for(let i=0;i<o.n;i++){const r=o.r*(1-i/(o.n*1.35)),sg=new T.Group(),b=new T.Mesh(new T.SphereGeometry(r,14,10),mat);b.scale.set(1,.9,1.25);sg.add(b);const rg=new T.Mesh(new T.TorusGeometry(r*.95,r*.1,6,16),dark);rg.position.z=r*.1;sg.add(rg);sg.position.set(0,r+.35,-i*o.r*1.15);g.add(sg);segs.push(sg);}
+  for(let i=0;i<o.n;i++){const r=o.r*(1-i/(o.n*1.35)),sg=new T.Group(),b=new T.Mesh(new T.SphereGeometry(r,16,12),mat);b.scale.set(1,.9,1.25);sg.add(b);const rg=new T.Mesh(new T.TorusGeometry(r*.95,r*.1,6,22),dark);rg.position.z=r*.1;sg.add(rg);sg.position.set(0,r+.35,-i*o.r*1.15);g.add(sg);segs.push(sg);}
   const {L,put,V}=famKit(),r0=o.r*1.15,hz=o.r*1.1;put('body',new T.SphereGeometry(r0,16,12),V(0,r0+.4,hz),null,V(1.1,.8,1.3));
-  for(let k=0;k<5;k++)put('eye',new T.SphereGeometry(r0*.12,8,6),V((k-2)*r0*.32,r0+.55,hz+r0*1.0));put('dark',new T.CircleGeometry(r0*.35,12),V(0,r0*.85+.25,hz+r0*1.28));
-  if(o.hood)[-1,1].forEach(sd=>put('body',new T.SphereGeometry(r0*.9,10,8),V(sd*r0*.9,r0+.55,hz*.9),null,V(.25,.9,.9)));
+  for(let k=0;k<5;k++)put('eye',new T.SphereGeometry(r0*.12,16,12),V((k-2)*r0*.32,r0+.55,hz+r0*1.0));put('dark',new T.CircleGeometry(r0*.35,12),V(0,r0*.85+.25,hz+r0*1.28));
+  if(o.hood)[-1,1].forEach(sd=>put('body',new T.SphereGeometry(r0*.9,16,12),V(sd*r0*.9,r0+.55,hz*.9),null,V(.25,.9,.9)));
   g.add(famMerge(L,mat,ty));return {g,segs};}
 function famSwimmer(ty,mat){const o=ty.o,{L,put,V,E,bar}=famKit(),cy=1.9;
-  put('body',new T.SphereGeometry(.7,14,10),V(0,cy,0),null,V(.9,.8,1.5));put('body',new T.SphereGeometry(.5,14,10),V(0,cy+.05,1.4));
-  [-1,1].forEach(sd=>{put('tooth',new T.SphereGeometry(.13,8,6),V(sd*.22,cy+.2,1.78));put('eye',new T.SphereGeometry(.07,8,6),V(sd*.22,cy+.2,1.88));
-    const sh=V(sd*.55,cy,.8),el=V(sd*o.arm*.6,cy-.1,1.5),ha=V(sd*o.arm,cy-.35,2.5);bar('body',sh,el,.17,.13);bar('body',el,ha,.13,.09);put('dark',new T.SphereGeometry(.14,8,6),ha);
+  put('body',new T.SphereGeometry(.7,16,12),V(0,cy,0),null,V(.9,.8,1.5));put('body',new T.SphereGeometry(.5,16,12),V(0,cy+.05,1.4));
+  [-1,1].forEach(sd=>{put('tooth',new T.SphereGeometry(.13,16,12),V(sd*.22,cy+.2,1.78));put('eye',new T.SphereGeometry(.07,16,12),V(sd*.22,cy+.2,1.88));
+    const sh=V(sd*.55,cy,.8),el=V(sd*o.arm*.6,cy-.1,1.5),ha=V(sd*o.arm,cy-.35,2.5);bar('body',sh,el,.17,.13);bar('body',el,ha,.13,.09);put('dark',new T.SphereGeometry(.14,16,12),ha);
     for(let f=0;f<3;f++)bar('body',ha,ha.clone().add(V(sd*(.15+f*.05),-.1-f*.06,.5)),.05,.025);});
   put('dark',new T.TorusGeometry(.2,.05,6,12,Math.PI),V(0,cy-.05,1.85),E(0,0,Math.PI));
-  bar('body',V(0,cy,-.9),V(0,cy-.2,-2.2),.45,.3);bar('body',V(0,cy-.2,-2.2),V(0,cy+.1,-3.4),.3,.12);put('body',new T.ConeGeometry(.4,.9,4),V(0,cy+.1,-3.8),E(-1.5708,0,0),V(1.6,1,.3));
+  bar('body',V(0,cy,-.9),V(0,cy-.2,-2.2),.45,.3);bar('body',V(0,cy-.2,-2.2),V(0,cy+.1,-3.4),.3,.12);put('body',new T.ConeGeometry(.4,.9,12),V(0,cy+.1,-3.8),E(-1.5708,0,0),V(1.6,1,.3));
   return {g:famMerge(L,mat,ty)};}
 function famTube(ty,mat){const o=ty.o,{L,put,V,E,bar}=famKit(),cy=o.r+.55;mat.side=T.DoubleSide;
-  put('body',new T.CylinderGeometry(o.r,o.r*1.06,o.len,20,1,true),V(0,cy,0),E(1.5708,0,0));put('dark',new T.TorusGeometry(o.r*1.02,o.r*.12,8,24),V(0,cy,o.len/2));put('dark',new T.CircleGeometry(o.r*.98,20),V(0,cy,-o.len/2+.25));
+  put('body',new T.CylinderGeometry(o.r,o.r*1.06,o.len,32,1,true),V(0,cy,0),E(1.5708,0,0));put('dark',new T.TorusGeometry(o.r*1.02,o.r*.12,12,40),V(0,cy,o.len/2));put('dark',new T.CircleGeometry(o.r*.98,20),V(0,cy,-o.len/2+.25));
   put('body',new T.ConeGeometry(o.r*.8,o.r*2.2,14),V(0,cy,-o.len/2-o.r*.9),E(-1.5708,0,0));
-  for(let k=0;k<12;k++){const a=k/12*6.2832;put('tooth',new T.ConeGeometry(o.r*.07,o.r*.28,5),V(Math.cos(a)*o.r*.9,cy+Math.sin(a)*o.r*.9,o.len/2-.1),E(0,0,a+1.5708));}
-  for(let i=0;i<4;i++){const side=i%2?1:-1,zz=(i<2?.3:-.3)*o.len,S=V(side*o.r*.85,cy-o.r*.35,zz),K=V(side*o.r*1.8,cy+.05,zz),F=V(side*o.r*2.1,.05,zz+(i<2?.25:-.25));bar('body',S,K,.13,.1);bar('body',K,F,.1,.05);put('dark',new T.SphereGeometry(.12,6,5),K);}
+  for(let k=0;k<12;k++){const a=k/12*6.2832;put('tooth',new T.ConeGeometry(o.r*.07,o.r*.28,12),V(Math.cos(a)*o.r*.9,cy+Math.sin(a)*o.r*.9,o.len/2-.1),E(0,0,a+1.5708));}
+  for(let i=0;i<4;i++){const side=i%2?1:-1,zz=(i<2?.3:-.3)*o.len,S=V(side*o.r*.85,cy-o.r*.35,zz),K=V(side*o.r*1.8,cy+.05,zz),F=V(side*o.r*2.1,.05,zz+(i<2?.25:-.25));bar('body',S,K,.13,.1);bar('body',K,F,.1,.05);put('dark',new T.SphereGeometry(.12,16,12),K);}
   return {g:famMerge(L,mat,ty)};}
 const FAM={chomper:famChomper,crab:famCrab,hand:famHand,serpent:famSerpent,swimmer:famSwimmer,tube:famTube};
 function buildMonster(ty,mat){if(ty.fam)return FAM[ty.fam](ty,mat);return ty.n==='puffer'?buildPuffer(mat):ty.n==='shrimp'?buildShrimp(mat):ty.n==='boss'?buildShark(mat,0x4a4f8c,0xd9d2e8,0x3b3f78):ty.n==='shark'?buildShark(mat):ty.n==='ray'?buildRay(mat):ty.n==='whale'?buildWhale(mat):buildEel(mat);}
