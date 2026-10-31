@@ -1166,25 +1166,29 @@ npcov.addEventListener('click',e=>{if(e.target===npcov){closeNpc();return;}const
    setTimeout(()=>{const r=tryRefine(slot);smithBusy=false;if(r===null){renderSmith();return;}playTone(r?'test':'defeat');smithMsg=r?'✨ สำเร็จ! '+SLOTN[slot]+' +'+P.rf[slot]:'💥 แตก! ของยังอยู่ ลองใหม่ (โอกาสเพิ่มขึ้น)';renderSmith(slot,r);},560);}});
 // ตัว NPC และป้ายในเมือง
 const NPCS=[];
-function npcBody(col,x,z){const g=new T.Group();g.position.set(x,0,z);const m=new T.MeshStandardMaterial({color:col,roughness:.6}),w=new T.MeshStandardMaterial({color:0xffffff}),k=new T.MeshStandardMaterial({color:0x111111});
-  const b=new T.Mesh(new T.SphereGeometry(.8,20,14),m);b.scale.set(1,1.05,.95);b.position.y=.9;g.add(b);[-1,1].forEach(sd=>{const e=new T.Mesh(new T.SphereGeometry(.17,12,10),w);e.position.set(sd*.3,1.35,.62);g.add(e);const p=new T.Mesh(new T.SphereGeometry(.08,10,8),k);p.position.set(sd*.3,1.35,.76);g.add(p);});
-  const mo=new T.Mesh(new T.TorusGeometry(.18,.03,6,12,Math.PI),k);mo.position.set(0,1.08,.76);mo.rotation.z=Math.PI;g.add(mo);return {g,m};}
+function npcBody(col,x,z){const g=new T.Group();g.position.set(x,0,z);const m=new T.MeshStandardMaterial({color:col,roughness:.6}),w=new T.MeshStandardMaterial({color:0xffffff,roughness:.25}),k=new T.MeshStandardMaterial({color:0x111111,roughness:.2}),bl=new T.MeshStandardMaterial({color:0xff9fa8,roughness:.7});
+  const b=new T.Mesh(new T.SphereGeometry(.8,36,26),m);b.scale.set(1,1.05,.95);b.position.y=.9;g.add(b);
+  [-1,1].forEach(sd=>{const e=new T.Mesh(new T.SphereGeometry(.17,22,16),w);e.position.set(sd*.3,1.35,.62);g.add(e);const p=new T.Mesh(new T.SphereGeometry(.09,18,12),k);p.position.set(sd*.3,1.35,.76);g.add(p);
+    const h=new T.Mesh(new T.SphereGeometry(.03,10,8),new T.MeshBasicMaterial({color:0xffffff}));h.position.set(sd*.3+.03,1.39,.84);g.add(h);
+    const ch=new T.Mesh(new T.SphereGeometry(.1,14,10),bl);ch.scale.set(1.3,.7,.5);ch.position.set(sd*.5,1.12,.66);g.add(ch);
+    const ft=new T.Mesh(new T.SphereGeometry(.2,18,12),m);ft.scale.set(1,.55,1.3);ft.position.set(sd*.35,.1,.3);g.add(ft);});
+  const mo=new T.Mesh(new T.TorusGeometry(.18,.03,8,28,Math.PI),k);mo.position.set(0,1.08,.76);mo.rotation.z=Math.PI;g.add(mo);return {g,m};}
 {const town=MAPS[0].group;
- {const n=npcBody(0xd9803a,-8,-3),g=n.g,hat=new T.Mesh(new T.ConeGeometry(.55,.5,12),new T.MeshStandardMaterial({color:0xc0463a}));hat.position.y=1.95;g.add(hat);
-  [-1,1].forEach(sd=>{const c=new T.Mesh(new T.SphereGeometry(.28,12,10),n.m);c.position.set(sd*.95,.95,.3);g.add(c);});
-  const hh=new T.Mesh(new T.CylinderGeometry(.06,.06,1.2,8),new T.MeshStandardMaterial({color:0x8a6a3a}));hh.position.set(.95,1.5,.3);g.add(hh);const hd=new T.Mesh(new T.BoxGeometry(.55,.3,.3),new T.MeshStandardMaterial({color:0x7d8794,metalness:.4}));hd.position.set(.95,2.15,.3);g.add(hd);
+ {const n=npcBody(0xd9803a,-8,-3),g=n.g,hat=new T.Mesh(new T.ConeGeometry(.55,.5,28),new T.MeshStandardMaterial({color:0xc0463a}));hat.position.y=1.95;g.add(hat);
+  [-1,1].forEach(sd=>{const c=new T.Mesh(new T.SphereGeometry(.28,22,16),n.m);c.position.set(sd*.95,.95,.3);g.add(c);});
+  const hh=new T.Mesh(new T.CylinderGeometry(.06,.06,1.2,16),new T.MeshStandardMaterial({color:0x8a6a3a}));hh.position.set(.95,1.5,.3);g.add(hh);const hd=new T.Mesh(new T.BoxGeometry(.55,.3,.3),new T.MeshStandardMaterial({color:0x7d8794,metalness:.4}));hd.position.set(.95,2.15,.3);g.add(hd);
   const an=new T.Mesh(new T.BoxGeometry(1.3,.6,.8),new T.MeshStandardMaterial({color:0x3b4452,metalness:.5,roughness:.4}));an.position.set(-10.2,.3,-3);town.add(an);town.add(g);NPCS.push({id:'smith',n:'ช่างตีเหล็ก',ic:'⚒',x:-8,z:-3,g});}
- {const n=npcBody(0x9fd8ff,8,-3),g=n.g;const dome=new T.Mesh(new T.SphereGeometry(.95,20,12,0,Math.PI*2,0,Math.PI/2),new T.MeshStandardMaterial({color:0xcfeeff,transparent:true,opacity:.75}));dome.position.y=1.45;g.add(dome);
+ {const n=npcBody(0x9fd8ff,8,-3),g=n.g;const dome=new T.Mesh(new T.SphereGeometry(.95,32,18,0,Math.PI*2,0,Math.PI/2),new T.MeshStandardMaterial({color:0xcfeeff,transparent:true,opacity:.75}));dome.position.y=1.45;g.add(dome);
   const cv=document.createElement('canvas');cv.width=256;cv.height=128;const x=cv.getContext('2d');x.fillStyle='#8a6a3a';x.fillRect(0,0,256,128);x.strokeStyle='#5a4220';x.lineWidth=8;x.strokeRect(4,4,248,120);x.fillStyle='#fff6d6';x.font='bold 54px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('ภารกิจ',128,66);
-  const bd=new T.Mesh(new T.BoxGeometry(2.6,1.3,.15),new T.MeshStandardMaterial({map:new T.CanvasTexture(cv)}));bd.position.set(10.4,2.1,-3);town.add(bd);[-1,1].forEach(sd=>{const po=new T.Mesh(new T.CylinderGeometry(.1,.1,2.4,8),new T.MeshStandardMaterial({color:0x5a4220}));po.position.set(10.4+sd*1.2,1.2,-3.05);town.add(po);});
+  const bd=new T.Mesh(new T.BoxGeometry(2.6,1.3,.15),new T.MeshStandardMaterial({map:new T.CanvasTexture(cv)}));bd.position.set(10.4,2.1,-3);town.add(bd);[-1,1].forEach(sd=>{const po=new T.Mesh(new T.CylinderGeometry(.1,.1,2.4,16),new T.MeshStandardMaterial({color:0x5a4220}));po.position.set(10.4+sd*1.2,1.2,-3.05);town.add(po);});
   town.add(g);NPCS.push({id:'board',n:'กระดานภารกิจ',ic:'📋',x:8,z:-3,g});}
 
- {const n=npcBody(0xe8c06a,0,10),g=n.g,hat=new T.Mesh(new T.CylinderGeometry(.5,.42,.7,14),new T.MeshStandardMaterial({color:0xffffff}));hat.position.y=2.05;g.add(hat);const hc=new T.Mesh(new T.SphereGeometry(.55,14,10),new T.MeshStandardMaterial({color:0xffffff}));hc.position.y=2.45;g.add(hc);
-  const pot=new T.Mesh(new T.CylinderGeometry(.6,.5,.6,16),new T.MeshStandardMaterial({color:0x3b4452,metalness:.5,roughness:.4}));pot.position.set(1.7,.3,0);g.add(pot);const soup=new T.Mesh(new T.CylinderGeometry(.5,.5,.05,16),new T.MeshStandardMaterial({color:0xe07a3a}));soup.position.set(1.7,.6,0);g.add(soup);
+ {const n=npcBody(0xe8c06a,0,10),g=n.g,hat=new T.Mesh(new T.CylinderGeometry(.5,.42,.7,28),new T.MeshStandardMaterial({color:0xffffff}));hat.position.y=2.05;g.add(hat);const hc=new T.Mesh(new T.SphereGeometry(.55,24,16),new T.MeshStandardMaterial({color:0xffffff}));hc.position.y=2.45;g.add(hc);
+  const pot=new T.Mesh(new T.CylinderGeometry(.6,.5,.6,28),new T.MeshStandardMaterial({color:0x3b4452,metalness:.5,roughness:.4}));pot.position.set(1.7,.3,0);g.add(pot);const soup=new T.Mesh(new T.CylinderGeometry(.5,.5,.05,28),new T.MeshStandardMaterial({color:0xe07a3a}));soup.position.set(1.7,.6,0);g.add(soup);
   town.add(g);NPCS.push({id:'cook',n:'พ่อครัว',ic:'🍳',x:0,z:10,g});}
 
- {const n=npcBody(0xff8ac8,-9,7),g=n.g,beret=new T.Mesh(new T.SphereGeometry(.6,14,8,0,6.2832,0,1.4),new T.MeshStandardMaterial({color:0xa070ff}));beret.position.set(.1,1.75,0);beret.scale.set(1.2,.5,1.2);g.add(beret);
-  [0xff6a5a,0xffe05a,0x4fb4ff].forEach((c,i)=>{const bk=new T.Mesh(new T.CylinderGeometry(.3,.26,.5,12),new T.MeshStandardMaterial({color:c}));bk.position.set(1.5+i*.65,.25,0);g.add(bk);});
+ {const n=npcBody(0xff8ac8,-9,7),g=n.g,beret=new T.Mesh(new T.SphereGeometry(.6,28,12,0,6.2832,0,1.4),new T.MeshStandardMaterial({color:0xa070ff}));beret.position.set(.1,1.75,0);beret.scale.set(1.2,.5,1.2);g.add(beret);
+  [0xff6a5a,0xffe05a,0x4fb4ff].forEach((c,i)=>{const bk=new T.Mesh(new T.CylinderGeometry(.3,.26,.5,24),new T.MeshStandardMaterial({color:c}));bk.position.set(1.5+i*.65,.25,0);g.add(bk);});
   town.add(g);NPCS.push({id:'dye',n:'ช่างย้อมสี',ic:'🎨',x:-9,z:7,g});}
  NPCS.forEach(n=>{n.tag=mkTag('portal',n.ic+' '+n.n);});}
 const npcBtn=document.createElement('button');npcBtn.id='npcbtn';document.body.append(npcBtn);let npcNear=null;
