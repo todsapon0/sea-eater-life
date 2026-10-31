@@ -1,4 +1,4 @@
-"""Local Chromium: actual directional warps, map UI, spawn lifecycle and legacy saves.
+"""Local Chromium: full-edge block traversal, map UI, spawn lifecycle and legacy saves.
 Requires Playwright, /usr/bin/chromium and THREE_JS_PATH (Three.js r128).
 Screenshots stay in EVOLUTION_ARTIFACTS (/tmp/sea-evolution by default).
 """
@@ -13,7 +13,7 @@ class H(http.server.SimpleHTTPRequestHandler):
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),H);threading.Thread(target=server.serve_forever,daemon=True).start()
 url=f'http://127.0.0.1:{server.server_port}/?debug=1'
 html=Path('index.html').read_text().replace('function loop(){requestAnimationFrame(loop);','function loop(){requestAnimationFrame(loop);if(window.__pauseTest)return;')
-expose='window.__maps={P,sea,scene,cam,ren,MAPS,PORTALS,SPAWN,mons,spawn,setMap,updatePortals,updateMini,updateZone,updateNames,updateBgm,BGM,ZN,save,kill,openMap,closeMap,get current(){return curMap},get grace(){return grace},get cooldown(){return warpCD},ready:()=>{warpCD=0;grace=0}};'
+expose='window.__maps={P,sea,scene,cam,ren,MAPS,PORTALS,SPAWN,mons,spawn,setMap,mapExit,mapEdge,game,keys,shots,vortices,shoot,whirlpool,updatePortals,updateMini,updateZone,updateNames,updateBgm,BGM,ZN,save,kill,openMap,closeMap,get current(){return curMap},get grace(){return grace},ready:()=>{grace=0}};'
 html=html.replace('loop();\n}',expose+'loop();\n}')
 legacy={'lv':8,'xp':12,'q':2,'qd':1,'inv':{'ครีบกระเบน':7},'seen':{'ray':1}}
 with sync_playwright() as p:
@@ -35,23 +35,45 @@ with sync_playwright() as p:
  load()
  assert page.evaluate('__maps.current')==0
  assert page.evaluate('__maps.P.inv["ครีบกระเบน"]')==7
- # Walk into all 26 real portal triggers; follow the async warp and check protection,
- # arrival, correct visible world/monsters, no bounce, and music/quest routing.
+ # Cross all 26 shared edges at three lateral positions, not just the old portal center.
  portals=page.evaluate('__maps.PORTALS.map(p=>({map:p.map,to:p.to.map}))')
- for i,pair in enumerate(portals):
-  page.evaluate('''i=>{const t=__maps,p=t.PORTALS[i];t.setMap(p.map);t.ready();t.sea.position.set(p.x,0,p.z);t.updatePortals(0);}''',i)
-  page.wait_for_function('(to)=>__maps.current===to',arg=pair['to'])
-  page.evaluate('''i=>{const t=__maps,p=t.PORTALS[i];if(t.sea.position.x!==p.to.x||t.sea.position.z!==p.to.z)throw Error('arrival');if(t.grace<3||t.cooldown!==2)throw Error('protection');
-   for(const d of t.MAPS)if(d.group.visible!==(d.id===t.current))throw Error('world visibility');
-   for(const m of t.mons)if(m.map!==t.current&&(!m.parked||m.g.visible||m.dead<1e8))throw Error('off-map monster');
-   t.updateMini(1);t.updateZone(.01);t.updateBgm(.01);if(t.BGM.want!==t.MAPS[t.current].music)throw Error('music');t.updatePortals(0);
-   if(t.ZN.puffer!=='ลานปักเป้า / แนวปะการังหนาม / ถ้ำผลึกหนาม')throw Error('dex habitat');}''',i)
-  page.wait_for_timeout(300)
-  assert page.evaluate('__maps.current')==pair['to']
+ report=page.evaluate("""()=>{const t=__maps;let trips=0;for(const [i,p] of t.PORTALS.entries())for(const f of [-.8,0,.8]){
+  const A=t.MAPS[p.map];t.setMap(p.map);t.ready();
+  t.sea.position.set(p.dx?p.dx*(A.w/2-1):f*(A.w/2-2),0,p.dz?p.dz*(A.d/2-1):f*(A.d/2-2));
+  const expected=t.mapExit(p.map,t.sea.position.x,t.sea.position.z),offset=t.cam.position.clone().sub(t.sea.position);
+  t.updatePortals(0);if(t.current!==p.to.map)throw Error('edge destination');
+  if(Math.hypot(t.sea.position.x-expected.x,t.sea.position.z-expected.z)>1e-9)throw Error('lateral arrival');
+  if(t.cam.position.clone().sub(t.sea.position).distanceTo(offset)>1e-8)throw Error('camera jumps');
+  if(t.grace<3)throw Error('arrival protection');
+  for(const d of t.MAPS)if(d.group.visible!==(d.id===t.current))throw Error('world visibility');
+  for(const m of t.mons)if(m.map!==t.current&&(!m.parked||m.g.visible||m.dead<1e8))throw Error('off-map monster');
+  t.updateMini(1);t.updateZone(.01);t.updateBgm(.01);if(t.BGM.want!==t.MAPS[t.current].music)throw Error('music');
+  t.updatePortals(0);if(t.current!==p.to.map)throw Error('automatic bounce');trips++;
+ }
+ for(const d of t.MAPS){const walls=d.group.children.filter(c=>c.userData.closedEdge);
+  if(walls.length!==4-t.PORTALS.filter(p=>p.map===d.id).length)throw Error('connected side still walled');
+  for(const w of walls)if(t.PORTALS.some(p=>p.map===d.id&&p.dx===w.userData.closedEdge.dx&&p.dz===w.userData.closedEdge.dz))throw Error('exit wall');
+ }
+ // Standing at the old ring location does not teleport anymore.
+ t.setMap(0);const p=t.PORTALS.find(p=>p.map===0);t.sea.position.set(p.x,0,p.z);t.updatePortals(0);if(t.current!==0)throw Error('old ring trigger');
+ // Clear attack meshes so spells cannot hit monsters in another block.
+ let disposed=0;t.shoot(1,1,1,0xffffff,.1);t.whirlpool();const fx=[...t.shots,...t.vortices];for(const a of fx){a.mesh.geometry.addEventListener('dispose',()=>disposed++);a.mesh.material.addEventListener('dispose',()=>disposed++);}
+ t.sea.position.set(p.dx*(t.MAPS[0].w/2-1),0,p.dz*(t.MAPS[0].d/2-1));t.updatePortals(0);
+ if(t.shots.length||t.vortices.length||disposed!==fx.length*2||fx.some(a=>a.mesh.parent))throw Error('old-block attack remains');
+ if(document.querySelector('#fadeov'))throw Error('edge walk should not fade/lock');
+ return {trips};}""")
+ assert report['trips']==78,report
+ # Actual held walking input across all four town edges continues into the next block.
+ for key,dx,dz,to in [('d',1,0,12),('a',-1,0,7),('w',0,-1,5),('s',0,1,1)]:
+  page.evaluate('''([dx,dz])=>{const t=__maps;t.setMap(0);t.sea.position.set(dx*(t.MAPS[0].w/2-2),0,dz*(t.MAPS[0].d/2-2));__cam.yaw=0;window.__pauseTest=false;}''',[dx,dz])
+  page.keyboard.down(key)
+  page.wait_for_function('(to)=>__maps.current===to',arg=to,timeout=120000)
+  page.keyboard.up(key);page.evaluate('window.__pauseTest=true')
+  assert page.evaluate('__cam.yaw')==0
  # In every map, exercise actual spawn/scaling and clamps, including empty town.
  page.evaluate('''()=>{const t=__maps;for(const d of t.MAPS){t.setMap(d.id);t.sea.position.set(0,0,0);
   for(const m of t.mons.filter(m=>m.map===d.id)){t.spawn(m);if(m.hp!==m.ty.hp*d.hpScale*1.8||m.xf!==d.xpScale)throw Error('tier scaling');if(m.parked||!m.g.visible)throw Error('active spawn');}
-  t.sea.position.set(999,0,-999);t.updatePortals(0);if(Math.abs(t.sea.position.x)>d.w/2-1||Math.abs(t.sea.position.z)>d.d/2-1)throw Error('player bounds');
+  t.sea.position.set(999,0,-999);t.updatePortals(0);const active=t.MAPS[t.current];if(Math.abs(t.sea.position.x)>active.w/2-1||Math.abs(t.sea.position.z)>active.d/2-1)throw Error('player bounds');
  }const boss=t.mons.find(m=>m.ty.n==='boss');t.setMap(boss.map);boss.aggro=true;t.updateBgm(.1);if(t.BGM.want!=='boss')throw Error('boss music');t.setMap(0);t.updateBgm(4);if(t.BGM.want!=='town')throw Error('town music');
  // Preserve a respawn timer while away, restore it when returning.
  const m=t.mons.find(m=>m.ty.n==='ray');t.setMap(m.map);m.dead=7;m.g.visible=false;t.setMap(0);t.setMap(m.map);if(m.dead!==7||m.g.visible)throw Error('respawn lifecycle');
@@ -133,6 +155,6 @@ with sync_playwright() as p:
  assert fp.evaluate('localStorage.selcls')=='bloop'
  fresh.close()
  assert not errors,errors
- print(json.dumps({'result':'PASS','portal_trips':len(portals),'maps':14,'screen_sizes':5,'legacy_save':'loaded/reloaded','fps_toggle':'no query string, numeric counter, persists on/off','local_start':'fresh picker, character selection, returning player; no password form','console_errors':errors}),flush=True)
+ print(json.dumps({'result':'PASS','edge_crossings':report['trips'],'held_input_directions':4,'maps':14,'screen_sizes':5,'legacy_save':'loaded/reloaded','fps_toggle':'no query string, numeric counter, persists on/off','local_start':'fresh picker, character selection, returning player; no password form','console_errors':errors}),flush=True)
  browser.close()
 server.shutdown()

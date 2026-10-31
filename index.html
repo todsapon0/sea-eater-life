@@ -268,12 +268,21 @@ const MAPS=[
 const MAPTHEME={town:'🏘',normal:'↓ 🐟',poison:'↑ ☠️',spike:'← 🐡',weird:'→ 🟣',boss:'👑'};
 MAPS.forEach(d=>{d.w=d.w||100;d.d=d.d||64;d.music=d.music||({shore:'shallows',kelp:'kelp',cave:'cave'}[d.biome]);d.hpScale=[1,1,1.3,1.7,1][d.tier];d.xpScale=[1,1,1.6,2.4,1][d.tier];});
 const MAP_ROUTES=[[0,5],[5,2],[2,6],[0,7],[7,8],[8,9],[0,1],[1,10],[10,11],[0,12],[12,13],[13,3],[3,4]];
-// ประตูคู่ที่ขอบตามทิศจริง จุดลงห่างจากประตู 4 หน่วยและมีคูลดาวน์วาร์ปเดิม
+// ขอบคู่ระหว่างบล็อก: เดินข้ามได้ตลอดแนวด้านที่มีแมพติดกัน
 const PORTALS=[];
 MAP_ROUTES.forEach(([a,b])=>{const A=MAPS[a],B=MAPS[b],dx=Math.sign(B.gx-A.gx),dz=Math.sign(B.gy-A.gy);
- const edge=(d,inset)=>({x:dx*(d.w/2-inset),z:dz*(d.d/2-inset)}),pa=edge(A,3),pb=edge(B,3),la=edge(A,7),lb=edge(B,7);
- PORTALS.push({map:a,...pa,to:{map:b,x:-lb.x,z:-lb.z}},{map:b,x:-pb.x,z:-pb.z,to:{map:a,...la}});});
+ const edge=d=>({x:dx*(d.w/2-3),z:dz*(d.d/2-3)}),pa=edge(A),pb=edge(B);
+ PORTALS.push({map:a,dx,dz,...pa,to:{map:b}},{map:b,dx:-dx,dz:-dz,x:-pb.x,z:-pb.z,to:{map:a}});});
 const portalDeeper=p=>MAPS[p.to.map].tier>MAPS[p.map].tier;
+const edgeArrow=p=>p.dx<0?'←':p.dx>0?'→':p.dz<0?'↑':'↓';
+function mapEdge(p){const d=MAPS[p.map],x=d.w/2-1,z=d.d/2-1;return p.dx?{x1:p.dx*x,z1:-z,x2:p.dx*x,z2:z}:{x1:-x,z1:p.dz*z,x2:x,z2:p.dz*z};}
+function mapExit(id,x,z){const A=MAPS[id],bx=A.w/2-1,bz=A.d/2-1;
+ const edges=PORTALS.filter(p=>p.map===id&&((p.dx&&x*p.dx>=bx)||(p.dz&&z*p.dz>=bz)));
+ // At a corner take only one connected side, preferring the larger overshoot.
+ edges.sort((a,b)=>(b.dx?x*b.dx-bx:z*b.dz-bz)-(a.dx?x*a.dx-bx:z*a.dz-bz));
+ const p=edges[0];if(!p)return null;const B=MAPS[p.to.map],nx=B.w/2-2,nz=B.d/2-2;
+ const clamp=(v,b)=>Math.max(-b,Math.min(b,v));
+ return {map:B.id,x:p.dx?-p.dx*nx:clamp(x/(A.w/2-2),1)*nx,z:p.dz?-p.dz*nz:clamp(z/(A.d/2-2),1)*nz};}
 const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
 const hf=(x,z)=>Math.sin(x*.15)*Math.cos(z*.13)*.5+Math.sin(x*.4+z*.3)*.1;
 const h=(x,z)=>MAPS[curMap].flat?0:hf(x,z);
@@ -300,15 +309,18 @@ const rm=new T.MeshStandardMaterial({color:0xb9c1c6,flatShading:true}),stalM=new
 const coralM=[0xe0566b,0xf2a03d,0x8f5fd6].map(c=>new T.MeshStandardMaterial({color:c,flatShading:true}));
 function buildMapWorld(def){
  const g=new T.Group();g.visible=def.id===curMap;scene.add(g);def.group=g;def.kelps=[];def.orbs=[];
- const rng=mulberry(7000+def.id*131),W=def.w,D=def.d,yAt=(x,z)=>def.flat?0:hf(x,z),free=(x,z,r)=>!PORTALS.some(q=>q.map===def.id&&Math.hypot(q.x-x,q.z-z)<r),R=a=>(rng()*2-1)*a;
+ const rng=mulberry(7000+def.id*131),W=def.w,D=def.d,yAt=(x,z)=>def.flat?0:hf(x,z),free=(x,z,r)=>!PORTALS.some(q=>q.map===def.id&&((q.dx&&x*q.dx>W/2-r)||(q.dz&&z*q.dz>D/2-r))),R=a=>(rng()*2-1)*a;
  const geo=new T.PlaneGeometry(W+10,D+10,Math.round((W+10)/2),Math.round((D+10)/2));geo.rotateX(-Math.PI/2);const pp=geo.attributes.position,col=new Float32Array(pp.count*3);
  for(let i=0;i<pp.count;i++){const x=pp.getX(i),z=pp.getZ(i);pp.setY(i,yAt(x,z));const n=.95+(Math.sin(x*1.7)+Math.cos(z*1.3))*.025;for(let k=0;k<3;k++)col[i*3+k]=Math.min(1,def.tint[k]*n);}
  geo.computeVertexNormals();geo.setAttribute('color',new T.BufferAttribute(col,3));
  const tex=sandTex.clone();tex.needsUpdate=true;tex.wrapS=tex.wrapT=T.RepeatWrapping;tex.repeat.set((W+10)/10,(D+10)/10);
  const gm=new T.Mesh(geo,new T.MeshStandardMaterial({color:0xffffff,map:tex,roughness:1,vertexColors:true}));gm.receiveShadow=true;g.add(gm);
  const wm=new T.MeshBasicMaterial({color:0x8feaff,transparent:true,opacity:.13,side:T.DoubleSide,depthWrite:false});
- [[0,-D/2,W,0],[0,D/2,W,0],[-W/2,0,D,Math.PI/2],[W/2,0,D,Math.PI/2]].forEach(([x,z,len,ry])=>{const w=new T.Mesh(new T.PlaneGeometry(len,8),wm);w.position.set(x,3.6,z);w.rotation.y=ry;g.add(w);});
- g.add(new T.LineLoop(new T.BufferGeometry().setFromPoints([new T.Vector3(-W/2,.4,-D/2),new T.Vector3(W/2,.4,-D/2),new T.Vector3(W/2,.4,D/2),new T.Vector3(-W/2,.4,D/2)]),new T.LineBasicMaterial({color:0xbff6ff})));
+ [[0,-D/2,W,0,0,-1],[0,D/2,W,0,0,1],[-W/2,0,D,Math.PI/2,-1,0],[W/2,0,D,Math.PI/2,1,0]].forEach(([x,z,len,ry,dx,dz])=>{
+  if(PORTALS.some(p=>p.map===def.id&&p.dx===dx&&p.dz===dz))return;
+  const w=new T.Mesh(new T.PlaneGeometry(len,8),wm);w.position.set(x,3.6,z);w.rotation.y=ry;w.userData.closedEdge={dx,dz};g.add(w);
+  g.add(new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(x-Math.cos(ry)*len/2,.4,z+Math.sin(ry)*len/2),new T.Vector3(x+Math.cos(ry)*len/2,.4,z-Math.sin(ry)*len/2)]),new T.LineBasicMaterial({color:0xbff6ff})));});
+
  const rocks=(n,minD)=>{for(let i=0;i<n;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7)||Math.hypot(x,z)<minD)continue;const r=new T.Mesh(rockG,rm);const sc=.8+rng()*2;r.scale.setScalar(sc);r.position.set(x,yAt(x,z)+.4,z);r.rotation.set(rng()*3,rng()*3,0);g.add(r);}};
  if(def.safe){ // เมืองริมหาด: ลานหิน น้ำพุ บ้าน ต้นปาล์ม
   const plaza=new T.Mesh(new T.CircleGeometry(12,40),new T.MeshStandardMaterial({color:0xe3d6b0,roughness:1}));plaza.rotation.x=-Math.PI/2;plaza.position.y=.03;plaza.receiveShadow=true;g.add(plaza);
@@ -945,26 +957,34 @@ function playerName(){let n='';try{n=localStorage.getItem('pname_'+CLS)||'';}cat
 function updateNames(){const nm=playerName(),txt=nm;if(txt!==myTagText){myTagText=txt;myTag.textContent=txt;}
   placeTag(myTag,sea.position.x,sea.position.y+(CLS==='sea'?3.7:4.9)*sea.scale.x,sea.position.z);
   for(const m of mons){const el=m.tag;if(m.dead>0||!m.g.visible){el.style.display='none';continue;}const dx=m.g.position.x-sea.position.x,dz=m.g.position.z-sea.position.z;if(dx*dx+dz*dz>(m.ty.n==='boss'?4900:1600)){el.style.display='none';continue;}placeTag(el,m.g.position.x,m.g.position.y+3.45*m.ty.s,m.g.position.z);}}
-// ===== ประตูวาร์ป + หน้าจอแผนที่ + มินิแมพ (แนว Ragnarok) =====
-PORTALS.forEach(p=>{const deeper=portalDeeper(p),col=deeper?0xffd95a:0x7dffb0,g=new T.Group();g.position.set(p.x,MAPS[p.map].flat?0:hf(p.x,p.z),p.z);g.rotation.y=Math.atan2(-p.x,-p.z);
-  const ring=new T.Mesh(new T.TorusGeometry(1.5,.16,12,36),new T.MeshBasicMaterial({color:col}));ring.position.y=1.8;g.add(ring);
-  const disc=new T.Mesh(new T.CircleGeometry(1.4,32),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.4,side:T.DoubleSide,depthWrite:false}));disc.position.y=1.8;g.add(disc);
-  const beam=new T.Mesh(new T.CylinderGeometry(1.3,1.3,8,20,1,true),new T.MeshBasicMaterial({color:col,transparent:true,opacity:.12,side:T.DoubleSide,depthWrite:false}));beam.position.y=4;g.add(beam);
-  scene.add(g);p.g=g;p.disc=disc;const d=MAPS[p.to.map];p.tag=mkTag('portal',(deeper?d.ic+' '+d.n+(d.rec>1?' Lv.'+d.rec+'+':''):'↩ '+d.ic+' '+d.n));});
-const fadeEl=document.createElement('div');fadeEl.id='fadeov';document.body.append(fadeEl);let warpLock=false,warpCD=0;
+// ===== เดินเชื่อมขอบแมพ + หน้าจอแผนที่ + มินิแมพ =====
+PORTALS.forEach(p=>{const def=MAPS[p.map],col=portalDeeper(p)?0xffd95a:0x7dffb0,g=new T.Group();
+ const line=mapEdge(p),cx=(line.x1+line.x2)/2,cz=(line.z1+line.z2)/2;g.position.set(cx,0,cz);
+ const geo=new T.PlaneGeometry(p.dx?.7:def.w-2,p.dz?.7:def.d-2,p.dx?1:24,p.dx?16:1);geo.rotateX(-Math.PI/2);
+ const pts=geo.attributes.position;for(let i=0;i<pts.count;i++)pts.setY(i,(def.flat?0:hf(cx+pts.getX(i),cz+pts.getZ(i)))+.15);
+ g.add(new T.Mesh(geo,new T.MeshBasicMaterial({color:col,transparent:true,opacity:.65,side:T.DoubleSide,depthWrite:false})));
+ scene.add(g);p.g=g;const d=MAPS[p.to.map];p.tag=mkTag('portal',edgeArrow(p)+' '+d.ic+' '+d.n+(d.rec>1?' Lv.'+d.rec+'+':''));});
 function setMap(i){curMap=i;MAPS.forEach(d=>{d.group.visible=d.id===i;});mons.forEach(m=>{if(m.map===i){if(m.parked){m.parked=false;m.dead=m.parkedDead;if(m.dead<=0){m.g.visible=true;m.bar.visible=true;}}}
   else if(!m.parked){m.parked=true;m.parkedDead=m.dead;m.dead=1e9;m.g.visible=false;m.bar.visible=false;m.aggro=false;m.windup=0;m.dash=0;if(m.ty.n==='boss')hideBossFx();}});
   PORTALS.forEach(p=>{p.g.visible=p.map===i;});}
-function doWarp(p){if(warpLock)return;warpLock=true;fadeEl.style.opacity=1;playTone('skill');
-  setTimeout(()=>{setMap(p.to.map);sea.position.set(p.to.x,0,p.to.z);warpCD=2;grace=Math.max(grace,3);fadeEl.style.opacity=0;warpLock=false;const d=MAPS[p.to.map];if(P.lv<d.rec-2)say('⚠ อันตราย! แนะนำเลเวล '+d.rec+'+');},280);}
-function updatePortals(dt){warpCD=Math.max(0,warpCD-dt);{const md=MAPS[curMap],bx=md.w/2-1,bz=md.d/2-1;sea.position.x=Math.max(-bx,Math.min(bx,sea.position.x));sea.position.z=Math.max(-bz,Math.min(bz,sea.position.z));}for(const p of PORTALS){const here=p.map===curMap;p.tag.style.display='none';if(!here)continue;p.disc.rotation.z+=dt*1.4;p.disc.scale.setScalar(1+Math.sin(zClock*3+p.x)*.05);
-  const dx=p.x-sea.position.x,dz=p.z-sea.position.z,d2=dx*dx+dz*dz;if(d2<1.9*1.9&&!warpLock&&warpCD<=0)doWarp(p);if(d2<45*45)placeTag(p.tag,p.x,p.g.position.y+4,p.z);}}
+function crossMap(exit){const ox=sea.position.x,oy=sea.position.y,oz=sea.position.z;setMap(exit.map);
+ sea.position.set(exit.x,h(exit.x,exit.z),exit.z);const shift=new T.Vector3(sea.position.x-ox,sea.position.y-oy,sea.position.z-oz);
+ cam.position.add(shift);camTarget.add(shift);bub.position.add(shift);sun.position.add(shift);sun.target.position.add(shift);
+ // Local attack coordinates belong to the old block, never the next block.
+ for(const list of [shots,vortices]){for(const fx of list){scene.remove(fx.mesh);fx.mesh.geometry.dispose();fx.mesh.material.dispose();}list.length=0;}
+ setLock(null);lockRing.visible=false;grace=Math.max(grace,3);miniT=0;
+ const d=MAPS[exit.map];if(P.lv<d.rec-2)say('⚠ อันตราย! แนะนำเลเวล '+d.rec+'+');}
+function updatePortals(dt){const exit=mapExit(curMap,sea.position.x,sea.position.z);if(exit)crossMap(exit);
+ const d=MAPS[curMap],bx=d.w/2-1,bz=d.d/2-1;sea.position.x=Math.max(-bx,Math.min(bx,sea.position.x));sea.position.z=Math.max(-bz,Math.min(bz,sea.position.z));
+ for(const p of PORTALS){p.tag.style.display='none';if(p.map!==curMap)continue;
+  const dist=p.dx?d.w/2-sea.position.x*p.dx:d.d/2-sea.position.z*p.dz;
+  if(dist<16)placeTag(p.tag,p.g.position.x,(d.flat?0:hf(p.g.position.x,p.g.position.z))+2.2,p.g.position.z);}}
 const mapov=document.createElement('div');mapov.id='mapov';mapov.setAttribute('role','dialog');mapov.setAttribute('aria-label','แผนที่');document.body.append(mapov);
 let mapTab=0,mapTimer=null;const MAPICON={ray:'🔷',shark:'🦈',eel:'🐍',puffer:'🐡',whale:'🐋',shrimp:'🦐',boss:'👑'};
 function renderMapUI(){const def=MAPS[mapTab],here=mons.filter(m=>m.map===mapTab),seen={};here.forEach(m=>{seen[m.ty.n]=m.ty;});const k=300/(def.w+6),ch=Math.round((def.d+6)*k);
  const rx=d=>(d.gx+3.5)*40,ry=d=>(d.gy+3.5)*28;
  const routes='<div class="maproutes" aria-label="เส้นทางสี่ทิศ"><span class="routekey" style="left:53%;top:9%">↑ สัตว์พิษ</span><span class="routekey" style="left:1%;top:32%">← สัตว์หนาม</span><span class="routekey" style="right:1%;top:32%">สัตว์ประหลาด →</span><span class="routekey" style="left:53%;bottom:9%">↓ สัตว์ทั่วไป</span><svg viewBox="0 0 320 196" aria-hidden="true">'+MAP_ROUTES.map(([a,b])=>'<line x1="'+rx(MAPS[a])+'" y1="'+ry(MAPS[a])+'" x2="'+rx(MAPS[b])+'" y2="'+ry(MAPS[b])+'"/>').join('')+'</svg>'+MAPS.map(m=>'<button data-mtab="'+m.id+'" style="left:'+rx(m)/3.2+'%;top:'+ry(m)/1.96+'%" aria-pressed="'+(m.id===mapTab)+'" aria-label="'+m.n+' '+MAPTHEME[m.theme]+(m.safe?' ปลอดภัย':' เลเวล '+m.rec)+'" title="'+m.n+'">'+m.ic+(m.safe||m.theme==='boss'?'':'<small>'+m.rec+'</small>')+(m.id===curMap?'<i>📍</i>':'')+'</button>').join('')+'</div>';
- mapov.innerHTML='<div class="mapbox"><div class="mhead"><h2>🗺️ แผนที่</h2><button class="evx" data-mclose aria-label="ปิด">✕</button></div>'+routes+'<div class="maptitle">'+MAPTHEME[def.theme]+' '+def.n+(def.safe?' • ปลอดภัย':' • Lv.'+def.rec+'+')+'</div><canvas id="mapcv" width="300" height="'+ch+'" aria-label="แผนที่'+def.n+' เหนืออยู่ด้านบน"></canvas><div class="maplg">'+Object.values(seen).map(t=>'<span>'+(t.ic||MAPICON[t.n]||'●')+' '+t.nm+'</span>').join('')+(def.safe?'<span>🏘 เขตปลอดภัย</span>':'')+'<span>🌀 วาร์ป • ↑ เหนือ</span><span>🔺 ตัวคุณ</span></div></div>';drawMap();}
+ mapov.innerHTML='<div class="mapbox"><div class="mhead"><h2>🗺️ แผนที่</h2><button class="evx" data-mclose aria-label="ปิด">✕</button></div>'+routes+'<div class="maptitle">'+MAPTHEME[def.theme]+' '+def.n+(def.safe?' • ปลอดภัย':' • Lv.'+def.rec+'+')+'</div><canvas id="mapcv" width="300" height="'+ch+'" aria-label="แผนที่'+def.n+' เหนืออยู่ด้านบน"></canvas><div class="maplg">'+Object.values(seen).map(t=>'<span>'+(t.ic||MAPICON[t.n]||'●')+' '+t.nm+'</span>').join('')+(def.safe?'<span>🏘 เขตปลอดภัย</span>':'')+'<span>↔ เดินออกขอบสี • ↑ เหนือ</span><span>🔺 ตัวคุณ</span></div></div>';drawMap();}
 function drawMap(){const cv=$('mapcv');if(!cv)return;const c=cv.getContext('2d'),def=MAPS[mapTab],k=300/(def.w+6),X=x=>cv.width/2+x*k,Y=z=>cv.height/2+z*k;c.clearRect(0,0,cv.width,cv.height);
   c.fillStyle='#07303b';c.fillRect(0,0,cv.width,cv.height);c.fillStyle=def.mc;c.fillRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);
   c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1.5;c.setLineDash([4,4]);c.strokeRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);c.setLineDash([]);
@@ -973,7 +993,7 @@ function drawMap(){const cv=$('mapcv');if(!cv)return;const c=cv.getContext('2d')
   for(const m of mons){if(m.map!==mapTab)continue;const waiting=m.parked?m.parkedDead>0:m.dead>0,x=X(m.home.x),y=Y(m.home.z),boss=m.ty.n==='boss';
     c.globalAlpha=waiting?.4:1;c.strokeStyle=boss?'#ffd95a':'rgba(255,255,255,.3)';c.lineWidth=boss?2.5:1;c.beginPath();c.arc(x,y,boss?11:4.5*k/1.2,0,6.2832);c.stroke();
     c.font=(boss?22:13)+'px system-ui';c.fillText(m.ty.ic||MAPICON[m.ty.n]||'●',x,y+1);c.globalAlpha=1;}
-  for(const p of PORTALS){if(p.map!==mapTab)continue;c.font='17px system-ui';c.fillText('🌀',X(p.x),Y(p.z));c.font='12px system-ui';c.fillStyle='#fff';c.fillText(MAPS[p.to.map].ic,X(p.x),Y(p.z)+(p.z<0?14:-14));}
+  for(const p of PORTALS){if(p.map!==mapTab)continue;const e=mapEdge(p);c.strokeStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.lineWidth=5;c.beginPath();c.moveTo(X(e.x1),Y(e.z1));c.lineTo(X(e.x2),Y(e.z2));c.stroke();c.font='14px system-ui';c.fillStyle='#fff';c.fillText(edgeArrow(p)+MAPS[p.to.map].ic,X(p.x-p.dx*2),Y(p.z-p.dz*2));}
   if(curMap===mapTab){const px=X(sea.position.x),py=Y(sea.position.z);c.save();c.translate(px,py);c.rotate(Math.PI-face);c.fillStyle='#fff';c.strokeStyle='#00b7d6';c.lineWidth=2;c.beginPath();c.moveTo(0,-8);c.lineTo(6,6);c.lineTo(-6,6);c.closePath();c.fill();c.stroke();c.restore();}}
 function openMap(){mapTab=curMap;renderMapUI();mapov.style.display='flex';mapov.classList.add('pop');setTimeout(()=>mapov.classList.remove('pop'),400);clearInterval(mapTimer);mapTimer=setInterval(drawMap,300);}
 function closeMap(){mapov.style.display='none';clearInterval(mapTimer);}
@@ -985,7 +1005,7 @@ function updateMini(dt){miniT-=dt;if(miniT>0)return;miniT=.2;const def=MAPS[curM
   if(mini.style.width!==cw+'px'||mini.style.height!==ch+'px'){mini.width=cw*2;mini.height=ch*2;mini.style.width=cw+'px';mini.style.height=ch+'px';}
   const c=mini.getContext('2d'),X=x=>(x+def.w/2+2)*k,Y=z=>(z+def.d/2+2)*k+14;c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,cw,ch);
   c.fillStyle='#fff';c.font='10px system-ui';c.textAlign='left';c.fillText(MAPTHEME[def.theme]+(def.safe?'':' '+def.rec+'+')+'  ↑ N',4,11);c.fillStyle=def.mc;c.globalAlpha=.8;c.fillRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);c.globalAlpha=1;
-  for(const p of PORTALS){if(p.map!==curMap)continue;c.fillStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.beginPath();c.arc(X(p.x),Y(p.z),3,0,6.2832);c.fill();}
+  for(const p of PORTALS){if(p.map!==curMap)continue;const e=mapEdge(p);c.strokeStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.lineWidth=3;c.beginPath();c.moveTo(X(e.x1),Y(e.z1));c.lineTo(X(e.x2),Y(e.z2));c.stroke();}
   for(const m of mons){if(m.map!==curMap||m.dead>0||!m.g.visible)continue;const boss=m.ty.n==='boss';c.fillStyle=boss?'#ffd95a':(m===lockM?'#ffffff':'#ff5a4a');c.beginPath();c.arc(X(m.g.position.x),Y(m.g.position.z),boss?4:m===lockM?2.6:1.8,0,6.2832);c.fill();}
   c.save();c.translate(X(sea.position.x),Y(sea.position.z));c.rotate(Math.PI-face);c.fillStyle='#fff';c.strokeStyle='#00b7d6';c.lineWidth=1.2;c.beginPath();c.moveTo(0,-5);c.lineTo(3.6,3.6);c.lineTo(-3.6,3.6);c.closePath();c.fill();c.stroke();c.restore();}
 mini.addEventListener('click',openMap);
