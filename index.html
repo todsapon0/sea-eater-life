@@ -523,9 +523,9 @@ function animateOrgans(tm){for(const g of organParts){const k=g.userData.t,ph=g.
 // ===== บัฟจากการกินมอนสเตอร์ (Hybrid Devour): ล้มแล้วมีโอกาสได้บัฟ 25 วิ, กินด้วยสกิลได้แน่นอน, ชนิดซ้ำรีเฟรช, เต็ม 2 ชนิดแทนตัวเก่าสุด; เอสเซนส์สะสมตามปกติ =====
 const FOOD={ray:{ic:'💨',n:'ว่องไว',d:'เดินเร็ว +15%',sp:1.15},shark:{ic:'🦷',n:'เขี้ยวฉลาม',d:'พลังโจมตี +20%',dm:1.2},eel:{ic:'🐍',n:'เกล็ดงู',d:'รับดาเมจ -15%',tk:.85},whale:{ic:'🐋',n:'อึดทน',d:'ฟื้นเลือด 2%/วิ',reg:.02},puffer:{ic:'🐡',n:'หนามพอง',d:'โจมตี +8% รับดาเมจ -10%',dm:1.08,tk:.9},shrimp:{ic:'🔮',n:'ผลึกคม',d:'สกิลฟื้นตัวเร็ว +25%',cdr:1.25},boss:{ic:'👑',n:'ราชาถ้ำ',d:'โจมตี +25% รับดาเมจ -15%',dm:1.25,tk:.85}},FOODKEYS=Object.keys(FOOD),FOOD_T=25;let devKill=false;
 FOODKEYS.forEach(k=>{P['fb_'+k]=0;});P.fbOrder=[];
-function grantFood(type,sure){const f=FOOD[type];if(!f)return;if(!sure&&type!=='boss'&&Math.random()>.3)return;const key='fb_'+type;
+function grantFood(type,sure,dur){const f=FOOD[type];if(!f)return;if(!sure&&type!=='boss'&&Math.random()>.3)return;const key='fb_'+type;
   if(!(P[key]>0)){const act=FOODKEYS.map(k=>'fb_'+k).filter(k=>P[k]>0);if(act.length>=2){const old=P.fbOrder.find(k=>P[k]>0)||act[0];P[old]=0;}}
-  P[key]=FOOD_T;P.fbOrder=P.fbOrder.filter(k=>k!==key&&P[k]>0);P.fbOrder.push(key);applyJob();say(f.ic+' บัฟ'+f.n+' '+FOOD_T+' วิ: '+f.d);}
+  P[key]=dur||FOOD_T;P.fbOrder=P.fbOrder.filter(k=>k!==key&&P[k]>0);P.fbOrder.push(key);applyJob();say(f.ic+' บัฟ'+f.n+' '+(dur||FOOD_T)+' วิ: '+f.d);}
 function applyJobVisual(){const j=(JOBS[CLS]||{})[P.job];const mm=CLS==='sea'?sea.userData.mainMat:white;
  if(j&&mm){if(!mm.userData.base)mm.userData.base=mm.color.clone();mm.color.copy(mm.userData.base).lerp(new T.Color(j.col),.4);}
  sea.scale.setScalar((j?j.sc:1)*(1+.05*P.ev));
@@ -1064,10 +1064,19 @@ function renderSmith(slotFx,ok){const mat=matCount(),fang=P.inv['เขี้ย
     return '<div class="rfrow'+fx+'" data-row="'+slot+'"><div class="rfic">'+(g?gSvg(g.org,g.rar):'＋')+'</div><div class="rfinfo"><b>'+SLOTN[slot]+' <em>+'+lv+'</em></b><i class="rfpips" aria-label="ระดับ '+lv+' จาก 10">'+'●'.repeat(lv)+'○'.repeat(10-lv)+'</i><small>'+(lv>0?SLOTB[slot]+' +'+refineBonus(slot,lv)+'%':'ยังไม่ได้ตีบวก')+(lv<10&&g?' • โอกาส '+ch+'%':'')+'</small></div>'+
      '<button class="rfgo" data-refine="'+slot+'" '+(why?'disabled':'')+'>'+(why||('⚒ 🧱'+c.mat+(c.fang?' 👑1':'')))+'</button>'+(fx?'<span class="rfspark">'+(ok?'✨':'💥')+'</span>':'')+'</div>';}).join('')+
    '<div class="rfmsg" id="smithmsg" role="status">'+smithMsg+'</div></div>';}
+const COOK_T=150,COOK_MAT=6;
+function cookCost(t){return {mat:COOK_MAT,fang:t==='boss'?1:0};}
+function cookWhy(t){const c=cookCost(t);if(matCount()<c.mat)return 'ขาดวัตถุดิบ';if((P.inv['เขี้ยวราชา']||0)<c.fang)return 'ขาด 👑';return '';}
+function tryCook(t){if(!FOOD[t]||cookWhy(t))return false;const c=cookCost(t);spendMat(c.mat);if(c.fang){P.inv['เขี้ยวราชา']-=c.fang;if(P.inv['เขี้ยวราชา']<=0)delete P.inv['เขี้ยวราชา'];}grantFood(t,true,COOK_T);save();renderDex();return true;}
+function renderCook(msg){const mat=matCount(),fang=P.inv['เขี้ยวราชา']||0;
+  npcov.innerHTML='<div class="mapbox"><div class="mhead"><h2>🍳 พ่อครัว</h2><button class="evx" data-nclose aria-label="ปิด">✕</button></div><div class="rfres">🧱 '+mat+'<span>👑 '+fang+'</span></div><div class="rfmsg">ปรุงแล้วบัฟนาน '+Math.round(COOK_T/60*10)/10+' นาที (กินมอนสเตอร์ได้แค่ '+FOOD_T+' วิ)</div>'+
+   FOODKEYS.map(t=>{const f=FOOD[t],c=cookCost(t),why=cookWhy(t);return '<div class="rfrow"><div class="rfic">'+f.ic+'</div><div class="rfinfo"><b>'+f.n+'</b><small>'+f.d+'</small></div><button class="rfgo" data-cook="'+t+'" '+(why?'disabled':'')+'>'+(why||('🍳 🧱'+c.mat+(c.fang?' 👑1':'')))+'</button></div>';}).join('')+
+   '<div class="rfmsg" role="status">'+(msg||'')+'</div></div>';}
 function renderBoard(){npcov.innerHTML='<div class="mapbox"><div class="mhead"><h2>📋 ภารกิจ</h2><button class="evx" data-nclose aria-label="ปิด">✕</button></div><div class="boardtxt">'+dailyHtml()+'</div></div>';}
-function openNpc(id){npcMode=id;smithMsg='';smithBusy=false;if(id==='smith')renderSmith();else renderBoard();npcov.style.display='flex';npcov.classList.add('pop');setTimeout(()=>npcov.classList.remove('pop'),400);}
+function openNpc(id){npcMode=id;smithMsg='';smithBusy=false;if(id==='smith')renderSmith();else if(id==='cook')renderCook();else renderBoard();npcov.style.display='flex';npcov.classList.add('pop');setTimeout(()=>npcov.classList.remove('pop'),400);}
 function closeNpc(){npcov.style.display='none';npcMode='';}
 npcov.addEventListener('click',e=>{if(e.target===npcov){closeNpc();return;}const b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-nclose')){closeNpc();return;}
+  if(b.dataset.cook){const t=b.dataset.cook,ok=tryCook(t);playTone(ok?'test':'defeat');renderCook(ok?'✨ ปรุงเสร็จ! '+FOOD[t].ic+' '+FOOD[t].n+' นาน '+COOK_T+' วิ':'');return;}
   if(b.dataset.refine&&!smithBusy){const slot=b.dataset.refine,row=npcov.querySelector('[data-row="'+slot+'"]');smithBusy=true;if(row)row.classList.add('hit');
    setTimeout(()=>{const r=tryRefine(slot);smithBusy=false;if(r===null){renderSmith();return;}playTone(r?'test':'defeat');smithMsg=r?'✨ สำเร็จ! '+SLOTN[slot]+' +'+P.rf[slot]:'💥 แตก! ของยังอยู่ ลองใหม่ (โอกาสเพิ่มขึ้น)';renderSmith(slot,r);},560);}});
 // ตัว NPC และป้ายในเมือง
@@ -1084,6 +1093,10 @@ function npcBody(col,x,z){const g=new T.Group();g.position.set(x,0,z);const m=ne
   const cv=document.createElement('canvas');cv.width=256;cv.height=128;const x=cv.getContext('2d');x.fillStyle='#8a6a3a';x.fillRect(0,0,256,128);x.strokeStyle='#5a4220';x.lineWidth=8;x.strokeRect(4,4,248,120);x.fillStyle='#fff6d6';x.font='bold 54px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('ภารกิจ',128,66);
   const bd=new T.Mesh(new T.BoxGeometry(2.6,1.3,.15),new T.MeshStandardMaterial({map:new T.CanvasTexture(cv)}));bd.position.set(10.4,2.1,-3);town.add(bd);[-1,1].forEach(sd=>{const po=new T.Mesh(new T.CylinderGeometry(.1,.1,2.4,8),new T.MeshStandardMaterial({color:0x5a4220}));po.position.set(10.4+sd*1.2,1.2,-3.05);town.add(po);});
   town.add(g);NPCS.push({id:'board',n:'กระดานภารกิจ',ic:'📋',x:8,z:-3,g});}
+
+ {const n=npcBody(0xe8c06a,0,10),g=n.g,hat=new T.Mesh(new T.CylinderGeometry(.5,.42,.7,14),new T.MeshStandardMaterial({color:0xffffff}));hat.position.y=2.05;g.add(hat);const hc=new T.Mesh(new T.SphereGeometry(.55,14,10),new T.MeshStandardMaterial({color:0xffffff}));hc.position.y=2.45;g.add(hc);
+  const pot=new T.Mesh(new T.CylinderGeometry(.6,.5,.6,16),new T.MeshStandardMaterial({color:0x3b4452,metalness:.5,roughness:.4}));pot.position.set(1.7,.3,0);g.add(pot);const soup=new T.Mesh(new T.CylinderGeometry(.5,.5,.05,16),new T.MeshStandardMaterial({color:0xe07a3a}));soup.position.set(1.7,.6,0);g.add(soup);
+  town.add(g);NPCS.push({id:'cook',n:'พ่อครัว',ic:'🍳',x:0,z:10,g});}
  NPCS.forEach(n=>{n.tag=mkTag('portal',n.ic+' '+n.n);});}
 const npcBtn=document.createElement('button');npcBtn.id='npcbtn';document.body.append(npcBtn);let npcNear=null;
 npcBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(npcNear)openNpc(npcNear.id);});
