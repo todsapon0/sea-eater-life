@@ -379,8 +379,10 @@ if(CLS==='sea'){(function(){
   {const pos=geo.attributes.position;for(let k=0;k<pos.count;k++){let x=pos.getX(k),y=pos.getY(k);const z=pos.getZ(k),w=Math.max(0,Math.min(1,(z+.2)/2)),r=Math.hypot(x,y)||1;x*=.95*(1-.14*w*(y/r));y*=1+.08*w;pos.setXYZ(k,x,y,z);}geo.computeVertexNormals();}
   const body=new T.Mesh(geo,M);body.position.y=AXIS;root.add(body);
   const tail=new T.Group();tail.position.set(0,AXIS,-2.0);root.add(tail);let par=tail,sc=1;const newSegs=[];
-  for(let k=0;k<6;k++){const g=new T.Group(),r0=.42*sc,len=.62*sc,m=new T.Mesh(new T.CylinderGeometry(r0*.8,r0,len,20),M);m.rotation.x=Math.PI/2;m.scale.set(1.05,1,.9);m.position.z=-len/2+.05;g.add(m);
-    g.position.z=k?-.6*Math.pow(.84,k-1):0;g.rotation.x=.05;par.add(g);newSegs.push(g);par=g;sc*=.84;}
+  const RS=[.42,.355,.3,.253,.213,.18,.152],LN=[.6,.5,.42,.355,.3,.25]; // รัศมีหน้า-หลังต่อเนื่อง ระยะวาง=ความยาวปล้อง ทรงกลมที่ข้อต่อบังรอยต่อ
+  for(let k=0;k<6;k++){const g=new T.Group(),m=new T.Mesh(new T.CylinderGeometry(RS[k],RS[k+1],LN[k]+.02,24),M);m.rotation.x=Math.PI/2;m.scale.set(1.05,1,.9);m.position.z=-LN[k]/2;g.add(m);
+    const jt=new T.Mesh(new T.SphereGeometry(RS[k],18,12),M);jt.scale.set(1.05,.9,1);g.add(jt);
+    g.position.z=k?-LN[k-1]:0;g.rotation.x=.05;par.add(g);newSegs.push(g);par=g;}
   const fs=new T.Shape();fs.moveTo(0,0);fs.quadraticCurveTo(.45,.45,1.35,.78);fs.lineTo(1.05,.2);fs.lineTo(1.4,-.28);fs.quadraticCurveTo(.45,-.05,0,-.12);fs.closePath();
   const fin=new T.Mesh(new T.ExtrudeGeometry(fs,{depth:.07,bevelEnabled:false}),M);fin.rotation.y=Math.PI/2;fin.position.set(-.035,0,-.22);fin.scale.setScalar(.95);newSegs[5].add(fin);
   const newLegs=[-1,1].map(side=>{const g=new T.Group();g.position.set(side*1.0,AXIS-.15,.55);root.add(g);const U=1.2,UA=.2;
@@ -634,8 +636,11 @@ if(CLS==='bloop'){(function(){
     const f=curveFin([0,.22],[.8,.85],[2.5,.1],[1.0,-.5],.1,FM);f.scale.x=sd;f.rotation.set(0,0,-sd*.5);f.rotation.y=sd*.45;g.add(f);return g;});
   // หางเรียว 5 ปล้อง + ครีบหางแฉกแนวนอน
   const tail=new T.Group();tail.position.set(0,AX,-2.1);root.add(tail);let par=tail,sc2=1;const ns=[];
-  for(let k=0;k<5;k++){const g=new T.Group(),r0=.6*sc2,len=.66*sc2,m=new T.Mesh(new T.CylinderGeometry(r0*.8,r0,len,22),FM);m.rotation.x=Math.PI/2;m.scale.set(1,.92,1);m.position.z=-len/2+.03;g.add(m);
-    g.position.z=k?-.58*Math.pow(.86,k-1):0;par.add(g);ns.push(g);par=g;sc2*=.8;}
+  // หางต่อเนื่อง: รัศมีหน้า-หลังของแต่ละปล้องตรงกับปล้องถัดไป ระยะวางปล้อง=ความยาวปล้อง + ทรงกลมที่ข้อต่อบังรอยต่อตอนงอ
+  const RS=[.6,.49,.4,.32,.25,.19],LN=[.62,.52,.44,.37,.31];
+  for(let k=0;k<5;k++){const g=new T.Group(),m=new T.Mesh(new T.CylinderGeometry(RS[k],RS[k+1],LN[k]+.02,28),FM);m.rotation.x=Math.PI/2;m.scale.set(1,.92,1);m.position.z=-LN[k]/2;g.add(m);
+    const jt=new T.Mesh(new T.SphereGeometry(RS[k],20,14),FM);jt.scale.set(1,.92,1);g.add(jt);
+    g.position.z=k?-LN[k-1]:0;par.add(g);ns.push(g);par=g;}
   [-1,1].forEach(sd=>{const f=curveFin([0,.05],[sd*1.1,.6],[sd*2.2,.2],[sd*1.0,-.7],.1,FM);f.rotation.x=Math.PI/2;f.position.z=-.35;ns[4].add(f);});
   legs[0]=fl[0];legs[1]=fl[1];segs.length=0;ns.forEach(g=>segs.push(g));
 })();}
