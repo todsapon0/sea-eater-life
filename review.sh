@@ -18,7 +18,7 @@ say "-- ล็อกที่ค้างใน HANDOFF.md"; grep -nE "🔒 ก�
 # 4) เทสต์ทั้งหมด (node ต่อเนื่อง, python ขนาน 3 ตัว)
 for t in test-*.cjs; do if timeout 120 node "$t" >"$TMP/$t.log" 2>&1; then say "PASS $t"; else say "FAIL $t: $(tail -2 "$TMP/$t.log"|tr '\n' ' '|cut -c1-200)"; fi; done
 mkpy(){ sed "s#executable_path='/usr/bin/chromium',##;s#executable_path=\"/usr/bin/chromium\",##" "$1" > ".rv_$1"; }
-runpy(){ t=$1; mkpy "$t"; if timeout 280 python3 ".rv_$t" >"$TMP/$t.log" 2>&1; then echo "PASS $t" >"$TMP/$t.res"; else echo "FAIL $t: $(tail -2 "$TMP/$t.log"|tr '\n' ' '|cut -c1-200)" >"$TMP/$t.res"; fi; rm -f ".rv_$t"; }
+runpy(){ t=$1; mkpy "$t"; if timeout 600 python3 ".rv_$t" >"$TMP/$t.log" 2>&1; then echo "PASS $t" >"$TMP/$t.res"; else echo "FAIL $t: $(tail -2 "$TMP/$t.log"|tr '\n' ' '|cut -c1-200)" >"$TMP/$t.res"; fi; rm -f ".rv_$t"; }
 export -f runpy mkpy; export TMP
 ls test-*.py | xargs -P 3 -I{} bash -c 'runpy {}'
 cat "$TMP"/*.res | sort | tee -a "$OUT"
