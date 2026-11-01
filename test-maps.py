@@ -36,7 +36,7 @@ with sync_playwright() as p:
  load()
  assert page.evaluate('__maps.current')==0
  assert page.evaluate('__maps.P.inv["ครีบกระเบน"]')==7
- # Cross all 26 shared edges at three lateral positions, not just the old portal center.
+ # Cross all 28 shared edges at three lateral positions, not just the old portal center.
  portals=page.evaluate('__maps.PORTALS.map(p=>({map:p.map,to:p.to.map}))')
  report=page.evaluate("""()=>{const t=__maps;let trips=0;for(const [i,p] of t.PORTALS.entries())for(const f of [-.8,0,.8]){
   const A=t.MAPS[p.map];t.setMap(p.map);t.ready();
@@ -63,7 +63,7 @@ with sync_playwright() as p:
  if(t.shots.length||t.vortices.length||disposed!==fx.length*2||fx.some(a=>a.mesh.parent))throw Error('old-block attack remains');
  if(document.querySelector('#fadeov'))throw Error('edge walk should not fade/lock');
  return {trips};}""")
- assert report['trips']==78,report
+ assert report['trips']==84,report
  # Actual held walking input across all four town edges continues into the next block.
  for key,dx,dz,to in [('d',1,0,12),('a',-1,0,7),('w',0,-1,5),('s',0,1,1)]:
   page.evaluate('''([dx,dz])=>{const t=__maps;t.setMap(0);t.sea.position.set(dx*(t.MAPS[0].w/2-2),0,dz*(t.MAPS[0].d/2-2));__cam.yaw=0;window.__pauseTest=false;}''',[dx,dz])
@@ -89,8 +89,8 @@ with sync_playwright() as p:
  for width,height in [(390,844),(844,390),(320,568),(768,1024),(1024,768)]:
   page.set_viewport_size({'width':width,'height':height})
   page.evaluate('__maps.openMap()');page.wait_for_timeout(450)
-  assert page.locator('[data-mtab]').count()==14
-  for mapid in range(14):
+  assert page.locator('[data-mtab]').count()==15
+  for mapid in list(range(14))+[15]:
    page.locator(f'[data-mtab="{mapid}"]').click()
    assert page.locator(f'[data-mtab="{mapid}"]').get_attribute('aria-pressed')=='true'
    assert 'undefined' not in page.locator('#mapov').inner_text()
@@ -156,6 +156,6 @@ with sync_playwright() as p:
  assert fp.evaluate('localStorage.selcls')=='bloop'
  fresh.close()
  assert not errors,errors
- print(json.dumps({'result':'PASS','edge_crossings':report['trips'],'held_input_directions':4,'maps':14,'screen_sizes':5,'legacy_save':'loaded/reloaded','fps_toggle':'no query string, numeric counter, persists on/off','local_start':'fresh picker, character selection, returning player; no password form','console_errors':errors}),flush=True)
+ print(json.dumps({'result':'PASS','edge_crossings':report['trips'],'held_input_directions':4,'maps':15,'screen_sizes':5,'legacy_save':'loaded/reloaded','fps_toggle':'no query string, numeric counter, persists on/off','local_start':'fresh picker, character selection, returning player; no password form','console_errors':errors}),flush=True)
  browser.close()
 server.shutdown()

@@ -20,7 +20,7 @@ with sync_playwright() as p:
  ctx.route('**/*',route)
  pg.add_init_script("""if(!localStorage.seeded){localStorage.seeded='1';localStorage.selcls='sea';localStorage.sel01=JSON.stringify({lv:2,xp:0,q:0,qd:0,inv:{},seen:{}});}window.mapLabels=[];const orig=CanvasRenderingContext2D.prototype.fillText;CanvasRenderingContext2D.prototype.fillText=function(t,...args){if(this.canvas.id==='mapcv')window.mapLabels.push(t);return orig.call(this,t,...args);};window.miniColors=[];const ofill=CanvasRenderingContext2D.prototype.fill;CanvasRenderingContext2D.prototype.fill=function(...args){if(this.canvas.id==='minimap')window.miniColors.push(this.fillStyle);return ofill.apply(this,args);};""")
  pg.goto(url,wait_until='networkidle');pg.wait_for_function('window.__tr');assert pg.evaluate('__tr.P.tr.length')==0
- assert pg.evaluate('__tr.TREASURES.length')==26
+ assert pg.evaluate('__tr.TREASURES.length')==28
  assert pg.evaluate("__tr.claimTreasure(__tr.TREASURES.find(t=>t.id==='c1'))")==False
  pg.evaluate("__tr.setMap(1);const t=__tr.TREASURES.find(x=>x.id==='c1');__tr.sea.position.set(t.x+2.8,0,t.z);__tr.updateTreasure();")
  def check_button():
@@ -41,5 +41,5 @@ with sync_playwright() as p:
  pg.reload(wait_until='networkidle');pg.wait_for_function('window.__tr');assert pg.evaluate("__tr.P.tr.includes('c1')&&__tr.P.tr.includes('p1')") and pg.evaluate("__tr.P.inv['ไข่มุกทะเล']")==pearls_before+1
  pg.evaluate('__tr.setMap(1);window.miniColors=[];__tr.updateMini(1)');assert '#ffdf48' not in pg.evaluate('window.miniColors') and '#f5e6ff' not in pg.evaluate('window.miniColors');pg.locator('#mapb').click();pg.wait_for_selector('#mapcv');pg.evaluate('window.mapLabels=[];__tr.drawMap()');labels=pg.evaluate('window.mapLabels');assert '💰' not in labels and '🦪' not in labels,labels
  assert not errs,errs;browser.close()
-print('PASS: 26 treasures, legacy save, range checks, map icons, one-time rewards and reload')
+print('PASS: 28 treasures, legacy save, range checks, map icons, one-time rewards and reload')
 sv.shutdown()

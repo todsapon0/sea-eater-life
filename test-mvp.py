@@ -27,11 +27,11 @@ with sync_playwright() as p:
   const a=t.mons.find(q=>q.map===1),ar=t.mons.find(q=>t.MAPS[q.map].arena),f=l=>{t.P.lv=l;return +t.xpFactor(a).toFixed(2);};out.xf=[f(5),f(6),f(7),f(16),f(60)];t.P.lv=60;out.xfArena=t.xpFactor(ar);
   return out;}""")
  print(json.dumps(r,ensure_ascii=False))
- assert r['maps']==[2,3,6,8,9,10,11,13],r
+ assert r['maps']==[2,3,6,8,9,10,11,13,15],r
  assert r['names'] and r['hp'],r
  assert r['mvpDead']==480 and r['drop'] and r['kc']==1 and r['respawnHp'] and r['normalDead']==6,r
- assert r['total']==98,r
+ assert r['total']==114,r
  assert r['xf']==[1,1,.9,.2,.2],r
  assert r['xfArena']==1,r
  assert not errs,errs[:2]
- print('PASS: 8 MVP elites in far maps, HP x6, 8-minute respawn, extra drops, normal monsters unchanged, 98 monsters')
+ print('PASS: 9 MVP elites in far maps, HP x6, 8-minute respawn, extra drops, normal monsters unchanged, 114 monsters')

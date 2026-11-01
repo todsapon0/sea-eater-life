@@ -2,7 +2,7 @@
 const fs=require('fs'),assert=require('assert'),html=fs.readFileSync('index.html','utf8');
 const source=html.slice(html.indexOf('let curMap=0;'),html.indexOf('const sandTex='));
 const {MAPS,MAP_ROUTES,PORTALS,SPAWN,monsterMeta,monsterRoster,portalDeeper,mapExit,mapEdge}=new Function(source+';return {MAPS,MAP_ROUTES,PORTALS,SPAWN,monsterMeta,monsterRoster,portalDeeper,mapExit,mapEdge};')();
-assert.equal(MAPS.length,15);assert.equal(MAPS.filter(d=>!d.arena).length,14);assert.equal(PORTALS.length,26);assert.equal(MAPS.filter(d=>d.safe).length,1);
+assert.equal(MAPS.length,16);assert.equal(MAPS.filter(d=>!d.arena).length,15);assert.equal(PORTALS.length,28);assert.equal(MAPS.filter(d=>d.safe).length,1);
 const inside=(d,p)=>Math.abs(p.x)<d.w/2&&Math.abs(p.z)<d.d/2;
 for(const [i,d] of MAPS.entries()){assert.equal(d.id,i);assert(['town','shallows','kelp','cave','lair'].includes(d.music));assert(d.hpScale>0&&d.xpScale>0);}
 const axes={poison:[0,-1],spike:[-1,0],normal:[0,1],weird:[1,0]};
@@ -15,7 +15,7 @@ for(const [theme,[dx,dz]] of Object.entries(axes)){
   assert(MAP_ROUTES.some(([a,b])=>a===from.id&&b===d.id));from=d;
  }
 }
-const reached=new Set([0]);for(let i=0;i<MAPS.length;i++)for(const p of PORTALS)if(reached.has(p.map))reached.add(p.to.map);assert.equal(reached.size,14,'all maps reachable');
+const reached=new Set([0]);for(let i=0;i<MAPS.length;i++)for(const p of PORTALS)if(reached.has(p.map))reached.add(p.to.map);assert.equal(reached.size,15,'all maps reachable');
 for(const p of PORTALS){
  const A=MAPS[p.map],B=MAPS[p.to.map],dx=Math.sign(B.gx-A.gx),dz=Math.sign(B.gy-A.gy);
  assert(inside(A,p));assert.equal(Math.sign(p.x),dx);assert.equal(Math.sign(p.z),dz);
@@ -44,11 +44,11 @@ for(const d of MAPS){
   const result=mapExit(d.id,x,z);if(result){assert(inside(MAPS[result.map],result));assert.equal(mapExit(result.map,result.x,result.z),null,'corner does not chain exits');}
  }
 }
-const allowed={normal:['ray','shark','whale'],poison:['eel','crb2'],spike:['puffer','chp2','chp3','shrimp'],weird:['chp1','crb1','hnd1','srp1','hnd2','swm1','tub1','crb3','hnd3','srp2','srp3','swm2','tub2'],boss:['boss'],arena:['ray','shark','eel','puffer','whale']};
+const allowed={normal:['ray','shark','whale'],poison:['eel','crb2'],spike:['puffer','chp2','chp3','shrimp'],weird:['chp1','crb1','hnd1','srp1','hnd2','swm1','tub1','crb3','hnd3','srp2','srp3','swm2','tub2'],boss:['boss'],arena:['ray','shark','eel','puffer','whale'],abyss:['shark','whale','eel','crb3','hnd3','srp3','swm2','tub2']};
 for(const sp of SPAWN){assert(allowed[MAPS[sp.map].theme].includes(sp.t),'theme: '+sp.t);assert(sp.n>=sp.c&&sp.c>0);}
 for(const d of MAPS)assert.equal(SPAWN.some(sp=>sp.map===d.id),!d.safe,'every field populated, town safe');
-assert.equal(monsterRoster.length,98);assert.equal(new Set(monsterRoster).size,23);assert.equal(monsterRoster.filter(n=>n==='boss').length,1);
+assert.equal(monsterRoster.length,114);assert.equal(new Set(monsterRoster).size,23);assert.equal(monsterRoster.filter(n=>n==='boss').length,1);
 for(const m of monsterMeta){const d=MAPS[m.map];assert(inside(d,m.home));for(const p of PORTALS.filter(p=>p.map===m.map))assert(Math.hypot(m.home.x-p.x,m.home.z-p.z)>7,'home clear of portal');}
 // New topology has no persisted map field: legacy saves always return to town.
 const save=html.slice(html.indexOf('const save=()=>'),html.indexOf('const say='));assert(!/curMap|map:/.test(save));assert(html.includes('setMap(0);'));
-console.log('PASS: 14 linked maps + 1 arena, four levelled branches, 26 full-edge links, lateral round trips and closed world boundaries, 98 monsters (90 themed + 8 arena pool), spawn safety and unchanged save schema');
+console.log('PASS: 15 linked maps (incl. abyss) + 1 arena, four levelled branches, 28 full-edge links, lateral round trips and closed world boundaries, 114 monsters (106 themed + 8 arena pool), spawn safety and unchanged save schema');
