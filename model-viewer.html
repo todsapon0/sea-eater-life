@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Sea Eater — ตัวดูโมเดล</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#0a4a58;font-family:-apple-system,system-ui,sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{display:block;width:100%;height:100%}
+#bar{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:0 8px}
+#top{position:fixed;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));font-size:13px;opacity:.85;line-height:1.4}
+button{font:inherit;font-size:14px;color:#fff;background:rgba(0,30,40,.72);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:9px 13px;min-height:40px}
+button.on{background:#1f8aa0}
+a{color:#bfeaf5}
+</style>
+</head>
+<body>
+<div id="top"><b>Sea Eater</b> โมเดลต้นฉบับ (สร้างด้วยโค้ด)<br>ลากหมุน • บีบ/ล้อเมาส์ซูม • <a href="index.html">กลับเกม</a></div>
+<div id="bar">
+<button data-v="front">หน้า</button><button data-v="side">ข้าง</button><button data-v="back">หลัง</button><button data-v="top">บน</button>
+<button id="spin" class="on">หมุนอัตโนมัติ</button><button id="tone">สี: เทา</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+if(!window.THREE){document.getElementById('top').innerHTML='<b>โหลดไม่สำเร็จ</b><br>เช็กอินเทอร์เน็ตแล้วรีเฟรช';return;}
+const T=THREE,BG=0x0a4a58;
+const scene=new T.Scene();{const c=document.createElement('canvas');c.width=2;c.height=256;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,256);g.addColorStop(0,'#1a8aa0');g.addColorStop(.55,'#0d5568');g.addColorStop(1,'#04222c');x.fillStyle=g;x.fillRect(0,0,2,256);const tx=new T.CanvasTexture(c);tx.encoding=T.sRGBEncoding;scene.background=tx;}
+scene.fog=new T.Fog(0x0b4a5c,16,42);
+const cam=new T.PerspectiveCamera(40,innerWidth/innerHeight,.1,100);
+const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight);ren.outputEncoding=T.sRGBEncoding;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=1.05;ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;document.body.prepend(ren.domElement);
+scene.add(new T.HemisphereLight(0xcdeeff,0x1d4a55,.75));
+const key=new T.DirectionalLight(0xfff4e0,1.25);key.position.set(6,11,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera,{left:-8,right:8,top:8,bottom:-8,near:1,far:30});key.shadow.bias=-.0006;key.shadow.radius=4;scene.add(key);
+const rim=new T.DirectionalLight(0x7fd0ff,.7);rim.position.set(-7,4,-8);scene.add(rim);
+// ลำแสงจากผิวน้ำ
+const shaft=new T.SpotLight(0xbfefff,.55,40,.6,.8,1);shaft.position.set(-3,16,2);shaft.target.position.set(0,0,0);scene.add(shaft,shaft.target);
+
+// พื้นเงา
+const floor=new T.Mesh(new T.CircleGeometry(40,64),new T.MeshStandardMaterial({color:0x2f7f86,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.02;floor.receiveShadow=true;scene.add(floor);
+// ก้อนหินเล็ก ๆ ประกอบฉาก
+const rockM=new T.MeshStandardMaterial({color:0x4d6f74,roughness:.95,flatShading:true});
+for(let i=0;i<14;i++){const a=i*2.4,d=6+((i*37)%9);const r=new T.Mesh(new T.DodecahedronGeometry(.4+((i*13)%7)*.18),rockM);r.position.set(Math.cos(a)*d,.15,Math.sin(a)*d);r.rotation.set(i,i*2,0);r.castShadow=r.receiveShadow=true;scene.add(r);}
+// ฟองลอย
+const bpos=new Float32Array(180);for(let i=0;i<180;i+=3){bpos[i]=(Math.random()-.5)*16;bpos[i+1]=Math.random()*9;bpos[i+2]=(Math.random()-.5)*16;}
+const bgeo=new T.BufferGeometry();bgeo.setAttribute('position',new T.BufferAttribute(bpos,3));
+const bubbles=new T.Points(bgeo,new T.PointsMaterial({color:0xe6fbff,size:.12,transparent:true,opacity:.55,depthWrite:false}));scene.add(bubbles);
+
+const TONES=[{n:'เทา',c:0x9aa6ab},{n:'ขาว',c:0xf1efe8}];
+let tone=0;
+const noiseTex=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),d=x.createImageData(256,256);for(let i=0;i<d.data.length;i+=4){const v=120+Math.random()*60|0;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}x.putImageData(d,0,0);for(let y=0;y<256;y+=4){x.fillStyle='rgba(0,0,0,.10)';x.fillRect(0,y,256,1);}const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(6,6);return t;})();
+const mat=new T.MeshStandardMaterial({color:TONES[0].c,roughness:.62,metalness:.03,side:T.DoubleSide,bumpMap:noiseTex,bumpScale:.35});
+const sea=new T.Group();scene.add(sea);
+const AXIS_Y=1.6; // ความสูงแกนลำตัวจากพื้น
+
+// ---------- ลำตัวเป็นขวดป่อง ปากกลมมนทรงไข่ ----------
+// โปรไฟล์ (รัศมี, ตำแหน่งตามยาว) จากหางเข้าปาก แล้ววนกลับเป็นผนังด้านใน
+const raw=[[.42,-2.0],[.55,-1.6],[.85,-.9],[1.08,-.1],[1.18,.7],[1.2,1.5],[1.18,1.78],[1.08,1.85],[.98,1.74],[.95,1.2],[.9,.5],[.74,-.2],[.5,-.7],[0,-.9]];
+const cr=new T.SplineCurve(raw.map(q=>new T.Vector2(q[0],q[1])));
+const prof=cr.getPoints(90);
+const bodyGeo=new T.LatheGeometry(prof,56);
+bodyGeo.rotateX(Math.PI/2);            // แกนยาว Y → Z (ปากอยู่ +Z)
+{const pos=bodyGeo.attributes.position;
+ for(let i=0;i<pos.count;i++){let x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+   const w=Math.max(0,Math.min(1,(z+.2)/2));         // ยิ่งใกล้ปากยิ่งปรับเป็นไข่
+   const r=Math.hypot(x,y)||1;
+   x*=.95*(1-.14*w*(y/r));                                  // ล่างกว้าง บนแคบ = ทรงไข่
+   y*=1+.08*w;
+   pos.setXYZ(i,x,y,z);}
+ bodyGeo.computeVertexNormals();}
+const body=new T.Mesh(bodyGeo,mat);body.position.y=AXIS_Y;sea.add(body);
+
+// ---------- ท้องเป็นปล้อง + ครีบ ----------
+const segs=[];const tail=new T.Group();tail.position.set(0,AXIS_Y,-2.0);sea.add(tail);
+let par=tail,sc=1;
+for(let i=0;i<6;i++){
+  const g=new T.Group(),r0=.42*sc,r1=r0*.8,len=.62*sc;
+  const m=new T.Mesh(new T.CylinderGeometry(r1,r0,len,24),mat);m.rotation.x=Math.PI/2;m.scale.set(1.05,1,.9);m.position.z=-len/2+.05;g.add(m);
+  g.position.z=i?-.6*Math.pow(.84,i-1):0;g.rotation.x=.05;par.add(g);segs.push(g);par=g;sc*=.84;
+}
+const fs=new T.Shape();fs.moveTo(0,0);fs.quadraticCurveTo(.45,.45,1.35,.78);fs.lineTo(1.05,.2);fs.lineTo(1.4,-.28);fs.quadraticCurveTo(.45,-.05,0,-.12);fs.closePath();
+const fin=new T.Mesh(new T.ExtrudeGeometry(fs,{depth:.07,bevelEnabled:false}),mat);
+fin.rotation.y=Math.PI/2;fin.rotation.z=0;fin.position.set(-.035,0,-.22);fin.scale.setScalar(.95);
+segs[segs.length-1].add(fin);
+
+// ---------- ขา 2 ข้าง: ต้นแขนยื่นข้าง ข้อต่อกลม แข้งลงพื้น เท้าพัด ----------
+function limb(side){
+  const g=new T.Group();g.position.set(side*1.0,AXIS_Y-.15,.55);sea.add(g);
+  const U=1.2,UA=.2;                                  // ความยาวต้นแขน, มุมก้ม
+  const up=new T.Mesh(new T.CylinderGeometry(.16,.2,U,14),mat);up.geometry.translate(0,U/2,0);up.rotation.z=-side*(Math.PI/2+UA);g.add(up);g.add(new T.Mesh(new T.SphereGeometry(.2,16,12),mat));
+  const elbow=new T.Vector3(side*Math.cos(UA)*U,-Math.sin(UA)*U,0);
+  const k=new T.Group();k.position.copy(elbow);g.add(k);
+  k.add(new T.Mesh(new T.SphereGeometry(.2,16,12),mat));
+  const L=elbow.y+g.position.y;                           // ระยะถึงพื้น
+  const drop=g.position.y+elbow.y-.12;
+  const low=new T.Mesh(new T.CylinderGeometry(.19,.12,drop,14),mat);low.geometry.translate(0,-drop/2,0);low.rotation.z=side*.1;k.add(low);
+  const foot=new T.Group();foot.position.set(Math.sin(.1)*drop*side,-Math.cos(.1)*drop,.0);
+  const cone=new T.Mesh(new T.ConeGeometry(.38,.3,14,1,true),mat);cone.position.y=.1;foot.add(cone);
+  for(let q=0;q<5;q++){const a=(q/4-.5)*1.5,t=new T.Mesh(new T.CylinderGeometry(.02,.04,.3,6),mat);
+    t.position.set(Math.sin(a)*.32,-.04,Math.cos(a)*.32+.05);t.rotation.set(Math.cos(a)*.75,0,-Math.sin(a)*.75);foot.add(t);}
+  k.add(foot);return g;
+}
+limb(-1);limb(1);
+sea.position.y=.12;sea.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+
+// ---------- กล้อง ----------
+const target=new T.Vector3(0,1.4,-.2);
+const C={yaw:.9,pitch:.3,dist:12},goal={yaw:.9,pitch:.3,dist:12};
+function place(){const cp=Math.cos(C.pitch);cam.position.set(target.x+Math.sin(C.yaw)*cp*C.dist,target.y+Math.sin(C.pitch)*C.dist,target.z+Math.cos(C.yaw)*cp*C.dist);cam.lookAt(target);}
+const VIEWS={front:[0,.12],side:[Math.PI/2,.12],back:[Math.PI,.15],top:[0,1.45]};
+let spin=true,drag=false;const pts=new Map();let pinch0=0,dist0=0;
+const cv=ren.domElement;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});drag=true;if(pts.size===2){const [a,b]=[...pts.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);dist0=goal.dist;}});
+cv.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;
+  if(pts.size===1){goal.yaw-=(e.clientX-p.x)*.007;goal.pitch=Math.max(.02,Math.min(1.5,goal.pitch+(e.clientY-p.y)*.006));spin=false;spinBtn.classList.remove('on');}
+  p.x=e.clientX;p.y=e.clientY;
+  if(pts.size===2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)goal.dist=Math.max(6,Math.min(28,dist0*pinch0/d));}});
+const up=e=>{pts.delete(e.pointerId);if(!pts.size)drag=false;};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();goal.dist=Math.max(6,Math.min(28,goal.dist*(1+Math.sign(e.deltaY)*.08)));},{passive:false});
+const spinBtn=document.getElementById('spin');
+spinBtn.onclick=()=>{spin=!spin;spinBtn.classList.toggle('on',spin);};
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const v=VIEWS[b.dataset.v];goal.yaw=v[0];goal.pitch=v[1];spin=false;spinBtn.classList.remove('on');});
+document.getElementById('tone').onclick=function(){tone=1-tone;mat.color.setHex(TONES[tone].c);this.textContent='สี: '+TONES[tone].n;};
+function resize(){const v=window.visualViewport,w=v?v.width:innerWidth,h=v?v.height:innerHeight;ren.setSize(w,h);cam.aspect=w/h;cam.fov=w<h?52:40;cam.updateProjectionMatrix();}
+addEventListener('resize',resize);if(window.visualViewport)visualViewport.addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,200));resize();
+
+// query ?v=front|side|back|top&spin=0 สำหรับจับภาพทดสอบ
+const q=new URLSearchParams(location.search);if(q.get('v')&&VIEWS[q.get('v')]){const v=VIEWS[q.get('v')];C.yaw=goal.yaw=v[0];C.pitch=goal.pitch=v[1];}
+if(q.get('spin')==='0'){spin=false;spinBtn.classList.remove('on');}
+if(q.get('tone')==='1')document.getElementById('tone').click();
+
+const clock=new T.Clock();let tm=0;
+(function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05);tm+=dt;
+  if(spin&&!drag)goal.yaw+=dt*.35;
+  C.yaw+=(goal.yaw-C.yaw)*Math.min(1,dt*8);C.pitch+=(goal.pitch-C.pitch)*Math.min(1,dt*8);C.dist+=(goal.dist-C.dist)*Math.min(1,dt*8);
+  segs.forEach((s,i)=>{s.rotation.y=Math.sin(tm*1.6-i*.6)*.07*(1+i*.25);});
+  {const bp=bgeo.attributes.position;for(let i=0;i<bp.count;i++){let y=bp.getY(i)+dt*(.25+(i%5)*.06);if(y>9)y=0;bp.setY(i,y);}bp.needsUpdate=true;}
+  place();ren.render(scene,cam);})();
+})();
+</script>
+</body>
+</html>
