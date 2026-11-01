@@ -41,7 +41,7 @@ with sync_playwright() as p:
  page.locator('[data-book-page="-1"]').click();assert '2 / 3' in page.locator('.bookpager').inner_text()
  page.locator('[data-book-tab=daily]').click();assert 'ภารกิจวันนี้' in page.locator('[data-book-section=daily]').inner_text()
  page.locator('[data-book-tab=bag]').click();assert 'เขี้ยวคม' in page.locator('[data-book-section=bag]').inner_text()
- page.locator('[data-book-tab=settings]').click()
+ page.locator('[data-book-tab=settings]').click();page.evaluate("document.querySelectorAll('#dex details').forEach(d=>d.open=true)")
  for name in ['fpsBtn','gfxBtn','fsBtn','hudBtn','camBtn','zoomIn','zoomOut','renameBtn','swc','exportSave','copySave','importFileBtn','importCodeBtn']:
   assert page.locator('#'+name).is_visible(),name
  before=page.locator('#fpsBtn').get_attribute('aria-pressed');page.locator('#fpsBtn').click();assert page.locator('#fpsBtn').get_attribute('aria-pressed')!=before

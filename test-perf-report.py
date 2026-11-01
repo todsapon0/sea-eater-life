@@ -21,7 +21,7 @@ with sync_playwright() as p:
   else:outbound.append(u);r.abort()
  ctx.route('**/*',route)
  page.add_init_script("""localStorage.selcls='sea';localStorage.pname_sea='PRIVATE PLAYER';window.copyFail=true;window.copied='';Object.defineProperty(navigator,'clipboard',{value:{writeText(t){if(window.copyFail)return Promise.reject(Error('denied'));window.copied=t;return Promise.resolve();}}});""")
- page.goto(url,wait_until='networkidle');page.wait_for_function('window.__perfTest');page.locator('#dexb').dispatch_event('pointerdown');page.locator('[data-book-tab=settings]').click()
+ page.goto(url,wait_until='networkidle');page.wait_for_function('window.__perfTest');page.locator('#dexb').dispatch_event('pointerdown');page.locator('[data-book-tab=settings]').click();page.evaluate("document.querySelectorAll('#dex details').forEach(d=>d.open=true)")
  assert page.locator('#perfToggle').get_attribute('aria-pressed')=='false'
  page.locator('#perfCopy').click();page.wait_for_selector('#perfReportText:visible');assert 'ยังไม่มีข้อมูล' in page.locator('#perfReportText').input_value()
  page.locator('#perfToggle').click();assert page.locator('#perfToggle').get_attribute('aria-pressed')=='true'
