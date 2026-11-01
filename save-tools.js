@@ -28,6 +28,7 @@
     if (r.tr !== undefined && (!Array.isArray(r.tr) || r.tr.length > 28 || r.tr.some(function (id, i, a) { return typeof id !== 'string' || !/^[cp](?:[1-9]|1[0-3]|15)$/.test(id) || a.indexOf(id) !== i; }))) fail('สมบัติของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.dy !== undefined && !isInt(r.dy, 0, 8)) fail('สีของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.rq !== undefined && !(typeof r.rq === 'string' && /^(\d{4}-\d{2}-\d{2}:\d{1,2}:[01])?$/.test(r.rq))) fail('คำขอราชาของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    if (r.wk !== undefined && r.wk !== null && !(isPlain(r.wk) && isInt(r.wk.w, 0, 99999) && Array.isArray(r.wk.k) && r.wk.k.length === 3 && r.wk.k.every(function (v) { return isInt(v, 0, 9999); }) && Array.isArray(r.wk.f) && r.wk.f.length === 3 && r.wk.f.every(function (v) { return v === 0 || v === 1; }))) fail('ภารกิจสัปดาห์ของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.tu !== undefined && !isInt(r.tu, 0, 9)) fail('ขั้นฝึกของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.ta !== undefined && !(typeof r.ta === 'string' && r.ta.length <= 20)) fail('ฉายาของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.ev !== undefined && !isInt(r.ev, 0, 3)) fail('ขั้นวิวัฒนาการไม่ถูกต้อง');
