@@ -200,6 +200,8 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 @media(max-width:360px) and (min-height:481px){#lockb{right:124px;bottom:calc(174px + env(safe-area-inset-bottom,0px))}}
 @media(orientation:landscape) and (max-height:480px){#lockb{right:calc(158px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:42px;height:42px;font-size:20px}}
 .nametag.locked{color:#ffe45a;font-size:13.5px;text-shadow:0 0 6px #ff9d00,0 1px 3px #000}
+#worldmini{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(212px + env(safe-area-inset-top,0px));z-index:2;border-radius:8px;background:rgba(7,38,48,.5);border:1px solid rgba(255,255,255,.3);pointer-events:none}
+body.hudmin #worldmini{display:none}
 #minimap{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(106px + env(safe-area-inset-top,0px));z-index:2;border-radius:10px;background:rgba(7,38,48,.55);border:1px solid rgba(255,255,255,.4);touch-action:manipulation;box-shadow:0 3px 10px rgba(0,40,60,.3)}
 
 #npcov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,30,40,.6);z-index:11;padding:12px;box-sizing:border-box}
@@ -291,6 +293,8 @@ function applyUiAssets(){const u=n=>ASSETS['ui/'+n]?'url(assets/ui/'+n+'.'+ASSET
  if(sn)r.push('#knob{background:'+sn+' center/100% 100% no-repeat!important;border:none!important;box-shadow:none!important}');
  if(r.length){const st=document.createElement('style');st.id='uiassets';st.textContent=r.join('\n');document.head.appendChild(st);}}
 const assetTex=(name,cb)=>{if(!ASSETS[name])return false;if(assetCache[name]){cb(assetCache[name]);return true;}assetCache[name]=null;new T.TextureLoader().load('assets/'+name+'.'+ASSETS[name],t=>{t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=2;assetCache[name]=t;cb(t);},undefined,()=>{});return true;};
+let edgeCurtain=null;
+const edgeCurtainMat=()=>{if(!edgeCurtain){const cv=document.createElement('canvas');cv.width=4;cv.height=64;const x=cv.getContext('2d'),gr=x.createLinearGradient(0,0,0,64);gr.addColorStop(0,'rgba(2,20,30,0)');gr.addColorStop(.55,'rgba(2,20,30,.5)');gr.addColorStop(1,'rgba(2,20,30,.75)');x.fillStyle=gr;x.fillRect(0,0,4,64);const t=new T.CanvasTexture(cv);edgeCurtain=new T.MeshBasicMaterial({map:t,transparent:true,side:T.DoubleSide,depthWrite:false});}return edgeCurtain;};
 const skyU={c:{value:new T.Color(BG)},map:{value:new T.DataTexture(new Uint8Array([255,255,255,255]),1,1,T.RGBAFormat)},useMap:{value:0}};skyU.map.value.needsUpdate=true;
 const skyDome=new T.Mesh(new T.SphereGeometry(150,16,10),new T.ShaderMaterial({uniforms:skyU,side:T.BackSide,depthWrite:false,fog:false,vertexShader:'varying float h;varying vec2 vu;void main(){vu=uv;h=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'uniform vec3 c;uniform sampler2D map;uniform float useMap;varying float h;varying vec2 vu;void main(){if(useMap>.5){gl_FragColor=vec4(texture2D(map,vu).rgb,1.);return;}float t=smoothstep(-.1,.9,h);vec3 top=mix(c,vec3(1.),.38);vec3 low=mix(c,vec3(1.),.08);gl_FragColor=vec4(mix(low,top,t),1.);}'}));
 const skyHz={};
@@ -398,12 +402,12 @@ function buildMapWorld(def){
   if(PORTALS.some(p=>p.map===def.id&&p.dx===dx&&p.dz===dz))return;
   const w=new T.Mesh(new T.PlaneGeometry(len,8),wm);w.position.set(x,3.6,z);w.rotation.y=ry;w.userData.closedEdge={dx,dz};w.visible=false;g.add(w);});
  // กำแพงขอบแมพแบบภาพ (เฟส A1c): ใส่ "edge/wall_<biome>":"png" ใน ASSETS เมื่อมีไฟล์ — แต่ละด้านเว้นช่องกว้างตรงวงวาร์ป; ไม่มีไฟล์ = ไม่วาดอะไร (ขอบเป็นกำแพงที่มองไม่เห็น)
- if(ASSETS['edge/wall_'+def.biome])[[0,-D/2,W,0,0,-1],[0,D/2,W,0,0,1],[-W/2,0,D,Math.PI/2,-1,0],[W/2,0,D,Math.PI/2,1,0]].forEach(([x,z,len,ry,dx,dz])=>{
+ {const useImg=!!ASSETS['edge/wall_'+def.biome];[[0,-D/2,W,0,0,-1],[0,D/2,W,0,0,1],[-W/2,0,D,Math.PI/2,-1,0],[W/2,0,D,Math.PI/2,1,0]].forEach(([x,z,len,ry,dx,dz])=>{
   const open=PORTALS.some(p=>p.map===def.id&&p.dx===dx&&p.dz===dz),gap=open?2*WARP_R+4:0,segs=open?[[-1,(len-gap)/2],[1,(len-gap)/2]]:[[0,len]];
   segs.forEach(([side,sl])=>{const off=side*((gap+sl)/2),geo=new T.PlaneGeometry(sl,8),uv=geo.attributes.uv;for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*sl/28);
-   const wmesh=new T.Mesh(geo,new T.MeshBasicMaterial({transparent:true,alphaTest:.4,side:T.DoubleSide,depthWrite:true,visible:false}));
+   const wmesh=new T.Mesh(geo,useImg?new T.MeshBasicMaterial({transparent:true,alphaTest:.4,side:T.DoubleSide,depthWrite:true,visible:false}):edgeCurtainMat());
    wmesh.position.set(x+(dx?0:off),3.2,z+(dx?off:0));wmesh.rotation.y=ry;wmesh.userData.edgeImg=true;g.add(wmesh);
-   assetTex('edge/wall_'+def.biome,t=>{wmesh.material.map=t;wmesh.material.visible=true;wmesh.material.needsUpdate=true;});});});
+   if(useImg)assetTex('edge/wall_'+def.biome,t=>{wmesh.material.map=t;wmesh.material.visible=true;wmesh.material.needsUpdate=true;});});});}
 
 
  // look v1: ของตกแต่งพื้นทะเลแบบ InstancedMesh (หนึ่ง draw call ต่อชุด) — หญ้า/ดอกไดนามิก/เห็ดเรืองแสงตามไบโอม
@@ -414,7 +418,7 @@ function buildMapWorld(def){
   if(def.biome==='shore'){if(!SPR(['coral_1']).length)scatter(coneG,[0x6fd8a8,0x9be37a,0x5cc9c0],170,(S,k)=>S.set(.2,.7+rng()*.9,.2));}
   else if(def.biome==='kelp'){if(!SPR(['kelp_1']).length)scatter(coneG,[0x3fae6a,0x7fd05a,0x2f9a8a],190,(S,k)=>S.set(.22,.8+rng()*1.1,.22));scatter(domeG,[0xff9fc0,0xffc47a,0xd9a8ff],40,(S,k)=>{const q=.3+rng()*.45;S.set(q,q*.8,q);});}
   else if(def.biome==='cave'){scatter(domeG,[0x7ad8ff,0xb48cff,0x8affc9],46,(S,k)=>{const q=.25+rng()*.5;S.set(q,q*1.1,q);},0x2a6a8a);}};
- const SPR=names=>names.filter(nm=>ASSETS['decor/'+nm]);
+  const SPR=names=>names.filter(nm=>ASSETS['decor/'+nm]);
  const sprites=(names,n,hMin,hMax,minD)=>{const per=Math.ceil(n/names.length),M=new T.Matrix4(),Q=new T.Quaternion(),S=new T.Vector3(),P=new T.Vector3();names.forEach(nm=>{const im=new T.InstancedMesh(spriteGeo,spriteMat(nm),per);im.frustumCulled=false;let k=0;for(let i=0;i<per*4&&k<per;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7)||Math.hypot(x,z)<(minD||0))continue;const h=hMin+rng()*(hMax-hMin),fl=rng()<.5?-1:1;S.set(h*fl,h,1);Q.identity();P.set(x,yAt(x,z)-.05,z);M.compose(P,Q,S);im.setMatrixAt(k,M);k++;}im.count=k;im.instanceMatrix.needsUpdate=true;g.add(im);});};
  const rocks=(n,minD)=>{const rs=SPR(['rock_1','rock_2']);if(rs.length){sprites(rs,n,2.4,5,minD);return;}for(let i=0;i<n;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7)||Math.hypot(x,z)<minD)continue;const r=new T.Mesh(rockG,rm);const sc=.8+rng()*2;r.scale.setScalar(sc);r.position.set(x,yAt(x,z)+.4,z);r.rotation.set(rng()*3,rng()*3,0);g.add(r);}};
  if(def.safe){ // เมืองริมหาด: ลานหิน น้ำพุ บ้าน ต้นปาล์ม
@@ -1176,9 +1180,18 @@ const TREASURE_BY_MAP=MAPS.map(d=>TREASURES.filter(t=>t.map===d.id));
 const treasureOpen=t=>P.tr.includes(t.id);
 // แถบล่างจอ iPad (พื้นที่ที่หน้าเว็บวาดไม่ถึง) ใช้สีเดียวกับพื้นทะเลของแมพนั้น จะได้ดูเหมือนพื้นต่อเนื่อง ไม่เป็นเส้นฟ้าสว่าง
 function setEdgeColor(def){try{const c=new T.Color(0xe0bf82).multiply(new T.Color(def.tint[0],def.tint[1],def.tint[2])).multiplyScalar(.82),hex='#'+c.getHexString(),m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',hex);document.documentElement.style.background=hex;document.body.style.background=hex;}catch(e){}}
+// แผนที่โลกย่อ (มุมซ้าย ใต้มินิแมป): ช่องสี่เหลี่ยมแทนแต่ละแมพตามตำแหน่งจริงในโลก, จุดสว่าง=ตอนนี้อยู่ที่นี่, เส้น=ทางที่ต่อกัน (เหลือง=ไปแมพที่เลเวลสูงกว่า) เพื่อให้รู้ว่าตัวเองอยู่ตรงไหนของโลก
+let worldMini=null;
+function drawWorldMini(){if(!worldMini){worldMini=document.createElement('canvas');worldMini.id='worldmini';document.body.append(worldMini);}
+ const F=MAPS.filter(d=>!d.arena),gxs=F.map(d=>d.gx),gys=F.map(d=>d.gy),x0=Math.min(...gxs),x1=Math.max(...gxs),y0=Math.min(...gys),y1=Math.max(...gys),cell=11,gap=4,pad=5,dpr=Math.min(devicePixelRatio||1,2);
+ const W=pad*2+(x1-x0+1)*(cell+gap)-gap,H=pad*2+(y1-y0+1)*(cell+gap)-gap;if(worldMini.width!==W*dpr){worldMini.width=W*dpr;worldMini.height=H*dpr;worldMini.style.width=W+'px';worldMini.style.height=H+'px';}
+ const c=worldMini.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+ const cx=d=>pad+(d.gx-x0)*(cell+gap)+cell/2,cy=d=>pad+(d.gy-y0)*(cell+gap)+cell/2;
+ c.lineWidth=2;for(const [a,b] of ALL_ROUTES){const A=MAPS[a],B=MAPS[b];if(A.arena||B.arena)continue;c.strokeStyle=(A.id===curMap||B.id===curMap)?(MAPS[Math.max(A.tier,B.tier)===B.tier?b:a].tier>MAPS[curMap].tier&&A.id!==B.id?'rgba(255,217,90,.9)':'rgba(125,255,176,.9)'):'rgba(255,255,255,.28)';c.beginPath();c.moveTo(cx(A),cy(A));c.lineTo(cx(B),cy(B));c.stroke();}
+ for(const d of F){c.fillStyle=d.mc||'#2a9fb0';c.fillRect(cx(d)-cell/2,cy(d)-cell/2,cell,cell);if(d.id===curMap){c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(cx(d)-cell/2-1,cy(d)-cell/2-1,cell+2,cell+2);c.fillStyle='#fff';c.beginPath();c.arc(cx(d),cy(d),2.6,0,6.2832);c.fill();}}}
 function setMap(i){if(perfRecording&&i!==curMap){perfMapStarted=performance.now();perfSampleStart=0;perfFrames=0;}curMap=i;setSkyFor(MAPS[i]);setEdgeColor(MAPS[i]);SPRU.tint.value.set(MAPS[i].tint[0]*.5+.5,MAPS[i].tint[1]*.5+.5,MAPS[i].tint[2]*.5+.5);MAPS.forEach(d=>{d.group.visible=d.id===i;});mons.forEach(m=>{if(m.map===i){if(m.parked){m.parked=false;m.dead=m.parkedDead;if(m.dead<=0){m.g.visible=true;m.bar.visible=true;}}}
   else if(!m.parked){m.parked=true;m.parkedDead=m.dead;m.dead=1e9;m.g.visible=false;m.bar.visible=false;m.aggro=false;m.windup=0;m.dash=0;if(m.ty.n==='boss')hideBossFx();}});
-  PORTALS.forEach(p=>{p.g.visible=p.map===i;});}
+  PORTALS.forEach(p=>{p.g.visible=p.map===i;});drawWorldMini();}
 function crossMap(exit){const ox=sea.position.x,oy=sea.position.y,oz=sea.position.z;setMap(exit.map);
  sea.position.set(exit.x,h(exit.x,exit.z),exit.z);const shift=new T.Vector3(sea.position.x-ox,sea.position.y-oy,sea.position.z-oz);
  cam.position.add(shift);camTarget.add(shift);bub.position.add(shift);sun.position.add(shift);sun.target.position.add(shift);
