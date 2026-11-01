@@ -1351,6 +1351,26 @@ const goalEl=$('goal'),goalAr=$('gar'),goalTx=$('gtx'),GADJ={};let goalT=0,goalP
 ALL_ROUTES.forEach(([a,b])=>{(GADJ[a]=GADJ[a]||[]).push(b);(GADJ[b]=GADJ[b]||[]).push(a);});
 function mapPath(a,b){const prev={[a]:-1},q=[a];while(q.length){const c=q.shift();if(c===b)break;(GADJ[c]||[]).forEach(n=>{if(!(n in prev)){prev[n]=c;q.push(n);}});}if(!(b in prev))return null;const p=[];for(let c=b;c!==-1;c=prev[c])p.unshift(c);return p;}
 function bestMap(){let best=curMap,br=-1,bl=99;MAPS.forEach(d=>{if(d.arena||d.safe||d.rec>P.lv)return;const p=mapPath(curMap,d.id),l=p?p.length:99;if(d.rec>br||(d.rec===br&&l<bl)){best=d.id;br=d.rec;bl=l;}});return best;}
+// ===== เหตุการณ์สุ่มในแมพ: ทุก ~4-7 นาทีที่อยู่ในแมพล่า มี 🎁 หีบลอยน้ำ หรือ 🫧 ฟองบัฟ ปรากฏ (ลูกศรชี้ทาง) อยู่ 90 วิ เก็บด้วยการเข้าใกล้; ไม่เก็บในเซฟ =====
+let evt=null,evtT=150+Math.random()*120;
+function evtClear(){if(evt){scene.remove(evt.g);evt=null;}}
+function evtSpawn(){const d=MAPS[curMap],bx=d.w/2-10,bz=d.d/2-10,kind=Math.random()<.55?'chest':'bubble',g=new T.Group();let x=0,z=0;
+ for(let i=0;i<20;i++){x=(Math.random()*2-1)*bx;z=(Math.random()*2-1)*bz;if(Math.hypot(x-sea.position.x,z-sea.position.z)>18)break;}
+ if(kind==='chest'){g.add(new T.Mesh(new T.SphereGeometry(.75,18,14),new T.MeshStandardMaterial({color:0xffd34e,emissive:0xaa7a10,emissiveIntensity:.6,roughness:.35})));const r=new T.Mesh(new T.TorusGeometry(1.1,.12,10,28),new T.MeshBasicMaterial({color:0xfff2a8}));r.rotation.x=Math.PI/2;g.add(r);}
+ else{g.add(new T.Mesh(new T.SphereGeometry(.9,18,14),new T.MeshStandardMaterial({color:0x8fe8ff,transparent:true,opacity:.6,emissive:0x2a9fc0,emissiveIntensity:.7,roughness:.2})));}
+ g.position.set(x,h(x,z)+1.2,z);scene.add(g);evt={g,x,z,map:curMap,kind,t:90,n:kind==='chest'?'🎁 หีบลอยน้ำ':'🫧 ฟองบัฟ'};say(evt.n+' ปรากฏในแมพนี้! ตามลูกศรไปเก็บ');}
+function evtCollect(){const e=evt;evtClear();evtT=240+Math.random()*180;
+ if(e.kind==='chest'){P.inv['ไข่มุกทะเล']=Math.min(99999,(P.inv['ไข่มุกทะเล']||0)+1+(MAPS[e.map].tier>=3?1:0));gain(Math.round((40+P.lv*10)*.5));const g=awardGear(MAPS[e.map].tier>=3?'whale':'shark',()=>.01+Math.random()*.1);say('🎁 ได้ไข่มุก + EXP'+(g?' + '+gearLabel(g):''));}
+ else{const ks=FOODKEYS.filter(k=>k!=='boss'),k=ks[Math.floor(Math.random()*ks.length)];grantFood(k,true,60);say('🫧 ได้บัฟ '+FOOD[k].n+' 60 วิ');}
+ save();}
+function updateEvent(dt){const d=MAPS[curMap];
+ if(!d||d.safe||d.arena||P.tu<5||arena){evtClear();return;}
+ if(evt&&evt.map!==curMap)evtClear();
+ if(evt){evt.t-=dt;evt.g.position.y=h(evt.x,evt.z)+1.2+Math.sin(performance.now()*.003)*.25;evt.g.rotation.y+=dt;
+  if(Math.hypot(sea.position.x-evt.x,sea.position.z-evt.z)<5*Math.max(1,HERO_SCALE*.9)){evtCollect();return;}
+  if(evt.t<=0){say(evt.n+' หายไปแล้ว');evtClear();evtT=240+Math.random()*180;}
+  return;}
+ evtT-=dt;if(evtT<=0)evtSpawn();}
 // ===== ฝึกเล่นครั้งแรก 5 ขั้น (เซฟเก่า/เลเวลเกิน 1 ข้าม; P.tu 0-4 กำลังฝึก, 5+ จบแล้ว) แสดงผ่านตัวนำทาง #goal =====
 const TUT=[()=>'ลากจอยสติ๊กซ้ายล่างเพื่อว่ายน้ำ',()=>'กดปุ่มแดง “'+$('bite').textContent+'” ที่มุมขวาล่าง',()=>'ออกไปหาดตื้น แล้วล้มมอนสเตอร์ 1 ตัว',()=>'กดปุ่ม 📖 มุมขวาบนเพื่อเปิดสมุด',()=>'กลับเมือง แตะกระดานภารกิจเพื่อรับภารกิจ'];
 let tutAcc=0,tutLast=null;
@@ -1361,14 +1381,17 @@ function updateGoal(dt){goalT-=dt;if(goalPos&&goalEl.style.display!=='none'){con
  if(curMap===ARENA_ID){goalEl.style.display='none';goalPos=null;return;}
  const cur=MAPS[curMap];let tgt=-1,txt='';
  if(cur.safe||cur.rec>P.lv+2){const b=bestMap();if(b!==curMap){tgt=b;txt=(cur.safe?'ออกไปล่า • ไป ':'เลเวลต่ำไป • ไป ')+MAPS[b].ic+MAPS[b].n+' (Lv.'+MAPS[b].rec+')';}}
+ const evOn=evt&&evt.map===curMap&&P.tu>=5;
  if(P.tu<5){txt='ฝึก '+(P.tu+1)+'/5: '+TUT[P.tu]();if(!(P.tu===2&&cur.safe))tgt=-1;}
  if(!txt){const q=qs[Math.min(P.qd,qs.length-1)],d=P.dly;
   if(q&&P.q<q.n)txt='เควสต์: ล้มมอนสเตอร์ '+P.q+'/'+q.n;
   else if(d&&Array.isArray(d.qs)&&d.f.some(x=>!x)){const i=d.f.findIndex(x=>!x);txt='ภารกิจ: '+QTXT[d.qs[i].e](d.qs[i].n)+(d.qs[i].n>1?' ('+d.k[i]+'/'+d.qs[i].n+')':'');}
   else{const b=bestMap();if(b!==curMap&&MAPS[b].rec>cur.rec&&P.lv>=cur.rec+4){tgt=b;txt='พร้อมแล้ว • ไป '+MAPS[b].ic+MAPS[b].n+' (Lv.'+MAPS[b].rec+')';}else{const rs=royalState(),rm=royalMon(),mv=mons.find(q=>q.mvp&&q.map===curMap&&q.dead<=0&&!q.parked);if(!rs.done&&rm&&P.lv>=MAPS[rm.map].rec-2){txt='🎯 คำขอวันนี้: ล่า '+rm.ty.nm+' ('+MAPS[rm.map].n+')';if(rm.map!==curMap)tgt=rm.map;}else txt=mv&&P.lv>=cur.rec?'ท้า '+mv.ty.nm+' ในแมพนี้ (แรงมาก!)':'ล่ามอนสเตอร์ สะสม EXP และวัตถุดิบ';}}}
+ if(evOn){txt=evt.n+' ปรากฏ! ('+Math.ceil(evt.t)+' วิ)';tgt=-1;}
  goalPos=null;if(tgt>=0){const p=mapPath(curMap,tgt),hop=p&&p[1],po=PORTALS.find(q=>q.map===curMap&&q.to.map===hop);if(po)goalPos=po.dx?{x:po.x,z:sea.position.z}:{x:sea.position.x,z:po.z};}
+ if(evOn)goalPos={x:evt.x,z:evt.z};
  goalAr.style.display=goalPos?'inline-block':'none';goalEl.style.display='flex';if(goalKey!==txt){goalKey=txt;goalTx.textContent=txt;}}
-const game=dt=>{updateLock(dt);sun.position.set(sea.position.x+10,25,sea.position.z+8);sun.target.position.set(sea.position.x,0,sea.position.z);updateFeedback(dt);updateNames();updateBuffHud(dt);updateZone(dt);updatePortals(dt);updateMini(dt);updateBgm(dt);updateNpcs(dt);updateTreasure();updateArena(dt);updateGoal(dt);grace=Math.max(0,grace-dt);if(CLS==='maja')updateMaja(dt);separateMonsters();assignPursuers();slamCD=Math.max(0,slamCD-dt*P.cdr);['devCD','tauntCD','shCD'].forEach(k=>P[k]=Math.max(0,P[k]-dt*P.cdr));['tauntT','sh','bless','song'].forEach(k=>P[k]=Math.max(0,P[k]-dt));{let fx=false;FOODKEYS.forEach(k=>{const kk='fb_'+k;if(P[kk]>0){P[kk]=Math.max(0,P[kk]-dt);if(P[kk]===0)fx=true;}});if(fx){P.fbOrder=P.fbOrder.filter(x=>P[x]>0);applyJob();}}shm.visible=P.sh>0;
+const game=dt=>{updateLock(dt);sun.position.set(sea.position.x+10,25,sea.position.z+8);sun.target.position.set(sea.position.x,0,sea.position.z);updateFeedback(dt);updateNames();updateBuffHud(dt);updateZone(dt);updatePortals(dt);updateMini(dt);updateBgm(dt);updateNpcs(dt);updateTreasure();updateArena(dt);updateGoal(dt);updateEvent(dt);updateEvent(dt);grace=Math.max(0,grace-dt);if(CLS==='maja')updateMaja(dt);separateMonsters();assignPursuers();slamCD=Math.max(0,slamCD-dt*P.cdr);['devCD','tauntCD','shCD'].forEach(k=>P[k]=Math.max(0,P[k]-dt*P.cdr));['tauntT','sh','bless','song'].forEach(k=>P[k]=Math.max(0,P[k]-dt));{let fx=false;FOODKEYS.forEach(k=>{const kk='fb_'+k;if(P[kk]>0){P[kk]=Math.max(0,P[kk]-dt);if(P[kk]===0)fx=true;}});if(fx){P.fbOrder=P.fbOrder.filter(x=>P[x]>0);applyJob();}}shm.visible=P.sh>0;
 mons.forEach(m=>{const g=m.g;if(m.dead>0){m.dead-=dt;if(m.dead<=0){if(MAPS[m.map].arena)m.dead=1e9;else{spawn(m);if(m.mvp&&m.map===curMap)say(m.ty.nm+' ปรากฏตัวแล้ว!');}}return;}
 // Separate close enemies from the player, keeping them inside the world.
 let dx=sea.position.x-g.position.x,dz=sea.position.z-g.position.z,d=Math.hypot(dx,dz);const minDistance=m.aggro?1.7+.9*m.ty.s:(grace>0?12:7);
