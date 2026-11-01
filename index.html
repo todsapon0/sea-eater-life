@@ -204,7 +204,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 .warparr{position:absolute;left:0;top:0;display:none;min-width:40px;height:40px;border-radius:20px;background:rgba(5,30,40,.78);border:2px solid #7dffb0;color:#fff;font:700 15px system-ui;line-height:36px;text-align:center;padding:0 8px;white-space:nowrap;box-shadow:0 0 12px rgba(125,255,176,.55)}
 .warparr.deep{border-color:#ffd95a;box-shadow:0 0 12px rgba(255,217,90,.55)}
 .warparr i{display:inline-block;font-style:normal;margin-right:3px}
-#worldmini{position:fixed;left:calc(138px + env(safe-area-inset-left,0px));top:calc(106px + env(safe-area-inset-top,0px));z-index:2;border-radius:8px;background:rgba(7,38,48,.5);border:1px solid rgba(255,255,255,.3);pointer-events:none}
+#worldmini{position:fixed;left:calc(138px + env(safe-area-inset-left,0px));top:calc(112px + env(safe-area-inset-top,0px));z-index:2;border-radius:8px;background:rgba(7,38,48,.5);border:1px solid rgba(255,255,255,.3);pointer-events:none}
 body.hudmin #worldmini{display:none}
 #minimap{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(106px + env(safe-area-inset-top,0px));z-index:2;border-radius:10px;background:rgba(7,38,48,.55);border:1px solid rgba(255,255,255,.4);touch-action:manipulation;box-shadow:0 3px 10px rgba(0,40,60,.3)}
 
@@ -479,7 +479,7 @@ let CLS='sea';try{CLS=gameStorage.getItem('selcls')||'sea';}catch(e){}const KEY=
 // ===== Sea Eater v2: ตัวขวดนอน ปากทรงไข่ (เฉพาะอาชีพ sea; Bloop/Maja ใช้โมเดลเดิม) =====
 if(CLS==='sea'){(function(){
   sea.children.slice().forEach(c=>{c.visible=false;});
-  const AXIS=1.6,M=new T.MeshStandardMaterial({color:0xb3bfc4,roughness:.62,metalness:.02,side:T.DoubleSide}),root=new T.Group();root.scale.setScalar(.9);sea.add(root);sea.userData.root=root;sea.userData.mainMat=M;
+  const AXIS=1.95,M=new T.MeshStandardMaterial({color:0xb3bfc4,roughness:.62,metalness:.02,side:T.DoubleSide}),root=new T.Group();root.scale.setScalar(.9);sea.add(root);sea.userData.root=root;sea.userData.mainMat=M;
   const raw=[[.42,-2.0],[.55,-1.6],[.85,-.9],[1.08,-.1],[1.18,.7],[1.2,1.5],[1.18,1.78],[1.08,1.85],[.98,1.74],[.95,1.2],[.9,.5],[.74,-.2],[.5,-.7],[0,-.9]];
   const geo=new T.LatheGeometry(new T.SplineCurve(raw.map(q=>new T.Vector2(q[0],q[1]))).getPoints(72),48);geo.rotateX(Math.PI/2);
   {const pos=geo.attributes.position;for(let k=0;k<pos.count;k++){let x=pos.getX(k),y=pos.getY(k);const z=pos.getZ(k),w=Math.max(0,Math.min(1,(z+.2)/2)),r=Math.hypot(x,y)||1;x*=.95*(1-.14*w*(y/r));y*=1+.08*w;pos.setXYZ(k,x,y,z);}geo.computeVertexNormals();}
@@ -491,7 +491,7 @@ if(CLS==='sea'){(function(){
     g.position.z=k?-LN[k-1]:0;g.rotation.x=.05;par.add(g);newSegs.push(g);par=g;}
   const fs=new T.Shape();fs.moveTo(0,0);fs.quadraticCurveTo(.45,.45,1.35,.78);fs.lineTo(1.05,.2);fs.lineTo(1.4,-.28);fs.quadraticCurveTo(.45,-.05,0,-.12);fs.closePath();
   const fin=new T.Mesh(new T.ExtrudeGeometry(fs,{depth:.07,bevelEnabled:false}),M);fin.rotation.y=Math.PI/2;fin.position.set(-.035,0,-.22);fin.scale.setScalar(.95);newSegs[5].add(fin);
-  const newLegs=[-1,1].map(side=>{const g=new T.Group();g.position.set(side*1.0,AXIS-.15,.55);root.add(g);const U=1.2,UA=.2;
+  const newLegs=[-1,1].map(side=>{const g=new T.Group();g.position.set(side*1.0,AXIS-.15,.55);root.add(g);const U=1.45,UA=-.42;
     const up=new T.Mesh(new T.CylinderGeometry(.16,.2,U,22),M);up.geometry.translate(0,U/2,0);up.rotation.z=-side*(Math.PI/2+UA);g.add(up);g.add(new T.Mesh(new T.SphereGeometry(.2,22,16),M));
     const el=new T.Vector3(side*Math.cos(UA)*U,-Math.sin(UA)*U,0),kn=new T.Group();kn.position.copy(el);g.add(kn);kn.add(new T.Mesh(new T.SphereGeometry(.2,22,16),M));
     const drop=g.position.y+el.y-.12,low=new T.Mesh(new T.CylinderGeometry(.19,.12,drop,22),M);low.geometry.translate(0,-drop/2,0);low.rotation.z=side*.1;kn.add(low);
