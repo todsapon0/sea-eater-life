@@ -34,6 +34,8 @@ assert.deepStrictEqual(tools.decodeCode(JSON.stringify(exported)), parsed); // r
 // Treasure flags are optional for legacy saves and survive export/import without duplication.
 assert.equal(tools.decodeCode(tools.encodeCode(backup({ sea: rec(5, { tu: 3 }) }, 'sea'))).characters.sea.tu, 3);
 for (const tu of [-1, 10, 1.5, '2']) throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(5, { tu }) }))), 'ฝึก');
+assert.equal(tools.decodeCode(tools.encodeCode(backup({ sea: rec(5, { rq: '2026-11-01:6:1' }) }, 'sea'))).characters.sea.rq, '2026-11-01:6:1');
+for (const rq of ['x', '2026-11-01:6:2', 5, '2026-11-01']) throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(5, { rq }) }))), 'ราชา');
 const treasureBackup = backup({ sea: rec(5, { tr: ['c1', 'p13', 'c15', 'p15'] }) }, 'sea');
 assert.deepStrictEqual(tools.decodeCode(tools.encodeCode(treasureBackup)).characters.sea.tr, ['c1', 'p13', 'c15', 'p15']);
 for (const tr of [['c1','c1'], ['c14'], ['__proto__'], [1], 'c1']) throwsMsg(() => tools.parseBackup(JSON.stringify(backup({ sea: rec(5, { tr }) }))), 'สมบัติ');
