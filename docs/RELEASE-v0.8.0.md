@@ -46,4 +46,14 @@
 - ตัวเลข FPS ของแมพร่องลึก/มอนสเตอร์ 5+ ตัว ยังไม่ได้วัด
 
 ## ผลทดสอบก่อนปิดเวอร์ชัน
-(เติมท้ายเอกสารเมื่อรัน `./review.sh` เสร็จ)
+รัน `./review.sh` บน commit 82c7d18 (โค้ดเกมสุดท้ายก่อนปิดเวอร์ชัน) เมื่อ 2026-11-01:
+- Node 8 ชุด ผ่านทั้งหมด (account-recovery, equipment, maps, monsters, perf-report, performance, refine, save-tools)
+- เบราว์เซอร์ (Chromium แนวนอน/ตามที่เทสต์กำหนด) ผ่าน 15 ชุด: arena, book, cooking, dye, gear-ui, landscape-only, maps (ข้ามขอบ 156 ครั้ง), monsters, mvp, perf-report, titles, touch-controls, treasures, whatsnew
+- test-evolution.py: ทั้ง 3 ตัวละคร (sea/bloop/maja) ผ่านครบ แต่ `review.sh` รายงาน FAIL เพราะเกินเวลา 600 วิตอนรันขนาน (เป็นข้อจำกัดเดิมของเทสต์ ไม่ใช่บั๊กเกม) — ดูผลรันเดี่ยวด้านล่าง
+- ไม่ได้ทดสอบ: iPad จริงครบตามรายการ B/B2/C, แนวตั้ง (ห้ามตามผู้ใช้), แมพร่องลึกบน iPad
+
+- **test-evolution.py รันเดี่ยว (ไม่ขนาน): ผ่านครบ 3 ตัวละคร (exit 0, ~5 นาที)**
+
+## แท็กจุดย้อนกลับ
+- `v0.5.4-stable` = commit 2e6b207 (main ที่เด็กเล่นอยู่ก่อนอัปเดต)
+- `v0.8.0` = commit ปิดเวอร์ชันนี้ (บนสาขา `claude/family-build`) — แก้บั๊กหลังจากนี้ให้ออกเป็น v0.8.1 ห้ามขยับแท็กเดิม
