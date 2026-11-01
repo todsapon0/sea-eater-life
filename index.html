@@ -397,6 +397,13 @@ function buildMapWorld(def){
  [[0,-D/2,W,0,0,-1],[0,D/2,W,0,0,1],[-W/2,0,D,Math.PI/2,-1,0],[W/2,0,D,Math.PI/2,1,0]].forEach(([x,z,len,ry,dx,dz])=>{
   if(PORTALS.some(p=>p.map===def.id&&p.dx===dx&&p.dz===dz))return;
   const w=new T.Mesh(new T.PlaneGeometry(len,8),wm);w.position.set(x,3.6,z);w.rotation.y=ry;w.userData.closedEdge={dx,dz};w.visible=false;g.add(w);});
+ // กำแพงขอบแมพแบบภาพ (เฟส A1c): ใส่ "edge/wall_<biome>":"png" ใน ASSETS เมื่อมีไฟล์ — แต่ละด้านเว้นช่องกว้างตรงวงวาร์ป; ไม่มีไฟล์ = ไม่วาดอะไร (ขอบเป็นกำแพงที่มองไม่เห็น)
+ if(ASSETS['edge/wall_'+def.biome])[[0,-D/2,W,0,0,-1],[0,D/2,W,0,0,1],[-W/2,0,D,Math.PI/2,-1,0],[W/2,0,D,Math.PI/2,1,0]].forEach(([x,z,len,ry,dx,dz])=>{
+  const open=PORTALS.some(p=>p.map===def.id&&p.dx===dx&&p.dz===dz),gap=open?2*WARP_R+4:0,segs=open?[[-1,(len-gap)/2],[1,(len-gap)/2]]:[[0,len]];
+  segs.forEach(([side,sl])=>{const off=side*((gap+sl)/2),geo=new T.PlaneGeometry(sl,8),uv=geo.attributes.uv;for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*sl/28);
+   const wmesh=new T.Mesh(geo,new T.MeshBasicMaterial({transparent:true,alphaTest:.4,side:T.DoubleSide,depthWrite:true,visible:false}));
+   wmesh.position.set(x+(dx?0:off),3.2,z+(dx?off:0));wmesh.rotation.y=ry;wmesh.userData.edgeImg=true;g.add(wmesh);
+   assetTex('edge/wall_'+def.biome,t=>{wmesh.material.map=t;wmesh.material.visible=true;wmesh.material.needsUpdate=true;});});});
 
 
  // look v1: ของตกแต่งพื้นทะเลแบบ InstancedMesh (หนึ่ง draw call ต่อชุด) — หญ้า/ดอกไดนามิก/เห็ดเรืองแสงตามไบโอม
@@ -1147,6 +1154,9 @@ PORTALS.forEach(p=>{const def=MAPS[p.map],col=portalDeeper(p)?0xffd95a:0x7dffb0,
  const mk=(geo,op,side)=>new T.Mesh(geo,new T.MeshBasicMaterial({color:col,transparent:true,opacity:op,side:side||T.FrontSide,depthWrite:false,blending:T.AdditiveBlending,fog:false}));
  const ring=mk(new T.RingGeometry(WARP_R*.76,WARP_R,40),.95,T.DoubleSide),inner=mk(new T.RingGeometry(WARP_R*.38,WARP_R*.46,32),.7,T.DoubleSide),disc=mk(new T.CircleGeometry(WARP_R*.76,40),.26,T.DoubleSide),beam=mk(new T.CylinderGeometry(WARP_R*.62,WARP_R*.8,10,24,1,true),.12,T.DoubleSide);
  ring.rotation.x=inner.rotation.x=disc.rotation.x=-Math.PI/2;beam.position.y=5;g.add(ring,inner,disc,beam);g.userData.ring=ring;g.userData.inner=inner;g.userData.beam=beam;
+ // ภาพวงวาร์ป/ลำแสงจากโค (เฟส A1c): ใส่ "edge/warp_ring":"png" และ/หรือ "edge/warp_beam":"png" ใน ASSETS — ภาพขาว-ฟ้าอ่อน ย้อมสีเขียว/ทองด้วยโค้ด; ไม่มีไฟล์ = ใช้วงที่วาดด้วยโค้ดเดิม
+ assetTex('edge/warp_ring',t=>{ring.geometry.dispose();ring.geometry=new T.PlaneGeometry(WARP_R*2.7,WARP_R*2.7);ring.material.map=t;ring.material.needsUpdate=true;inner.visible=false;disc.visible=false;});
+ assetTex('edge/warp_beam',t=>{beam.visible=false;for(const ry of [0,Math.PI/2]){const bm=mk(new T.PlaneGeometry(WARP_R*1.6,10),.5,T.DoubleSide);bm.material.map=t;bm.position.y=5;bm.rotation.y=ry;g.add(bm);}});
  scene.add(g);p.g=g;const d=MAPS[p.to.map];p.tag=mkTag('portal',edgeArrow(p)+' '+d.ic+' '+d.n+(d.rec>1?' Lv.'+d.rec+'+':''));});
 // Performance diagnostics are opt-in and stay in memory; no save or network data.
 let perfRecording=false,perfData={},perfSampleStart=0,perfFrames=0,perfMapStarted=0,perfStartupMs=null,perfFrustum=null,perfMatrix=null,perfSphere=null;
