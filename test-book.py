@@ -40,7 +40,10 @@ with sync_playwright() as p:
  assert page.locator('[data-book-page="1"]').is_disabled()
  page.locator('[data-book-page="-1"]').click();assert '2 / 3' in page.locator('.bookpager').inner_text()
  page.locator('[data-book-tab=daily]').click();assert 'ภารกิจวันนี้' in page.locator('[data-book-section=daily]').inner_text()
- page.locator('[data-book-tab=bag]').click();assert 'เขี้ยวคม' in page.locator('[data-book-section=bag]').inner_text()
+ page.locator('[data-book-tab=bag]').click();assert page.locator('.bagtile').count()>0
+ page.locator('.bagtile').first.click();assert 'เขี้ยวคม' in page.locator('.bagdetail').inner_text()
+ page.locator('[data-bagcat=food]').click();assert page.locator('.bagtile').count()==7;page.locator('.bagtile').first.click();assert 'ว่องไว' in page.locator('.bagdetail').inner_text()
+ page.locator('[data-bagcat=mat]').click();assert page.locator('.bagtile').count()>=1;page.locator('.bagtile').first.click();assert 'ได้จาก' in page.locator('.bagdetail').inner_text() or 'ของสะสม' in page.locator('.bagdetail').inner_text()
  page.locator('[data-book-tab=settings]').click();page.evaluate("document.querySelectorAll('#dex details').forEach(d=>d.open=true)")
  for name in ['fpsBtn','gfxBtn','fsBtn','hudBtn','camBtn','zoomIn','zoomOut','renameBtn','swc','exportSave','copySave','importFileBtn','importCodeBtn']:
   assert page.locator('#'+name).is_visible(),name

@@ -130,7 +130,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 /* Compact book: fixed-size panels with icon tabs and paged creatures. */
 #dex{top:50%!important;right:50%!important;transform:translate(50%,-50%);width:min(420px,94vw);max-height:calc(100dvh - 24px)!important;box-sizing:border-box;overflow-y:auto;z-index:11;padding:10px 12px;background:linear-gradient(165deg,rgba(18,86,100,.98),rgba(8,44,58,.98))}
 #dex .bookhead{display:flex;align-items:center;justify-content:space-between;font-size:17px}#dex .bookhead button{min-width:36px;min-height:36px;padding:0}
-#dex .booktabs{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}#dex .booktabs #equipGear{flex:1 1 100%;min-height:38px;background:linear-gradient(#2f9a6a,#1f6e4c);border-color:#fff}#dex .setdet{margin-top:8px;border-top:1px solid #ffffff2e;padding-top:6px}#dex .setdet summary{cursor:pointer;font-weight:700;font-size:14px;padding:6px 2px;min-height:34px}#dex .setgrp{margin-bottom:4px}#dex .booktabs button{flex:1;min-height:42px;padding:4px 1px;margin:0;font-size:12px;white-space:nowrap}#dex .booktabs button[aria-pressed=true]{border-color:#ffd95a;background:#356b65}
+#dex .booktabs{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}#dex .booktabs #equipGear{flex:1 1 100%;min-height:38px;background:linear-gradient(#2f9a6a,#1f6e4c);border-color:#fff}#dex .setdet{margin-top:8px;border-top:1px solid #ffffff2e;padding-top:6px}#dex .setdet summary{cursor:pointer;font-weight:700;font-size:14px;padding:6px 2px;min-height:34px}#dex .setgrp{margin-bottom:4px}#dex .bagcats{display:flex;gap:4px;margin:6px 0}#dex .bagcats button{flex:1;min-height:42px;font-size:13px;white-space:nowrap;margin:0}#dex .bagcats button[aria-pressed=true]{border-color:#ffe08a;background:rgba(60,130,120,.9)}#dex .baggrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:34vh;overflow-y:auto}#dex .bagtile{position:relative;min-height:62px;margin:0;padding:4px 2px;border-radius:12px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}#dex .bagtile[aria-pressed=true]{border-color:#ffe08a;background:rgba(255,224,138,.16)}#dex .bagtile.dim{opacity:.45}#dex .bagic{font-size:26px;line-height:1}#dex .bagic svg{width:32px;height:32px}#dex .bagtile small{font-size:11px;line-height:1.1;opacity:.95}#dex .bagdetail{margin-top:8px;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid #ffffff2e;font-size:14px;line-height:1.5;min-height:48px}#dex .booktabs button{flex:1;min-height:42px;padding:4px 1px;margin:0;font-size:12px;white-space:nowrap}#dex .booktabs button[aria-pressed=true]{border-color:#ffd95a;background:#356b65}
 #dex .bookgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}#dex .bookcard{min-width:0;min-height:60px;border-radius:12px;border:1px solid #ffffff55;background:#ffffff16;padding:3px;text-align:center}#dex .bookcard summary{list-style:none;cursor:pointer;font-size:23px;line-height:1.15}#dex .bookcard summary::-webkit-details-marker{display:none}#dex .bookcard small{display:block;font-size:10px;line-height:1.2;overflow-wrap:anywhere}#dex .bookcard p{font-size:11px;line-height:1.35;text-align:left;margin:3px}#dex .bookpager{display:flex;align-items:center;justify-content:center;gap:10px}#dex .bookpager button{min-width:42px;min-height:36px}#dex .booksection[hidden]{display:none}#dex .bookbody{max-height:calc(100dvh - 150px);overflow:auto;touch-action:pan-y}#dex .bookitems{display:flex;flex-wrap:wrap;gap:5px}#dex .bookitem{border-radius:9px;background:#ffffff18;padding:5px;font-size:12px}
 @media(orientation:landscape) and (max-height:560px){#dex{width:min(720px,96vw)}#dex .bookgrid{grid-template-columns:repeat(8,1fr)}#dex .bookbody{max-height:calc(100dvh - 125px)}}
 /* A generous movement pad owns bottom-left touches, including near misses of the circle. */
@@ -247,6 +247,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #topbar>button:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
 #msg,#goal{border:2px solid #ffe08a;box-shadow:0 3px 0 rgba(0,0,0,.25),0 5px 10px rgba(0,0,0,.3)}
 #dex{background:linear-gradient(#0e5368f5,#08303bf5);border:3px solid #ffe08a;border-radius:22px;box-shadow:0 4px 0 rgba(0,0,0,.3),0 10px 26px rgba(0,0,0,.5)}
+#gl{width:100vw!important;height:100vh!important}@supports (height:100lvh){#gl{height:100lvh!important}}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,0) 55%,rgba(5,50,70,.22) 100%)}</style>
 </head>
@@ -268,7 +269,7 @@ else{
 const T=THREE,BG=0x56cfd8;
 const scene=new T.Scene();scene.background=new T.Color(BG);scene.fog=new T.Fog(BG,40,130);
 const cam=new T.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);
-const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight);document.body.prepend(ren.domElement);
+const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight,false);ren.domElement.id='gl';document.body.prepend(ren.domElement);
 scene.add(new T.HemisphereLight(0xf0ffff,0xe3c283,.64));
 const sun=new T.DirectionalLight(0xfff0cf,.5);sun.position.set(10,25,8);scene.add(sun);
 // look v1: แสงเติมสีฟ้าอ่อนจากด้านตรงข้าม (ไม่มีเงา) ให้ด้านเงายังสว่างนุ่ม แบบการ์ตูน
@@ -284,7 +285,7 @@ skyDome.renderOrder=-10;skyDome.frustumCulled=false;scene.add(skyDome);
 // ===== เงา (เปิด/ปิดได้ ปิดจะลดความละเอียดภาพด้วย เหมาะกับ iPad 8 / iPhone 11) =====
 sun.target.position.set(0,0,0);scene.add(sun.target);let gfxHigh=true;try{if(localStorage.getItem('gfx')==='0')gfxHigh=false;}catch(e){}
 sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22,near:1,far:70});sun.shadow.bias=-.0008;ren.shadowMap.enabled=true;ren.shadowMap.type=gfxHigh?T.PCFSoftShadowMap:T.PCFShadowMap;
-let gfxReady=false;function setGfx(on,persist){gfxHigh=on;sun.castShadow=on;ren.setPixelRatio(on?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1.25));if(gfxReady)applyViewportSoon();else ren.setSize(innerWidth,innerHeight);if(persist){try{localStorage.setItem('gfx',on?'1':'0');}catch(e){}}}
+let gfxReady=false;function setGfx(on,persist){gfxHigh=on;sun.castShadow=on;ren.setPixelRatio(on?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1.25));if(gfxReady)applyViewportSoon();else ren.setSize(innerWidth,innerHeight,false);if(persist){try{localStorage.setItem('gfx',on?'1':'0');}catch(e){}}}
 setGfx(gfxHigh,false);
 let gfxN=0,gfxDts=[],gfxAutoDone=false;
 function gfxProbe(dt){gfxReady=true;if(gfxAutoDone||!gfxHigh||navigator.webdriver||document.hidden)return;if(++gfxN<=30)return;gfxDts.push(dt);if(gfxDts.length>=60){gfxAutoDone=true;gfxDts.sort((a,b)=>a-b);if(gfxDts[30]>1/24){setGfx(false,true);say('ภาพช้า จึงปิดเงาให้อัตโนมัติ เปิดกลับได้ในสมุด');if(typeof refreshDisplayUI==='function')refreshDisplayUI();}}}
@@ -1445,22 +1446,45 @@ function exportSaveBackup(){
 }
 const ZN={};SPAWN.forEach(sp=>{if(MAPS[sp.map].arena)return;const n=MAPS[sp.map].n;ZN[sp.t]=ZN[sp.t]?ZN[sp.t]+(ZN[sp.t].split(' / ').includes(n)?'':' / '+n):n;});
 const dailyHtml=()=>{const evolution='<b>🧬 ขั้น '+P.ev+'/3 • เอสเซนส์ '+P.es+'</b><br>';const d=P.dly;if(!d||!Array.isArray(d.qs))return evolution;return evolution+'<b>🎯 ภารกิจวันนี้</b> (ล็อกอินต่อเนื่อง '+d.s+' วัน)<br>'+d.qs.map((q,i)=>(d.f[i]?'✅ ':'⬜ ')+QTXT[q.e](q.n)+(q.n>1?' ('+d.k[i]+'/'+q.n+')':'')).join('<br>')+'<br>'+(d.b?'🎉 ครบทุกภารกิจแล้ว':'ทำครบทั้ง 3 ข้อ รับโบนัสเพิ่ม')+'<hr style="border:0;border-top:1px solid #ffffff2e">';};
-let bookTab='species',bookPage=0;const BOOK_PAGE_SIZE=8;
+let bookTab='species',bookPage=0,bagCat='gear',bagSel='';const BOOK_PAGE_SIZE=8;
 const bookEscape=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const renderDex=()=>{const pages=Math.max(1,Math.ceil(types.length/BOOK_PAGE_SIZE));bookPage=Math.max(0,Math.min(bookPage,pages-1));
  const cards=types.slice(bookPage*BOOK_PAGE_SIZE,(bookPage+1)*BOOK_PAGE_SIZE).map(t=>{const known=!!P.seen[t.n],name=known?bookEscape(t.nm):'???',icon=known?(t.ic||MAPICON[t.n]||'🐟'):'❔';return '<details class="bookcard"><summary aria-label="'+name+'"><span>'+icon+'</span><small>'+name+'</small></summary>'+(known?'<p>'+bookEscape(ZN[t.n]||t.zone||'')+'<br>⚔ '+(P.kc[t.n]||0)+' • 🎁 '+bookEscape(t.dr)+(t.hint?'<br>'+bookEscape(t.hint):'')+'</p>':'<p>ยังไม่พบ</p>')+'</details>';}).join('');
  const tabs=[['species','🐟','สายพันธุ์'],['daily','🎯','ภารกิจ'],['bag','🎒','กระเป๋า'],['settings','⚙️','ตั้งค่า']];
  const tabbar=tabs.map(([id,ic,label])=>'<button data-book-tab="'+id+'" aria-pressed="'+(bookTab===id)+'">'+ic+' '+label+'</button>').join('');
  const section=(id,body)=>'<section class="booksection" data-book-section="'+id+'"'+(bookTab===id?'':' hidden')+'>'+body+'</section>';
- const inventory=Object.keys(P.inv).map(k=>'<span class="bookitem">'+bookEscape(inventoryLabel(k))+' ×'+P.inv[k]+'</span>').join('')||'ว่าง';
+ // กระเป๋าแบบไอคอน: แยก 3 หมวด (เครื่องแต่งกาย/ของกินได้/วัสดุ) แตะไอคอนเพื่อดูรายละเอียด
+ const bagTile=(key,ic,badge,col,dim)=>'<button class="bagtile'+(dim?' dim':'')+'" data-bagsel="'+bookEscape(key)+'" aria-pressed="'+(bagSel===key)+'" style="'+(col?'border-color:'+col:'')+'"><span class="bagic">'+ic+'</span>'+(badge?'<small>'+bookEscape(String(badge))+'</small>':'')+'</button>';
+ const gearItems=Object.keys(P.inv).filter(k=>k.startsWith('eq:')&&P.inv[k]>0).map(k=>({k,o:gearFrom(k.slice(3)),n:P.inv[k]})).filter(x=>x.o).sort((a,b)=>(RARITY[b.o.rar].mul-RARITY[a.o.rar].mul)||(b.o.lv-a.o.lv)),
+  matItems=Object.keys(P.inv).filter(k=>!k.startsWith('eq:')&&P.inv[k]>0).sort((a,b)=>P.inv[b]-P.inv[a]),
+  matIc=k=>{if(k==='ไข่มุกทะเล')return '🦪';if(k==='เขี้ยวราชา')return '👑';const t=types.find(q=>q.dr===k);return (t&&FOOD[t.like||t.n]&&FOOD[t.like||t.n].ic)||'🧱';};
+ let bagGrid='',bagDetail='';
+ if(bagCat==='gear'){
+  bagGrid=gearItems.map(x=>bagTile('eq:'+x.o.id,gSvg(x.o.org,x.o.rar),'Lv.'+x.o.lv+(x.n>1?' ×'+x.n:''),RARITY[x.o.rar].col)).join('')||'<div class="hint">ยังไม่มีเครื่องแต่งกาย ล้มมอนสเตอร์เพื่อสุ่มได้</div>';
+  const g=gearItems.find(x=>'eq:'+x.o.id===bagSel);
+  if(g){const slot=Object.keys(ORG).find(sl=>ORG[sl].some(q=>q.id===g.o.org)),eff=Object.keys(GEAR_STATS).filter(q=>g.o[q]).map(q=>{const p=Math.round((g.o[q]-1)*100);return GEAR_STATS[q]+' '+(p>0?'+':'')+p+'%';}).join(' • ');
+   bagDetail='<b>'+bookEscape(g.o.n)+'</b> Lv.'+g.o.lv+' <span style="color:'+RARITY[g.o.rar].col+'">['+RARITY[g.o.rar].n+']</span><br>ใส่ที่: '+(SLOTN[slot]||slot)+' • มี '+g.n+' ชิ้น'+(P.mu[slot]===g.o.id?' • ✔ สวมอยู่':'')+'<br>'+bookEscape(eff||'ไม่มีโบนัส')+'<br><small>สวม/เปลี่ยนที่ปุ่ม “สวมอุปกรณ์” ด้านบน</small>';}
+ }else if(bagCat==='food'){
+  bagGrid=FOODKEYS.map(k=>{const t=Math.ceil(P['fb_'+k]||0);return bagTile('food:'+k,FOOD[k].ic,t>0?t+' วิ':'',t>0?'#7dffb0':'',t<=0);}).join('');
+  const fk=bagSel.startsWith('food:')?bagSel.slice(5):'';
+  if(FOOD[fk]){const f=FOOD[fk],t=Math.ceil(P['fb_'+fk]||0),mt=types.find(q=>(q.like||q.n)===fk);
+   bagDetail='<b>'+f.ic+' '+bookEscape(f.n)+'</b><br>'+bookEscape(f.d)+'<br>'+(t>0?'🟢 กำลังมีผล เหลือ '+t+' วินาที':'⚪ ยังไม่มีผล')+'<br><small>ได้โอกาสหนึ่งเมื่อล้ม'+(mt?bookEscape(mt.nm):'มอนสเตอร์ชนิดนี้')+' หรือปรุงที่พ่อครัวในเมือง</small>';}
+ }else{
+  bagGrid=matItems.map(k=>bagTile('mat:'+k,matIc(k),'×'+P.inv[k])).join('')||'<div class="hint">ยังไม่มีวัสดุ ลองล้มมอนสเตอร์ดู</div>';
+  const mk=bagSel.startsWith('mat:')?bagSel.slice(4):'';
+  if(mk&&P.inv[mk]>0){const t=types.find(q=>q.dr===mk);
+   bagDetail='<b>'+matIc(mk)+' '+bookEscape(mk)+'</b> ×'+P.inv[mk]+'<br>'+(mk==='ไข่มุกทะเล'?'ของสะสมพิเศษ ได้จากล็อกอินรายวัน ภารกิจ หีบสมบัติ และสนามคลื่น':mk==='เขี้ยวราชา'?'ใช้ตีบวกอุปกรณ์ระดับสูง (ตั้งแต่ +8) ได้จากราชาถ้ำ':'ได้จาก'+(t?bookEscape(t.nm):'มอนสเตอร์')+'<br><small>ใช้ปรุงอาหารที่พ่อครัว และตีบวกอุปกรณ์ที่ช่างตีเหล็ก (ใช้วัสดุชนิดไหนก็ได้)</small>');}
+ }
+ const bagTabs=[['gear','👕','เครื่องแต่งกาย'],['food','🍖','ของกินได้'],['mat','🧱','วัสดุ']].map(([id,ic,l])=>'<button data-bagcat="'+id+'" aria-pressed="'+(bagCat===id)+'">'+ic+' '+l+'</button>').join('');
+ const bagHtml='<div class="bagcats">'+bagTabs+'</div><div class="baggrid">'+bagGrid+'</div><div class="bagdetail">'+(bagDetail||'<span class="hint">แตะไอคอนเพื่อดูรายละเอียด</span>')+'</div>';
  $('dex').innerHTML='<div class="bookhead"><b>📖 สมุด</b><button data-book-close aria-label="ปิด">✕</button></div><nav class="booktabs">'+tabbar+'<button id="equipGear">⚔️ สวมอุปกรณ์</button></nav><div class="bookbody">'+
  section('species','<b>สายพันธุ์ '+Object.keys(P.seen).length+'/'+types.length+'</b><div class="bookgrid">'+cards+'</div><div class="bookpager"><button data-book-page="-1" aria-label="หน้าก่อน" '+(bookPage===0?'disabled':'')+'>◀</button><span>'+(bookPage+1)+' / '+pages+'</span><button data-book-page="1" aria-label="หน้าถัดไป" '+(bookPage===pages-1?'disabled':'')+'>▶</button></div>')+
- section('daily',dailyHtml())+section('bag','<b>🎒 กระเป๋า</b><div class="bookitems">'+inventory+'</div>')+
+ section('daily',dailyHtml())+section('bag',bagHtml)+
  section('settings','<div class="setgrp"><button id="renameBtn">✏️ ตั้งชื่อ</button> <button id="wnBtn">🎉 มีอะไรใหม่</button> <button id="swc">เปลี่ยนตัวละคร</button></div>'
 +'<details class="setdet"><summary>💾 เซฟและสำรองข้อมูล</summary><button id="exportSave">สำรองเซฟ</button> <button id="copySave">คัดลอกรหัสเซฟ</button> <button id="importFileBtn">นำเข้าไฟล์</button> <button id="importCodeBtn">นำเข้ารหัส</button><input type="file" id="importFile" accept="application/json,.json" hidden><textarea id="saveCode" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="รหัสเซฟ SEL1... วางที่นี่ แล้วกด นำเข้ารหัส" style="display:none;width:100%;box-sizing:border-box;margin-top:6px;font:16px monospace;border-radius:8px"></textarea></details>'
 +'<details class="setdet"><summary>🖥 การแสดงผลและกล้อง</summary><button id="fsBtn"></button> <button id="hudBtn"></button> <button id="gfxBtn"></button> <button id="camBtn">กล้องกลับหลังตัว</button> <button id="zoomIn">ซูมเข้า +</button> <button id="zoomOut">ซูมออก −</button><div class="hint" id="dispHint"></div><div class="hint">ลากนิ้วหนึ่งนิ้วบนพื้นน้ำเพื่อหมุนกล้อง 360° บีบสองนิ้วเพื่อซูมเข้า-ออก ปุ่มต่าง ๆ ใช้ได้พร้อมกัน (คอม: ล้อเมาส์ หรือ - = ซูม, Z X หมุน, C กลับหลังตัว)</div></details>'
 +'<details class="setdet"><summary>🔧 สำหรับทดสอบ (FPS)</summary><button id="fpsBtn"></button> <button id="perfToggle"></button> <button id="perfCopy">คัดลอกรายงานประสิทธิภาพ</button><textarea id="perfReportText" aria-label="รายงานประสิทธิภาพ" readonly rows="5" style="display:none;width:100%;box-sizing:border-box;font:16px monospace"></textarea></details>')+'</div>';refreshDisplayUI();};
-$('dex').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-book-close')){$('dex').style.display='none';return;}if(b.dataset.bookTab){bookTab=b.dataset.bookTab;renderDex();return;}if(b.dataset.bookPage){bookPage+=Number(b.dataset.bookPage);renderDex();}});
+$('dex').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-book-close')){$('dex').style.display='none';return;}if(b.dataset.bookTab){bookTab=b.dataset.bookTab;renderDex();return;}if(b.dataset.bagcat){bagCat=b.dataset.bagcat;bagSel='';renderDex();return;}if(b.dataset.bagsel!==undefined){bagSel=bagSel===b.dataset.bagsel?'':b.dataset.bagsel;renderDex();return;}if(b.dataset.bookPage){bookPage+=Number(b.dataset.bookPage);renderDex();}});
 $('dex').addEventListener('click',e=>{if(e.target.id==='equipGear'){$('dex').style.display='none';renderEvo();evo.style.display='flex';$('gearTitle').scrollIntoView({block:'start'});return;}if(e.target.id==='exportSave'){exportSaveBackup();return;}if(e.target.id==='swc'){if(account.remote){location.reload();return;}try{gameStorage.removeItem('selcls');}catch(x){}location.reload();}});$('dexb').addEventListener('pointerdown',e=>{e.preventDefault();const d=$('dex');d.style.display=d.style.display==='block'?'none':'block';renderDex();});
 // Fullscreen / PWA / HUD. iPhone Safari has no Fullscreen API, so there the honest answer
 // is Add to Home Screen, which gives a real fullscreen standalone window.
@@ -1551,7 +1575,8 @@ function applyViewport(){
   const v=window.visualViewport,s=v&&v.scale>0?v.scale:1;
   let w=Math.round(v&&v.width?v.width*s:innerWidth),h=Math.round(v&&v.height?v.height*s:innerHeight);
   if(!(w>0))w=Math.max(1,innerWidth);if(!(h>0))h=Math.max(1,innerHeight);
-  cam.aspect=w/h;cam.updateProjectionMatrix();ren.setSize(w,h);
+  // ภาพ 3D เต็มจอจริง: ขนาดแสดงผลมาจาก CSS (#gl เต็ม viewport) แล้วตั้งบัฟเฟอร์ให้ตรงกัน ไม่ให้เหลือแถบสีพื้นหลังด้านล่างบน iPad แบบไอคอนหน้าจอหลัก
+  const el=ren.domElement,cw=el.clientWidth||w,ch=el.clientHeight||h;cam.aspect=cw/ch;cam.updateProjectionMatrix();ren.setSize(cw,ch,false);
   updateCompact();updateZoomWarn();
 }
 // The page cannot reset the browser zoom itself, but it can say so instead of leaving
