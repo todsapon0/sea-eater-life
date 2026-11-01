@@ -247,7 +247,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #topbar>button:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
 #msg,#goal{border:2px solid #ffe08a;box-shadow:0 3px 0 rgba(0,0,0,.25),0 5px 10px rgba(0,0,0,.3)}
 #dex{background:linear-gradient(#0e5368f5,#08303bf5);border:3px solid #ffe08a;border-radius:22px;box-shadow:0 4px 0 rgba(0,0,0,.3),0 10px 26px rgba(0,0,0,.5)}
-#gl{width:100vw!important;height:100vh!important}@supports (height:100lvh){#gl{height:100lvh!important}}
+#gl{position:fixed!important;left:0!important;top:0!important;width:100%!important;height:100%!important}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,0) 55%,rgba(5,50,70,.22) 100%)}</style>
 </head>
@@ -407,7 +407,7 @@ const bg=new T.BufferGeometry();bg.setAttribute('position',new T.BufferAttribute
 const bub=new T.Points(bg,new T.PointsMaterial({color:0xdff8ff,size:.35,transparent:true,opacity:.7}));scene.add(bub);
 
 // Sea Eater
-const HERO_SCALE=(()=>{try{return (localStorage.getItem('selcls')||'sea')==='sea'?2:1;}catch(e){return 2;}})(); // Sea Eater ต้องใหญ่สุดในเกม (ภาพจำของเด็ก) ตัวใหญ่กว่าบอสและวาฬ; Bloop/Maja ขนาดเดิม
+const HERO_SCALE=(()=>{try{return (localStorage.getItem('selcls')||'sea')==='sea'?1.5:1;}catch(e){return 1.5;}})(); // Sea Eater ต้องใหญ่สุดในเกม (ภาพจำของเด็ก) ตัวใหญ่กว่าบอสและวาฬ; Bloop/Maja ขนาดเดิม
 const sea=new T.Group(),white=new T.MeshStandardMaterial({color:0xf5f2ea}),foot=new T.MeshStandardMaterial({color:0xd9d4c8}),dark=new T.MeshStandardMaterial({color:0x5a0f18});
 const body=new T.Mesh(new T.SphereGeometry(1,28,20),white);body.scale.set(1,1.25,.95);body.position.y=2.4;sea.add(body);
 const mouth=new T.Group();mouth.position.set(0,2.1,.05);sea.add(mouth);
@@ -1375,11 +1375,11 @@ let lastTapTime=0,lastTapTarget=null;document.addEventListener('touchend',e=>{if
 // Hybrid follow camera: it trails the player, and dragging on the water orbits it 360 degrees.
 // Listening on the canvas only is what keeps this off the buttons: a finger that lands on a
 // control never reaches here, so the stick and the camera can be dragged at the same time.
-const CAM={yaw:0,pitch:.62,dist:25*(HERO_SCALE>1?1.5:1)},CAM_PITCH_MIN=.4,CAM_PITCH_MAX=1.25,CAM_DIST_MIN=7,CAM_DIST_MAX=60;
-try{const d=parseFloat(localStorage.getItem('camdist3'));if(d>=CAM_DIST_MIN&&d<=CAM_DIST_MAX)CAM.dist=d;}catch(e){}
+const CAM={yaw:0,pitch:.62,dist:25*(HERO_SCALE>1?1.25:1)},CAM_PITCH_MIN=.4,CAM_PITCH_MAX=1.25,CAM_DIST_MIN=7,CAM_DIST_MAX=60;
+try{const d=parseFloat(localStorage.getItem('camdist4'));if(d>=CAM_DIST_MIN&&d<=CAM_DIST_MAX)CAM.dist=d;}catch(e){}
 if(new URLSearchParams(location.search).get('debug')==='1')window.__cam=CAM;   // lets tests read the camera
 const clampDist=d=>Math.max(CAM_DIST_MIN,Math.min(CAM_DIST_MAX,d));
-const saveCamDist=()=>{try{localStorage.setItem('camdist3',String(Math.round(CAM.dist*10)/10));}catch(e){}};
+const saveCamDist=()=>{try{localStorage.setItem('camdist4',String(Math.round(CAM.dist*10)/10));}catch(e){}};
 const zoomCam=f=>{CAM.dist=clampDist(CAM.dist*f);saveCamDist();};
 const camTarget=new T.Vector3();
 // One finger on the water orbits; two fingers on the water pinch to zoom. A finger resting on the
@@ -1612,7 +1612,7 @@ try{fpsEnabled=fpsEnabled||localStorage.getItem('fps')==='1';}catch(e){}
 const debugNode=document.createElement('div');debugNode.id='debug';debugNode.setAttribute('role','status');debugNode.style.cssText='position:fixed;left:50%;bottom:calc(6px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:8;background:#001b22bb;color:white;font:12px monospace;padding:3px 6px;pointer-events:none;white-space:nowrap';document.body.append(debugNode);
 function setFps(on,persist){fpsEnabled=on;debugNode.style.display=on?'block':'none';debugNode.textContent='FPS: --';debugFrames=0;debugStart=performance.now();if(persist)try{localStorage.setItem('fps',on?'1':'0');}catch(e){}}
 setFps(fpsEnabled,false);
-function loop(){requestAnimationFrame(loop);if(fpsEnabled){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+(debugEnabled?' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact'):'');debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;gfxProbe(dt);
+function loop(){requestAnimationFrame(loop);if(fpsEnabled){debugFrames++;const now=performance.now(),elapsed=now-debugStart;if(elapsed>=1000){const view=window.visualViewport;debugNode.textContent='FPS: '+Math.round(debugFrames*1000/elapsed)+(debugEnabled?' | scale: '+(view?view.scale.toFixed(2):'n/a')+' | '+Math.round(view?view.width:innerWidth)+'×'+Math.round(view?view.height:innerHeight)+' | compact='+document.body.classList.contains('compact'):' | '+innerWidth+'×'+innerHeight+' จอ '+screen.width+'×'+screen.height+' gl '+ren.domElement.clientWidth+'×'+ren.domElement.clientHeight);debugFrames=0;debugStart=now;}}const dt=Math.min(clock.getDelta(),.05);t+=dt;gfxProbe(dt);
 let x=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),z=jz+((keys.KeyS||keys.ArrowDown)?1:0)-((keys.KeyW||keys.ArrowUp)?1:0);
 const l=Math.hypot(x,z);if(l>1){x/=l;z/=l;}const mv=l>.12;
 // Movement is relative to where the camera is looking, so "up" on the stick is always

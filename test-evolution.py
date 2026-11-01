@@ -88,7 +88,7 @@ with sync_playwright() as p:
   if cls=='maja':
    page.evaluate("()=>{const t=__evoTest;t.whirlpool();const m=t.mons[0];m.dead=0;m.hp=10000;m.g.position.copy(t.vortices[0].mesh.position);t.updateMaja(.01);if(Math.abs((10000-m.hp)-(4+t.P.lv)*t.P.dmgMul)>1e-8)throw Error('whirlpool multiplier');}")
   # Kill essence rewards, no backend.
-  rewards=page.evaluate('''()=>{const t=__evoTest,out={};for(const name of ['ray','shark','eel','whale','boss']){const m=t.mons.find(m=>m.ty.n===name),before=t.P.es;const count=()=>Object.entries(t.P.inv).filter(([k])=>k.startsWith('eq:')).reduce((n,[k,v])=>n+v,0),items=count();t.kill(m);if(name==='boss'&&count()!==items+1)throw Error('boss equipment drop');out[name]=t.P.es-before;}return out;}''')
+  rewards=page.evaluate('''()=>{const t=__evoTest,out={};for(const name of ['ray','shark','eel','whale','boss']){const m=t.mons.find(m=>m.ty.n===name&&!m.mvp),before=t.P.es;const count=()=>Object.entries(t.P.inv).filter(([k])=>k.startsWith('eq:')).reduce((n,[k,v])=>n+v,0),items=count();t.kill(m);if(name==='boss'&&count()!==items+1)throw Error('boss equipment drop');out[name]=t.P.es-before;}return out;}''')
   assert rewards=={'ray':1,'shark':2,'eel':2,'whale':3,'boss':30},rewards
   page.wait_for_timeout(1600);after=page.locator('#debug').inner_text()
   assert not errors,errors;assert not network,network
