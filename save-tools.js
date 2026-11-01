@@ -27,6 +27,7 @@
     if (r.ar !== undefined && !(typeof r.ar === 'string' && /^(\d{4}-\d{2}-\d{2})?$/.test(r.ar))) fail('สนามคลื่นของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.tr !== undefined && (!Array.isArray(r.tr) || r.tr.length > 28 || r.tr.some(function (id, i, a) { return typeof id !== 'string' || !/^[cp](?:[1-9]|1[0-3]|15)$/.test(id) || a.indexOf(id) !== i; }))) fail('สมบัติของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.dy !== undefined && !isInt(r.dy, 0, 8)) fail('สีของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    if (r.tu !== undefined && !isInt(r.tu, 0, 9)) fail('ขั้นฝึกของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.ta !== undefined && !(typeof r.ta === 'string' && r.ta.length <= 20)) fail('ฉายาของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.ev !== undefined && !isInt(r.ev, 0, 3)) fail('ขั้นวิวัฒนาการไม่ถูกต้อง');
     if (r.es !== undefined && !isInt(r.es, 0, 1e7)) fail('เอสเซนส์ไม่ถูกต้อง');
