@@ -200,6 +200,10 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 @media(max-width:360px) and (min-height:481px){#lockb{right:124px;bottom:calc(174px + env(safe-area-inset-bottom,0px))}}
 @media(orientation:landscape) and (max-height:480px){#lockb{right:calc(158px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:42px;height:42px;font-size:20px}}
 .nametag.locked{color:#ffe45a;font-size:13.5px;text-shadow:0 0 6px #ff9d00,0 1px 3px #000}
+#warpar{position:fixed;left:0;top:0;width:0;height:0;z-index:3;pointer-events:none}
+.warparr{position:absolute;left:0;top:0;display:none;min-width:40px;height:40px;border-radius:20px;background:rgba(5,30,40,.78);border:2px solid #7dffb0;color:#fff;font:700 15px system-ui;line-height:36px;text-align:center;padding:0 8px;white-space:nowrap;box-shadow:0 0 12px rgba(125,255,176,.55)}
+.warparr.deep{border-color:#ffd95a;box-shadow:0 0 12px rgba(255,217,90,.55)}
+.warparr i{display:inline-block;font-style:normal;margin-right:3px}
 #worldmini{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(212px + env(safe-area-inset-top,0px));z-index:2;border-radius:8px;background:rgba(7,38,48,.5);border:1px solid rgba(255,255,255,.3);pointer-events:none}
 body.hudmin #worldmini{display:none}
 #minimap{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(106px + env(safe-area-inset-top,0px));z-index:2;border-radius:10px;background:rgba(7,38,48,.55);border:1px solid rgba(255,255,255,.4);touch-action:manipulation;box-shadow:0 3px 10px rgba(0,40,60,.3)}
@@ -433,8 +437,8 @@ function buildMapWorld(def){
   const fImg=SPR(['fountain_1']).length>0;if(fImg)spriteAt('fountain_1',0,-6,6.5);const fb=new T.Mesh(new T.CylinderGeometry(2.6,2.8,.9,24),new T.MeshStandardMaterial({color:0xcfc7b0}));fb.position.set(0,.45,-6);g.add(fb);
   const fw=new T.Mesh(new T.CylinderGeometry(2.2,2.2,.95,24),new T.MeshStandardMaterial({color:0x66e0ff,roughness:.2}));fw.position.set(0,.5,-6);g.add(fw);
   const jet=new T.Mesh(coneG,new T.MeshBasicMaterial({color:0xcff6ff,transparent:true,opacity:.7}));jet.scale.set(.5,3.2,.5);jet.position.set(0,.9,-6);g.add(jet);if(fImg){fb.visible=fw.visible=jet.visible=false;}
-  [[-17,-12,0xb88a5a,0xc0463a],[17,-12,0x8aa8b8,0x3f7fb8],[-17,12,0xc9a35a,0x7a4a9a]].forEach(([x,z,wc,rc],hi)=>{if(SPR(['house_'+(hi+1)]).length){spriteAt('house_'+(hi+1),x,z,9.5);return;}const b=new T.Mesh(new T.BoxGeometry(7,3.6,5.5),new T.MeshStandardMaterial({color:wc,roughness:.8}));b.position.set(x,1.8,z);g.add(b);const r=new T.Mesh(new T.ConeGeometry(5.4,2.6,4),new T.MeshStandardMaterial({color:rc,roughness:.8}));r.position.set(x,4.9,z);r.rotation.y=Math.PI/4;g.add(r);});
-  for(let i=0;i<9;i++){const a=i/9*6.2832+.3,x=Math.cos(a)*22,z=Math.sin(a)*15;if(!free(x,z,6))continue;if(SPR(['palm_1']).length){spriteAt('palm_1',x,z,7+rng()*2,rng()<.5?-1:1);continue;}const tr=new T.Mesh(trunkG,new T.MeshStandardMaterial({color:0x8a6a3a}));tr.scale.y=4;tr.position.set(x,2,z);g.add(tr);for(let k=0;k<5;k++){const lf=new T.Mesh(coneG,kelpM[k%2]);lf.scale.set(.9,2.6,.9);lf.position.set(x,4,z);lf.rotation.set(Math.PI/2.4,k*1.2566,0);g.add(lf);}}
+  [[-17,-12,0xb88a5a,0xc0463a],[17,-12,0x8aa8b8,0x3f7fb8],[-17,12,0xc9a35a,0x7a4a9a],[17,12,0x9ab88a,0x2f8a6a]].forEach(([x,z,wc,rc],hi)=>{x*=MAP_SCALE*1.05;z*=MAP_SCALE*1.05;if(SPR(['house_'+(hi%3+1)]).length){spriteAt('house_'+(hi%3+1),x,z,10,hi===3?-1:1);return;}if(hi===3)return;const b=new T.Mesh(new T.BoxGeometry(7,3.6,5.5),new T.MeshStandardMaterial({color:wc,roughness:.8}));b.position.set(x,1.8,z);g.add(b);const r=new T.Mesh(new T.ConeGeometry(5.4,2.6,4),new T.MeshStandardMaterial({color:rc,roughness:.8}));r.position.set(x,4.9,z);r.rotation.y=Math.PI/4;g.add(r);});
+  for(let i=0;i<12;i++){const a=i/12*6.2832+.3,x=Math.cos(a)*33,z=Math.sin(a)*22;if(!free(x,z,6))continue;if(SPR(['palm_1']).length){spriteAt('palm_1',x,z,7+rng()*2,rng()<.5?-1:1);continue;}const tr=new T.Mesh(trunkG,new T.MeshStandardMaterial({color:0x8a6a3a}));tr.scale.y=4;tr.position.set(x,2,z);g.add(tr);for(let k=0;k<5;k++){const lf=new T.Mesh(coneG,kelpM[k%2]);lf.scale.set(.9,2.6,.9);lf.position.set(x,4,z);lf.rotation.set(Math.PI/2.4,k*1.2566,0);g.add(lf);}}
   rocks(8,15);
  }else if(def.biome==='shore'){rocks(14,0);const csp=SPR(['coral_1','coral_2']);if(csp.length)sprites(csp,16,2.6,5.2,0);else for(let i=0;i<28;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7))continue;const c=new T.Mesh(coralG,coralM[i%3]);c.scale.set((.5+rng()*.6)*1.9,1.6+rng()*2.4,(.5+rng()*.6)*1.9);c.position.set(x,yAt(x,z),z);g.add(c);}
   const spg=SPR(['sponge_1']);if(spg.length)sprites(spg,26,1.2,2.2,0);else{const N=44,dm=new T.InstancedMesh(domeG,new T.MeshStandardMaterial({color:0xffffff,roughness:.7}),N),M=new T.Matrix4(),Q=new T.Quaternion(),S=new T.Vector3(),P=new T.Vector3(),pal=[0xffb3c7,0xffd78a,0xb9e6c8,0xc9b8f2,0xfff0a8].map(c=>new T.Color(c));let k=0;
@@ -1205,7 +1209,17 @@ function crossMap(exit){const ox=sea.position.x,oy=sea.position.y,oz=sea.positio
  for(const list of [shots,vortices]){for(const fx of list){scene.remove(fx.mesh);fx.mesh.geometry.dispose();fx.mesh.material.dispose();}list.length=0;}
  setLock(null);lockRing.visible=false;grace=Math.max(grace,3);miniT=0;
  const d=MAPS[exit.map];if(P.lv<d.rec-2)say('⚠ อันตราย! แนะนำเลเวล '+d.rec+'+');}
-function updatePortals(dt){const exit=mapExit(curMap,sea.position.x,sea.position.z);if(exit)crossMap(exit);
+// ลูกศรชี้วงวาร์ปที่อยู่นอกจอ: ติดขอบจอในทิศของวงนั้น พร้อมไอคอนแมพปลายทาง (เขียว=ง่ายกว่า/เท่ากัน ทอง=ยากกว่า) หายไปเมื่อวงอยู่ในจอ
+let warpBox=null;const warpV=new T.Vector3();
+function updateWarpArrows(){if(!warpBox){warpBox=document.createElement('div');warpBox.id='warpar';document.body.append(warpBox);}
+ const W=innerWidth,H=innerHeight;for(const p of PORTALS){if(!p.arr){p.arr=document.createElement('div');p.arr.className='warparr'+(portalDeeper(p)?' deep':'');const d=MAPS[p.to.map];p.arr.innerHTML='<i></i>'+d.ic;warpBox.append(p.arr);}
+  if(p.map!==curMap||document.body.classList.contains('hudmin')){p.arr.style.display='none';continue;}
+  warpV.set(p.x,1.2,p.z).project(cam);let sx=(warpV.x*.5+.5)*W,sy=(-warpV.y*.5+.5)*H;if(warpV.z>1){sx=W-sx;sy=H-sy;}
+  const inside=warpV.z<=1&&sx>30&&sx<W-30&&sy>60&&sy<H-60;if(inside){p.arr.style.display='none';continue;}
+  const cx=W/2,cy=H/2,dx=sx-cx,dy=sy-cy,ex=W/2-54,ey=H/2-96,k=Math.min(ex/Math.max(Math.abs(dx),.001),ey/Math.max(Math.abs(dy),.001));
+  const x=cx+dx*k,y=cy+dy*k,ang=Math.atan2(dy,dx);p.arr.firstChild.textContent=Math.abs(Math.cos(ang))>Math.abs(Math.sin(ang))?(Math.cos(ang)>0?'▶':'◀'):(Math.sin(ang)>0?'▼':'▲');
+  p.arr.style.display='block';p.arr.style.transform='translate3d('+Math.round(x-20)+'px,'+Math.round(y-20)+'px,0)';}}
+function updatePortals(dt){const exit=mapExit(curMap,sea.position.x,sea.position.z);if(exit)crossMap(exit);updateWarpArrows();
  const d=MAPS[curMap],bx=d.w/2-1,bz=d.d/2-1;sea.position.x=Math.max(-bx,Math.min(bx,sea.position.x));sea.position.z=Math.max(-bz,Math.min(bz,sea.position.z));
  for(const p of PORTALS){p.tag.style.display='none';if(p.map!==curMap)continue;
   const pu=1+.07*Math.sin(performance.now()/260+p.x);p.g.userData.ring.scale.setScalar(pu);p.g.userData.inner.rotation.z+=dt*1.2;p.g.userData.beam.material.opacity=.1+.04*Math.sin(performance.now()/340+p.z);
