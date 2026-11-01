@@ -1373,11 +1373,11 @@ let lastTapTime=0,lastTapTarget=null;document.addEventListener('touchend',e=>{if
 // Hybrid follow camera: it trails the player, and dragging on the water orbits it 360 degrees.
 // Listening on the canvas only is what keeps this off the buttons: a finger that lands on a
 // control never reaches here, so the stick and the camera can be dragged at the same time.
-const CAM={yaw:0,pitch:.62,dist:18},CAM_PITCH_MIN=.18,CAM_PITCH_MAX=1.25,CAM_DIST_MIN=7,CAM_DIST_MAX=34;
-try{const d=parseFloat(localStorage.getItem('camdist'));if(d>=CAM_DIST_MIN&&d<=CAM_DIST_MAX)CAM.dist=d;}catch(e){}
+const CAM={yaw:0,pitch:.62,dist:25},CAM_PITCH_MIN=.18,CAM_PITCH_MAX=1.25,CAM_DIST_MIN=7,CAM_DIST_MAX=44;
+try{const d=parseFloat(localStorage.getItem('camdist2'));if(d>=CAM_DIST_MIN&&d<=CAM_DIST_MAX)CAM.dist=d;}catch(e){}
 if(new URLSearchParams(location.search).get('debug')==='1')window.__cam=CAM;   // lets tests read the camera
 const clampDist=d=>Math.max(CAM_DIST_MIN,Math.min(CAM_DIST_MAX,d));
-const saveCamDist=()=>{try{localStorage.setItem('camdist',String(Math.round(CAM.dist*10)/10));}catch(e){}};
+const saveCamDist=()=>{try{localStorage.setItem('camdist2',String(Math.round(CAM.dist*10)/10));}catch(e){}};
 const zoomCam=f=>{CAM.dist=clampDist(CAM.dist*f);saveCamDist();};
 const camTarget=new T.Vector3();
 // One finger on the water orbits; two fingers on the water pinch to zoom. A finger resting on the
