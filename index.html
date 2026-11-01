@@ -329,7 +329,9 @@ const MAPS=[
  {id:14,n:'สนามคลื่น',ic:'🏟️',rec:1,bg:0x335a7a,w:56,d:56,tint:[.85,.9,1],mc:'#4f7fa8',gx:6,gy:6,theme:'arena',tier:2,biome:'shore',music:'lair',arena:1},
  {id:15,n:'ร่องลึกก้นทะเล',ic:'🌑',rec:18,bg:0x0b1a2e,tint:[.3,.36,.55],mc:'#2c3b66',gx:5,gy:0,theme:'abyss',tier:5,biome:'cave',music:'lair'}];
 const MAPTHEME={abyss:'🌑',town:'🏘',normal:'↓ 🐟',poison:'↑ ☠️',spike:'← 🐡',weird:'→ 🟣',boss:'👑',arena:'🏟️'};
-MAPS.forEach(d=>{d.w=d.w||100;d.d=d.d||64;d.music=d.music||({shore:'shallows',kelp:'kelp',cave:'cave'}[d.biome]);d.hpScale=[1,1,1.3,1.7,1,2.2][d.tier];d.xpScale=[1,1,1.6,2.4,1,3.2][d.tier];d.dmgScale=[1,1,1.2,1.5,1.3,1.8][d.tier];});
+// ขนาดแมพ ×1.5 ทุกแมพยกเว้นสนามคลื่น (ผู้ใช้: 'แมพเล็กไป' 2026-11-01); จำนวนมอนสเตอร์/ของตกแต่งเพิ่มตามให้ความหนาแน่นไม่ลด
+const MAP_SCALE=1.5;
+MAPS.forEach(d=>{const k=d.arena?1:MAP_SCALE;d.w=(d.w||100)*k;d.d=(d.d||64)*k;d.music=d.music||({shore:'shallows',kelp:'kelp',cave:'cave'}[d.biome]);d.hpScale=[1,1,1.3,1.7,1,2.2][d.tier];d.xpScale=[1,1,1.6,2.4,1,3.2][d.tier];d.dmgScale=[1,1,1.2,1.5,1.3,1.8][d.tier];});
 const MAP_ROUTES=[[0,5],[5,2],[2,6],[0,7],[7,8],[8,9],[0,1],[1,10],[10,11],[0,12],[12,13],[13,3],[3,4],[4,15]];
 // ขอบคู่ระหว่างบล็อก: เดินข้ามได้ตลอดแนวด้านที่มีแมพติดกัน
 const PORTALS=[];
@@ -363,6 +365,7 @@ const SPAWN=[
  {map:14,t:'ray',n:3,c:1},{map:14,t:'shark',n:2,c:1},{map:14,t:'eel',n:1,c:1},{map:14,t:'puffer',n:1,c:1},{map:14,t:'whale',n:1,c:1},
  {map:4,t:'boss',n:1,c:1},
  {map:15,t:'shark',n:3,c:2},{map:15,t:'whale',n:2,c:1},{map:15,t:'crb3',n:2,c:1},{map:15,t:'hnd3',n:2,c:1},{map:15,t:'srp3',n:2,c:1},{map:15,t:'swm2',n:2,c:1},{map:15,t:'tub2',n:2,c:1},{map:15,t:'eel',n:1,c:1}];
+SPAWN.forEach(sp=>{if(sp.t!=='boss'&&!MAPS[sp.map].arena)sp.n=Math.ceil(sp.n*MAP_SCALE);});
 const monsterRoster=[],monsterMeta=[];
 SPAWN.forEach((sp,si)=>{const def=MAPS[sp.map],rng=mulberry(1000+si*77),centers=[],bx=def.w/2-9,bz=def.d/2-9;
  for(let c=0;c<sp.c;c++){let best=null;for(let tr=0;tr<80&&!best;tr++){const x=(rng()*2-1)*bx,z=(rng()*2-1)*bz;if(PORTALS.some(q=>q.map===sp.map&&Math.hypot(q.x-x,q.z-z)<12))continue;if(centers.some(q=>Math.hypot(q[0]-x,q[1]-z)<16))continue;best=[x,z];}centers.push(best||[(rng()*2-1)*bx,(rng()*2-1)*bz]);}
@@ -419,7 +422,7 @@ function buildMapWorld(def){
   else if(def.biome==='kelp'){if(!SPR(['kelp_1']).length)scatter(coneG,[0x3fae6a,0x7fd05a,0x2f9a8a],190,(S,k)=>S.set(.22,.8+rng()*1.1,.22));scatter(domeG,[0xff9fc0,0xffc47a,0xd9a8ff],40,(S,k)=>{const q=.3+rng()*.45;S.set(q,q*.8,q);});}
   else if(def.biome==='cave'){scatter(domeG,[0x7ad8ff,0xb48cff,0x8affc9],46,(S,k)=>{const q=.25+rng()*.5;S.set(q,q*1.1,q);},0x2a6a8a);}};
   const SPR=names=>names.filter(nm=>ASSETS['decor/'+nm]);
- const sprites=(names,n,hMin,hMax,minD)=>{const per=Math.ceil(n/names.length),M=new T.Matrix4(),Q=new T.Quaternion(),S=new T.Vector3(),P=new T.Vector3();names.forEach(nm=>{const im=new T.InstancedMesh(spriteGeo,spriteMat(nm),per);im.frustumCulled=false;let k=0;for(let i=0;i<per*4&&k<per;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7)||Math.hypot(x,z)<(minD||0))continue;const h=hMin+rng()*(hMax-hMin),fl=rng()<.5?-1:1;S.set(h*fl,h,1);Q.identity();P.set(x,yAt(x,z)-.05,z);M.compose(P,Q,S);im.setMatrixAt(k,M);k++;}im.count=k;im.instanceMatrix.needsUpdate=true;g.add(im);});};
+ const sprites=(names,n,hMin,hMax,minD)=>{n=Math.round(n*(def.arena?1:MAP_SCALE));const per=Math.ceil(n/names.length),M=new T.Matrix4(),Q=new T.Quaternion(),S=new T.Vector3(),P=new T.Vector3();names.forEach(nm=>{const im=new T.InstancedMesh(spriteGeo,spriteMat(nm),per);im.frustumCulled=false;let k=0;for(let i=0;i<per*4&&k<per;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7)||Math.hypot(x,z)<(minD||0))continue;const h=hMin+rng()*(hMax-hMin),fl=rng()<.5?-1:1;S.set(h*fl,h,1);Q.identity();P.set(x,yAt(x,z)-.05,z);M.compose(P,Q,S);im.setMatrixAt(k,M);k++;}im.count=k;im.instanceMatrix.needsUpdate=true;g.add(im);});};
  // วางแผ่นภาพ 1 ชิ้นตำแหน่งกำหนดเอง (ของในเมือง เฟส A1d): ไม่มีไฟล์ = ไม่ถูกเรียก (ใช้ทรงโค้ดเดิม)
  const spriteAt=(nm,x,z,h,fl)=>{const im=new T.InstancedMesh(spriteGeo,spriteMat(nm),1),M=new T.Matrix4();im.frustumCulled=false;M.compose(new T.Vector3(x,yAt(x,z)-.05,z),new T.Quaternion(),new T.Vector3(h*(fl||1),h,1));im.setMatrixAt(0,M);g.add(im);return im;};
  const rocks=(n,minD)=>{const rs=SPR(['rock_1','rock_2']);if(rs.length){sprites(rs,n,2.4,5,minD);return;}for(let i=0;i<n;i++){const x=R(W/2-3),z=R(D/2-3);if(!free(x,z,7)||Math.hypot(x,z)<minD)continue;const r=new T.Mesh(rockG,rm);const sc=.8+rng()*2;r.scale.setScalar(sc);r.position.set(x,yAt(x,z)+.4,z);r.rotation.set(rng()*3,rng()*3,0);g.add(r);}};
