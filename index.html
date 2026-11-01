@@ -248,6 +248,7 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 #msg,#goal{border:2px solid #ffe08a;box-shadow:0 3px 0 rgba(0,0,0,.25),0 5px 10px rgba(0,0,0,.3)}
 #dex{background:linear-gradient(#0e5368f5,#08303bf5);border:3px solid #ffe08a;border-radius:22px;box-shadow:0 4px 0 rgba(0,0,0,.3),0 10px 26px rgba(0,0,0,.5)}
 #gl{position:fixed!important;left:0!important;top:0!important;width:100%!important;height:calc(100% + 44px)!important}
+.aimg{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}.gimg{display:inline-block;width:1em;height:1em;vertical-align:middle}.gimg.gr-rare .aimg{filter:drop-shadow(0 0 3px #80caff)}.gimg.gr-epic .aimg{filter:drop-shadow(0 0 4px #d4a0ff)}#dex .bagic .aimg{width:38px;height:38px}#dex .bagic .gimg{width:38px;height:38px}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,0) 55%,rgba(5,50,70,.22) 100%)}</style>
 </head>
@@ -277,6 +278,16 @@ const fillL=new T.DirectionalLight(0xa9e4ff,.16);fillL.position.set(-12,8,-10);s
 // look v1: โดมท้องฟ้าไล่สี (ถูกเทียบสีกับพื้นหลังของแต่ละแมพทุกเฟรม) ราคาถูก ไม่ใช้เท็กเจอร์
 // ===== ภาพวาดจาก GPT (ถ้ามีไฟล์) — ใส่ชื่อไฟล์ที่มีจริงใน assets/ ที่นี่ (ไม่มี = ใช้ของเดิม ไม่ยิงโหลดไฟล์ที่ไม่มี) เช่น {sky_shore:'jpg',floor_shore:'jpg'} ดู docs/ART-PIPELINE.md =====
 const ASSETS={},assetCache={};
+const aImg=(name,alt)=>ASSETS[name]?'<img class="aimg" src="assets/'+name+'.'+ASSETS[name]+'" alt="'+(alt||'')+'" draggable="false">':'';
+// UI จากภาพวาด (เฟส A2): ใส่ในหน้าเฉพาะไฟล์ที่มีจริงใน ASSETS ('ui/panel' ฯลฯ) ถ้าไม่มี = CSS เดิม
+function applyUiAssets(){const u=n=>ASSETS['ui/'+n]?'url(assets/ui/'+n+'.'+ASSETS['ui/'+n]+')':'',r=[],panel=u('panel'),hud=u('hud'),bite=u('btn_bite'),sk=u('btn_skill'),sb=u('stick_base'),sn=u('stick_knob');
+ if(panel)r.push('#dex,.mapbox{background:transparent!important;border:24px solid transparent!important;border-image:'+panel+' 64 fill/24px stretch!important;box-shadow:none!important}');
+ if(hud)r.push('#hud{background:transparent!important;border:14px solid transparent!important;border-image:'+hud+' 48 fill/14px stretch!important;box-shadow:none!important}');
+ if(bite)r.push('#bite{background:'+bite+' center/100% 100% no-repeat!important;border:none!important;box-shadow:none!important}');
+ if(sk)r.push('.sk,#slam{background-image:'+sk+'!important;background-size:100% 100%!important;background-blend-mode:multiply;border:none!important;box-shadow:none!important}');
+ if(sb)r.push('#stick{background:'+sb+' center/100% 100% no-repeat!important;border:none!important;box-shadow:none!important}');
+ if(sn)r.push('#knob{background:'+sn+' center/100% 100% no-repeat!important;border:none!important;box-shadow:none!important}');
+ if(r.length){const st=document.createElement('style');st.id='uiassets';st.textContent=r.join('\n');document.head.appendChild(st);}}
 const assetTex=(name,cb)=>{if(!ASSETS[name])return false;if(assetCache[name]){cb(assetCache[name]);return true;}assetCache[name]=null;new T.TextureLoader().load('assets/'+name+'.'+ASSETS[name],t=>{t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=2;assetCache[name]=t;cb(t);},undefined,()=>{});return true;};
 const skyU={c:{value:new T.Color(BG)},map:{value:new T.DataTexture(new Uint8Array([255,255,255,255]),1,1,T.RGBAFormat)},useMap:{value:0}};skyU.map.value.needsUpdate=true;
 const skyDome=new T.Mesh(new T.SphereGeometry(150,16,10),new T.ShaderMaterial({uniforms:skyU,side:T.BackSide,depthWrite:false,fog:false,vertexShader:'varying float h;varying vec2 vu;void main(){vu=uv;h=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'uniform vec3 c;uniform sampler2D map;uniform float useMap;varying float h;varying vec2 vu;void main(){if(useMap>.5){gl_FragColor=vec4(texture2D(map,vu).rgb,1.);return;}float t=smoothstep(-.1,.9,h);vec3 top=mix(c,vec3(1.),.38);vec3 low=mix(c,vec3(1.),.08);gl_FragColor=vec4(mix(low,top,t),1.);}'}));
@@ -406,7 +417,7 @@ function buildMapWorld(def){
   for(let i=0;i<8;i++){const a=i/8*6.2832+.4,x=Math.cos(a)*21,z=Math.sin(a)*21;const pl=new T.Mesh(new T.CylinderGeometry(1,1.2,7,10),stalM);pl.position.set(x,3.5,z);g.add(pl);const gm2=new T.Mesh(orbG,new T.MeshBasicMaterial({color:0xb48cff}));gm2.scale.setScalar(2);gm2.position.set(x,7.4,z);g.add(gm2);}
   rocks(6,10);for(let i=0;i<14;i++){const a=rng()*6.2832,r=8+rng()*16,o=new T.Mesh(orbG,orbM);o.position.set(Math.cos(a)*r,1.4+rng()*4,Math.sin(a)*r);o.userData.ph=i;g.add(o);def.orbs.push(o);}}
  decor();return g;}
-MAPS.forEach(buildMapWorld);setSkyFor(MAPS[curMap]);setEdgeColor(MAPS[curMap]);
+MAPS.forEach(buildMapWorld);applyUiAssets();setSkyFor(MAPS[curMap]);setEdgeColor(MAPS[curMap]);
 const bp=new Float32Array(240);for(let i=0;i<240;i+=3){bp[i]=(Math.random()-.5)*80;bp[i+1]=Math.random()*18;bp[i+2]=(Math.random()-.5)*80;}
 const bg=new T.BufferGeometry();bg.setAttribute('position',new T.BufferAttribute(bp,3));
 const bub=new T.Points(bg,new T.PointsMaterial({color:0xdff8ff,size:.35,transparent:true,opacity:.7}));scene.add(bub);
@@ -481,7 +492,7 @@ orb:['#7a8cff','#cfd6ff','<circle cx="20" cy="21" r="14"/><path d="M12 15Q14 10 
 crest:['#ffcf4a','#ff7a7a','<path d="M6 31L6 12L14 20L20 7L26 20L34 12L34 31Z"/><circle cx="20" cy="25" r="3" fill="#ff7a7a"/><circle cx="11" cy="25" r="2" fill="#7ad0ff"/><circle cx="29" cy="25" r="2" fill="#7ad0ff"/>'],
 spine:['#9a8060','#e8d8b8','<path d="M20 36L20 4L24 36Z"/><path d="M14 36L8 10L19 36Z"/><path d="M26 36L32 10L21 36Z"/><path d="M8 36H32" stroke-width="5"/>'],
 lance:['#6cc8e8','#e0f6ff','<path d="M20 36V12M10 8V18Q10 24 20 24Q30 24 30 18V8M20 4V12" fill="none" stroke="#123" stroke-width="7.5"/><path d="M20 36V12M10 8V18Q10 24 20 24Q30 24 30 18V8M20 4V12" fill="none" stroke="#6cc8e8" stroke-width="4"/><path d="M20 3L16 9H24Z M10 3L7 9H13Z M30 3L27 9H33Z"/>']};
-function gSvg(org,rar){const g=GSVG[org],col=({common:'#eaf7f5',rare:'#80caff',epic:'#d4a0ff'})[rar]||'#eaf7f5',n=({common:0,rare:1,epic:2})[rar]||0;if(!g)return '✨';
+function gSvg(org,rar){const im=aImg('icon/icon_'+org);if(im)return '<span class="gimg gr-'+(rar||'common')+'">'+im+'</span>';const g=GSVG[org],col=({common:'#eaf7f5',rare:'#80caff',epic:'#d4a0ff'})[rar]||'#eaf7f5',n=({common:0,rare:1,epic:2})[rar]||0;if(!g)return '✨';
  const stars=n?'<path d="'+(n===1?'M20 38.5l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2-1.5-1.4 2-.3z':'M14 38.5l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2-1.5-1.4 2-.3zM26 38.5l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2-1.5-1.4 2-.3z')+'" fill="#ffe066" stroke="#123" stroke-width=".6" transform="translate(0,-2)"/>':'';
  return '<svg class="gsvg" viewBox="0 0 40 42" width="1em" height="1em" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="'+col+'" opacity=".22"/><g fill="'+g[0]+'" stroke="#123" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">'+g[2]+'</g>'+stars+'</svg>';}
 const ORG={head:[
@@ -1465,7 +1476,7 @@ const renderDex=()=>{const pages=Math.max(1,Math.ceil(types.length/BOOK_PAGE_SIZ
  const bagTile=(key,ic,badge,col,dim)=>'<button class="bagtile'+(dim?' dim':'')+'" data-bagsel="'+bookEscape(key)+'" aria-pressed="'+(bagSel===key)+'" style="'+(col?'border-color:'+col:'')+'"><span class="bagic">'+ic+'</span>'+(badge?'<small>'+bookEscape(String(badge))+'</small>':'')+'</button>';
  const gearItems=Object.keys(P.inv).filter(k=>k.startsWith('eq:')&&P.inv[k]>0).map(k=>({k,o:gearFrom(k.slice(3)),n:P.inv[k]})).filter(x=>x.o).sort((a,b)=>(RARITY[b.o.rar].mul-RARITY[a.o.rar].mul)||(b.o.lv-a.o.lv)),
   matItems=Object.keys(P.inv).filter(k=>!k.startsWith('eq:')&&P.inv[k]>0).sort((a,b)=>P.inv[b]-P.inv[a]),
-  matIc=k=>{if(k==='ไข่มุกทะเล')return '🦪';if(k==='เขี้ยวราชา')return '👑';const t=types.find(q=>q.dr===k);return (t&&FOOD[t.like||t.n]&&FOOD[t.like||t.n].ic)||'🧱';};
+  matIc=k=>{if(k==='ไข่มุกทะเล')return aImg('icon/icon_pearl')||'🦪';if(k==='เขี้ยวราชา')return aImg('icon/icon_king_fang')||'👑';const t=types.find(q=>q.dr===k);return (t&&FOOD[t.like||t.n]&&FOOD[t.like||t.n].ic)||'🧱';};
  let bagGrid='',bagDetail='';
  if(bagCat==='gear'){
   bagGrid=gearItems.map(x=>bagTile('eq:'+x.o.id,gSvg(x.o.org,x.o.rar),'Lv.'+x.o.lv+(x.n>1?' ×'+x.n:''),RARITY[x.o.rar].col)).join('')||'<div class="hint">ยังไม่มีเครื่องแต่งกาย ล้มมอนสเตอร์เพื่อสุ่มได้</div>';
@@ -1473,10 +1484,10 @@ const renderDex=()=>{const pages=Math.max(1,Math.ceil(types.length/BOOK_PAGE_SIZ
   if(g){const slot=Object.keys(ORG).find(sl=>ORG[sl].some(q=>q.id===g.o.org)),eff=Object.keys(GEAR_STATS).filter(q=>g.o[q]).map(q=>{const p=Math.round((g.o[q]-1)*100);return GEAR_STATS[q]+' '+(p>0?'+':'')+p+'%';}).join(' • ');
    bagDetail='<b>'+bookEscape(g.o.n)+'</b> Lv.'+g.o.lv+' <span style="color:'+RARITY[g.o.rar].col+'">['+RARITY[g.o.rar].n+']</span><br>ใส่ที่: '+(SLOTN[slot]||slot)+' • มี '+g.n+' ชิ้น'+(P.mu[slot]===g.o.id?' • ✔ สวมอยู่':'')+'<br>'+bookEscape(eff||'ไม่มีโบนัส')+'<br><small>สวม/เปลี่ยนที่ปุ่ม “สวมอุปกรณ์” ด้านบน</small>';}
  }else if(bagCat==='food'){
-  bagGrid=FOODKEYS.map(k=>{const t=Math.ceil(P['fb_'+k]||0);return bagTile('food:'+k,FOOD[k].ic,t>0?t+' วิ':'',t>0?'#7dffb0':'',t<=0);}).join('');
+  bagGrid=FOODKEYS.map(k=>{const t=Math.ceil(P['fb_'+k]||0);return bagTile('food:'+k,aImg('icon/icon_food_'+k)||FOOD[k].ic,t>0?t+' วิ':'',t>0?'#7dffb0':'',t<=0);}).join('');
   const fk=bagSel.startsWith('food:')?bagSel.slice(5):'';
   if(FOOD[fk]){const f=FOOD[fk],t=Math.ceil(P['fb_'+fk]||0),mt=types.find(q=>(q.like||q.n)===fk);
-   bagDetail='<b>'+f.ic+' '+bookEscape(f.n)+'</b><br>'+bookEscape(f.d)+'<br>'+(t>0?'🟢 กำลังมีผล เหลือ '+t+' วินาที':'⚪ ยังไม่มีผล')+'<br><small>ได้โอกาสหนึ่งเมื่อล้ม'+(mt?bookEscape(mt.nm):'มอนสเตอร์ชนิดนี้')+' หรือปรุงที่พ่อครัวในเมือง</small>';}
+   bagDetail='<b>'+(aImg('icon/icon_food_'+fk)||f.ic)+' '+bookEscape(f.n)+'</b><br>'+bookEscape(f.d)+'<br>'+(t>0?'🟢 กำลังมีผล เหลือ '+t+' วินาที':'⚪ ยังไม่มีผล')+'<br><small>ได้โอกาสหนึ่งเมื่อล้ม'+(mt?bookEscape(mt.nm):'มอนสเตอร์ชนิดนี้')+' หรือปรุงที่พ่อครัวในเมือง</small>';}
  }else{
   bagGrid=matItems.map(k=>bagTile('mat:'+k,matIc(k),'×'+P.inv[k])).join('')||'<div class="hint">ยังไม่มีวัสดุ ลองล้มมอนสเตอร์ดู</div>';
   const mk=bagSel.startsWith('mat:')?bagSel.slice(4):'';
