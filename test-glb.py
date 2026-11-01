@@ -22,7 +22,7 @@ with sync_playwright() as p:
  def run(enable):
   ctx=b.new_context(viewport={'width':1024,'height':768});pg=ctx.new_page();errs=[]
   pg.on('pageerror',lambda e:errs.append(str(e)))
-  html=base.replace('const ASSETS={','const ASSETS={'+('"model/sea_eater":"glb",' if enable else ''),1)
+  html=base.replace('"model/sea_eater":"glb",','').replace('const ASSETS={','const ASSETS={'+('"model/sea_eater":"glb",' if enable else ''),1)
   def route(r):
    u=r.request.url
    if 'three.min.js' in u:r.fulfill(path=str(three),content_type='application/javascript')
