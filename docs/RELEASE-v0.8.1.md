@@ -14,7 +14,7 @@
 | ทางออกแมพแบบ RO: วงวาร์ปที่กลางขอบ ขอบเป็นกำแพง | `WARP_R`, `mapExit`, `PORTALS` visuals | 90136c5 |
 | แผนที่โลกย่อ + ม่านเงาขอบแมพ | `drawWorldMini`, `edgeCurtainMat` | 4a29edd |
 | แมพใหญ่ขึ้น ×1.5 (ยกเว้นสนามคลื่น), มอนสเตอร์ 175 ตัว | `MAP_SCALE`, `SPAWN` | 8b06e85 |
-| ตัวโหลดโมเดล GLB ของ Sea Eater + โมเดลต้นแบบจากโค (ปิดได้โดยลบ key `model/sea_eater` ใน `ASSETS`) | `loadHeroGlb`, `lib/GLTFLoader.js` | f23bd05 bf387be |
+| ตัวโหลดโมเดล GLB ของ Sea Eater (ตอนนี้ปิดไว้: ผู้ใช้ปฏิเสธต้นแบบรอบแรก รอเฟส B2) | `loadHeroGlb`, `lib/GLTFLoader.js` | f23bd05 bf387be |
 | ผังเมืองขยาย + แก้ HUD iPhone (กรอบเล็กลง, แผนที่โลกย่อไปข้างมินิแมป, เอาลูกศรวาร์ปนอกจอออก) | `applyUiAssets`, `#worldmini` | 3d6edd5 และ commit หลังจากนี้ |
 
 ## ผลตรวจ (2026-11-01 ~21:00)
