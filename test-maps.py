@@ -36,7 +36,7 @@ with sync_playwright() as p:
  load()
  assert page.evaluate('__maps.current')==0
  assert page.evaluate('__maps.P.inv["ครีบกระเบน"]')==7
- # Cross all 36 shared edges (28 grid + 8 ring) at three lateral positions, not just the old portal center.
+ # Cross all 52 shared edges (28 grid + 24 ring) at three lateral positions, not just the old portal center.
  portals=page.evaluate('__maps.PORTALS.map(p=>({map:p.map,to:p.to.map}))')
  report=page.evaluate("""()=>{const t=__maps;let trips=0;for(const [i,p] of t.PORTALS.entries())for(const f of [-.8,0,.8]){
   const A=t.MAPS[p.map];t.setMap(p.map);t.ready();
@@ -63,7 +63,7 @@ with sync_playwright() as p:
  if(t.shots.length||t.vortices.length||disposed!==fx.length*2||fx.some(a=>a.mesh.parent))throw Error('old-block attack remains');
  if(document.querySelector('#fadeov'))throw Error('edge walk should not fade/lock');
  return {trips};}""")
- assert report['trips']==108,report
+ assert report['trips']==156,report
  # Actual held walking input across all four town edges continues into the next block.
  for key,dx,dz,to in [('d',1,0,12),('a',-1,0,7),('w',0,-1,5),('s',0,1,1)]:
   page.evaluate('''([dx,dz])=>{const t=__maps;t.setMap(0);t.sea.position.set(dx*(t.MAPS[0].w/2-2),0,dz*(t.MAPS[0].d/2-2));__cam.yaw=0;window.__pauseTest=false;}''',[dx,dz])
@@ -125,7 +125,7 @@ with sync_playwright() as p:
  assert page.locator('#fpsBtn').get_attribute('aria-pressed')=='true'
  page.locator('#dexb').dispatch_event('pointerdown')
  page.evaluate('window.__pauseTest=false')
- page.wait_for_function('/^FPS: [0-9]+( \| .*)?$/.test(document.querySelector("#debug").textContent)',timeout=120000)
+ page.wait_for_function('/^FPS: [0-9]+( [|] .*)?$/.test(document.querySelector("#debug").textContent)',timeout=120000)
  page.screenshot(path=str(artifacts/'fps-enabled-390x844.png'))
  load(normal_url);page.add_style_tag(content='#debug{visibility:visible!important}')
  assert page.locator('#debug').is_visible()
