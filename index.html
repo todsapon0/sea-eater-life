@@ -406,7 +406,7 @@ function buildMapWorld(def){
   for(let i=0;i<8;i++){const a=i/8*6.2832+.4,x=Math.cos(a)*21,z=Math.sin(a)*21;const pl=new T.Mesh(new T.CylinderGeometry(1,1.2,7,10),stalM);pl.position.set(x,3.5,z);g.add(pl);const gm2=new T.Mesh(orbG,new T.MeshBasicMaterial({color:0xb48cff}));gm2.scale.setScalar(2);gm2.position.set(x,7.4,z);g.add(gm2);}
   rocks(6,10);for(let i=0;i<14;i++){const a=rng()*6.2832,r=8+rng()*16,o=new T.Mesh(orbG,orbM);o.position.set(Math.cos(a)*r,1.4+rng()*4,Math.sin(a)*r);o.userData.ph=i;g.add(o);def.orbs.push(o);}}
  decor();return g;}
-MAPS.forEach(buildMapWorld);setSkyFor(MAPS[curMap]);
+MAPS.forEach(buildMapWorld);setSkyFor(MAPS[curMap]);setEdgeColor(MAPS[curMap]);
 const bp=new Float32Array(240);for(let i=0;i<240;i+=3){bp[i]=(Math.random()-.5)*80;bp[i+1]=Math.random()*18;bp[i+2]=(Math.random()-.5)*80;}
 const bg=new T.BufferGeometry();bg.setAttribute('position',new T.BufferAttribute(bp,3));
 const bub=new T.Points(bg,new T.PointsMaterial({color:0xdff8ff,size:.35,transparent:true,opacity:.7}));scene.add(bub);
@@ -1124,7 +1124,9 @@ const TREASURES=MAPS.filter(d=>!d.safe&&!d.arena).flatMap(d=>{const r=(q=>()=>{q
   const a=at(-1),b=at(1);return [{id:'c'+d.id,map:d.id,kind:'chest',x:+a.x.toFixed(1),z:+a.z.toFixed(1)},{id:'p'+d.id,map:d.id,kind:'pearl',x:+b.x.toFixed(1),z:+b.z.toFixed(1)}];});
 const TREASURE_BY_MAP=MAPS.map(d=>TREASURES.filter(t=>t.map===d.id));
 const treasureOpen=t=>P.tr.includes(t.id);
-function setMap(i){if(perfRecording&&i!==curMap){perfMapStarted=performance.now();perfSampleStart=0;perfFrames=0;}curMap=i;setSkyFor(MAPS[i]);MAPS.forEach(d=>{d.group.visible=d.id===i;});mons.forEach(m=>{if(m.map===i){if(m.parked){m.parked=false;m.dead=m.parkedDead;if(m.dead<=0){m.g.visible=true;m.bar.visible=true;}}}
+// แถบล่างจอ iPad (พื้นที่ที่หน้าเว็บวาดไม่ถึง) ใช้สีเดียวกับพื้นทะเลของแมพนั้น จะได้ดูเหมือนพื้นต่อเนื่อง ไม่เป็นเส้นฟ้าสว่าง
+function setEdgeColor(def){try{const c=new T.Color(0xe0bf82).multiply(new T.Color(def.tint[0],def.tint[1],def.tint[2])).multiplyScalar(.82),hex='#'+c.getHexString(),m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',hex);document.documentElement.style.background=hex;document.body.style.background=hex;}catch(e){}}
+function setMap(i){if(perfRecording&&i!==curMap){perfMapStarted=performance.now();perfSampleStart=0;perfFrames=0;}curMap=i;setSkyFor(MAPS[i]);setEdgeColor(MAPS[i]);MAPS.forEach(d=>{d.group.visible=d.id===i;});mons.forEach(m=>{if(m.map===i){if(m.parked){m.parked=false;m.dead=m.parkedDead;if(m.dead<=0){m.g.visible=true;m.bar.visible=true;}}}
   else if(!m.parked){m.parked=true;m.parkedDead=m.dead;m.dead=1e9;m.g.visible=false;m.bar.visible=false;m.aggro=false;m.windup=0;m.dash=0;if(m.ty.n==='boss')hideBossFx();}});
   PORTALS.forEach(p=>{p.g.visible=p.map===i;});}
 function crossMap(exit){const ox=sea.position.x,oy=sea.position.y,oz=sea.position.z;setMap(exit.map);
