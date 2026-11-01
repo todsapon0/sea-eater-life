@@ -316,7 +316,11 @@ const MAP_ROUTES=[[0,5],[5,2],[2,6],[0,7],[7,8],[8,9],[0,1],[1,10],[10,11],[0,12
 const PORTALS=[];
 MAP_ROUTES.forEach(([a,b])=>{const A=MAPS[a],B=MAPS[b],dx=Math.sign(B.gx-A.gx),dz=Math.sign(B.gy-A.gy);
  const edge=d=>({x:dx*(d.w/2-3),z:dz*(d.d/2-3)}),pa=edge(A),pb=edge(B);
- PORTALS.push({map:a,dx,dz,...pa,to:{map:b}},{map:b,dx:-dx,dz:-dz,x:-pb.x,z:-pb.z,to:{map:a}});});
+ PORTALS.push({map:a,dx,dz,...pa,to:{map:b,dx:-dx,dz:-dz}},{map:b,dx:-dx,dz:-dz,x:-pb.x,z:-pb.z,to:{map:a,dx,dz}});});
+// วงแหวนปลายสาย (ผู้ใช้สั่ง): ปลายสายพิษ→หนาม→ทั่วไป→ประหลาด→พิษ เดินออกขอบที่ระบุแล้วไปโผล่ขอบที่ระบุของอีกแมพ [แมพA,ขอบA(dx,dz),แมพB,ขอบB(dx,dz)]
+const RING_LINKS=[[6,-1,0,9,0,-1],[9,0,1,11,-1,0],[11,1,0,3,0,1],[3,0,-1,6,1,0]],ALL_ROUTES=MAP_ROUTES.concat(RING_LINKS.map(r=>[r[0],r[3]]));
+RING_LINKS.forEach(([a,adx,adz,b,bdx,bdz])=>{const A=MAPS[a],B=MAPS[b],e=(d,dx,dz)=>({x:dx*(d.w/2-3),z:dz*(d.d/2-3)});
+ PORTALS.push({map:a,dx:adx,dz:adz,...e(A,adx,adz),to:{map:b,dx:bdx,dz:bdz}},{map:b,dx:bdx,dz:bdz,...e(B,bdx,bdz),to:{map:a,dx:adx,dz:adz}});});
 const portalDeeper=p=>MAPS[p.to.map].tier>MAPS[p.map].tier;
 const edgeArrow=p=>p.dx<0?'←':p.dx>0?'→':p.dz<0?'↑':'↓';
 function mapEdge(p){const d=MAPS[p.map],x=d.w/2-1,z=d.d/2-1;return p.dx?{x1:p.dx*x,z1:-z,x2:p.dx*x,z2:z}:{x1:-x,z1:p.dz*z,x2:x,z2:p.dz*z};}
@@ -326,7 +330,8 @@ function mapExit(id,x,z){const A=MAPS[id],bx=A.w/2-1,bz=A.d/2-1;
  edges.sort((a,b)=>(b.dx?x*b.dx-bx:z*b.dz-bz)-(a.dx?x*a.dx-bx:z*a.dz-bz));
  const p=edges[0];if(!p)return null;const B=MAPS[p.to.map],nx=B.w/2-2,nz=B.d/2-2;
  const clamp=(v,b)=>Math.max(-b,Math.min(b,v));
- return {map:B.id,x:p.dx?-p.dx*nx:clamp(x/(A.w/2-2),1)*nx,z:p.dz?-p.dz*nz:clamp(z/(A.d/2-2),1)*nz};}
+ const f=clamp(p.dx?z/(A.d/2-2):x/(A.w/2-2),1),tx=p.to.dx,tz=p.to.dz;
+ return {map:B.id,x:tx?tx*nx:f*nx,z:tz?tz*nz:f*nz};}
 const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
 const hf=(x,z)=>Math.sin(x*.15)*Math.cos(z*.13)*.5+Math.sin(x*.4+z*.3)*.1;
 const h=(x,z)=>MAPS[curMap].flat?0:hf(x,z);
@@ -1138,7 +1143,7 @@ const mapov=document.createElement('div');mapov.id='mapov';mapov.setAttribute('r
 let mapTab=0,mapTimer=null;const MAPICON={ray:'🔷',shark:'🦈',eel:'🐍',puffer:'🐡',whale:'🐋',shrimp:'🦐',boss:'👑'};
 function renderMapUI(){const def=MAPS[mapTab],here=mons.filter(m=>m.map===mapTab),seen={};here.forEach(m=>{seen[m.ty.n]=m.ty;});const k=300/(def.w+6),ch=Math.round((def.d+6)*k);
  const rx=d=>(d.gx+3.4)*35,ry=d=>(d.gy+3.5)*28;
- const routes='<div class="maproutes" aria-label="เส้นทางสี่ทิศ"><span class="routekey" style="left:53%;top:9%">↑ สัตว์พิษ</span><span class="routekey" style="left:1%;top:32%">← สัตว์หนาม</span><span class="routekey" style="right:1%;top:32%">สัตว์ประหลาด →</span><span class="routekey" style="left:53%;bottom:9%">↓ สัตว์ทั่วไป</span><svg viewBox="0 0 320 196" aria-hidden="true">'+MAP_ROUTES.map(([a,b])=>'<line x1="'+rx(MAPS[a])+'" y1="'+ry(MAPS[a])+'" x2="'+rx(MAPS[b])+'" y2="'+ry(MAPS[b])+'"/>').join('')+'</svg>'+MAPS.filter(m=>!m.arena).map(m=>'<button data-mtab="'+m.id+'" style="left:'+rx(m)/3.2+'%;top:'+ry(m)/1.96+'%" aria-pressed="'+(m.id===mapTab)+'" aria-label="'+m.n+' '+MAPTHEME[m.theme]+(m.safe?' ปลอดภัย':' เลเวล '+m.rec)+'" title="'+m.n+'">'+m.ic+(m.safe||m.theme==='boss'?'':'<small>'+m.rec+'</small>')+(m.id===curMap?'<i>📍</i>':'')+'</button>').join('')+'</div>';
+ const routes='<div class="maproutes" aria-label="เส้นทางสี่ทิศ"><span class="routekey" style="left:53%;top:9%">↑ สัตว์พิษ</span><span class="routekey" style="left:1%;top:32%">← สัตว์หนาม</span><span class="routekey" style="right:1%;top:32%">สัตว์ประหลาด →</span><span class="routekey" style="left:53%;bottom:9%">↓ สัตว์ทั่วไป</span><svg viewBox="0 0 320 196" aria-hidden="true">'+ALL_ROUTES.map(([a,b])=>'<line x1="'+rx(MAPS[a])+'" y1="'+ry(MAPS[a])+'" x2="'+rx(MAPS[b])+'" y2="'+ry(MAPS[b])+'"/>').join('')+'</svg>'+MAPS.filter(m=>!m.arena).map(m=>'<button data-mtab="'+m.id+'" style="left:'+rx(m)/3.2+'%;top:'+ry(m)/1.96+'%" aria-pressed="'+(m.id===mapTab)+'" aria-label="'+m.n+' '+MAPTHEME[m.theme]+(m.safe?' ปลอดภัย':' เลเวล '+m.rec)+'" title="'+m.n+'">'+m.ic+(m.safe||m.theme==='boss'?'':'<small>'+m.rec+'</small>')+(m.id===curMap?'<i>📍</i>':'')+'</button>').join('')+'</div>';
  mapov.innerHTML='<div class="mapbox"><div class="mhead"><h2>🗺️ แผนที่</h2><button class="evx" data-mclose aria-label="ปิด">✕</button></div>'+routes+'<div class="maptitle">'+MAPTHEME[def.theme]+' '+def.n+(def.safe?' • ปลอดภัย':' • Lv.'+def.rec+'+')+'</div><canvas id="mapcv" width="300" height="'+ch+'" aria-label="แผนที่'+def.n+' เหนืออยู่ด้านบน"></canvas><div class="maplg">'+Object.values(seen).map(t=>'<span>'+(t.ic||MAPICON[t.n]||'●')+' '+t.nm+'</span>').join('')+(def.safe?'<span>🏘 เขตปลอดภัย</span>':'<span>💰 หีบ • 🦪 หอยมุก</span>')+'<span>↔ เดินออกขอบสี • ↑ เหนือ</span><span>🔺 ตัวคุณ</span></div></div>';drawMap();}
 function drawMap(){const cv=$('mapcv');if(!cv)return;const c=cv.getContext('2d'),def=MAPS[mapTab],k=300/(def.w+6),X=x=>cv.width/2+x*k,Y=z=>cv.height/2+z*k;c.clearRect(0,0,cv.width,cv.height);
   c.fillStyle='#07303b';c.fillRect(0,0,cv.width,cv.height);c.fillStyle=def.mc;c.fillRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);
@@ -1323,7 +1328,7 @@ function updateArena(dt){if(!arena)return;if(curMap!==ARENA_ID){arena=null;arena
     else say('✅ ผ่านคลื่นที่ '+w+'! 💠+'+3*w+' 🦪+1');save();renderDex();}}
 // ===== ตัวนำทาง "ทำอะไรต่อ": ข้อความเป้าหมายปัจจุบัน + ลูกศรชี้ไปทางประตูแมพที่ควรไป =====
 const goalEl=$('goal'),goalAr=$('gar'),goalTx=$('gtx'),GADJ={};let goalT=0,goalPos=null,goalKey='';
-MAP_ROUTES.forEach(([a,b])=>{(GADJ[a]=GADJ[a]||[]).push(b);(GADJ[b]=GADJ[b]||[]).push(a);});
+ALL_ROUTES.forEach(([a,b])=>{(GADJ[a]=GADJ[a]||[]).push(b);(GADJ[b]=GADJ[b]||[]).push(a);});
 function mapPath(a,b){const prev={[a]:-1},q=[a];while(q.length){const c=q.shift();if(c===b)break;(GADJ[c]||[]).forEach(n=>{if(!(n in prev)){prev[n]=c;q.push(n);}});}if(!(b in prev))return null;const p=[];for(let c=b;c!==-1;c=prev[c])p.unshift(c);return p;}
 function bestMap(){let best=curMap,br=-1,bl=99;MAPS.forEach(d=>{if(d.arena||d.safe||d.rec>P.lv)return;const p=mapPath(curMap,d.id),l=p?p.length:99;if(d.rec>br||(d.rec===br&&l<bl)){best=d.id;br=d.rec;bl=l;}});return best;}
 function updateGoal(dt){goalT-=dt;if(goalPos&&goalEl.style.display!=='none'){const dx=goalPos.x-sea.position.x,dz=goalPos.z-sea.position.z,s=Math.sin(CAM.yaw),c=Math.cos(CAM.yaw);goalAr.style.transform='rotate('+Math.atan2(dx*s+dz*c,dx*c-dz*s)+'rad)';}
