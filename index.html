@@ -759,6 +759,21 @@ if(CLS==='maja'){(function(){
   const tipc=new T.Mesh(new T.ConeGeometry(.12,.45,8),M);tipc.rotation.x=-Math.PI/2;tipc.position.z=-.3;ns[13].add(tipc);
   legs[0]=new T.Group();legs[1]=new T.Group();root.add(legs[0],legs[1]);segs.length=0;ns.forEach(g=>segs.push(g));
 })();}
+// ===== โมเดล GLB ของ Sea Eater (เฟส B): ใส่ 'model/sea_eater':'glb' ใน ASSETS เมื่อมีไฟล์ assets/model/sea_eater.glb — โหลด lib/GLTFLoader.js แบบเลื่อนเวลา, ซ่อนโมเดลโค้ดเดิม (เว้นอุปกรณ์ที่ติดตัว), เล่นท่า Idle/Move/Bite ตามสถานะ; โหลดไม่สำเร็จ = ใช้โมเดลเดิม =====
+let heroMixer=null,heroActs={},heroCur='',heroBiting=false,heroGlb=null;
+function heroPlay(name,fade){const a=heroActs[name];if(!a)return;const prev=heroActs[heroCur];if(prev&&prev!==a)prev.fadeOut(fade||.2);a.reset().fadeIn(fade||.2).play();heroCur=name;}
+function heroBite(){if(!heroMixer||!heroActs.Bite||heroBiting)return;heroBiting=true;const a=heroActs.Bite;a.reset().setLoop(T.LoopOnce,1);a.clampWhenFinished=true;const prev=heroActs[heroCur];if(prev)prev.fadeOut(.08);a.fadeIn(.08).play();setTimeout(()=>{heroBiting=false;a.fadeOut(.15);heroCur='';},Math.max(300,(a.getClip().duration||.45)*1000));}
+function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=moving?'Move':'Idle';if(want!==heroCur)heroPlay(want,.2);}heroMixer.update(dt);}
+function loadHeroGlb(){if(CLS!=='sea'||!ASSETS['model/sea_eater'])return;
+ const go=()=>{try{new T.GLTFLoader().load('assets/model/sea_eater.'+ASSETS['model/sea_eater'],gl=>{try{
+  const m=gl.scene,root=sea.userData.root;if(!root)return;sea.updateMatrixWorld(true);const sc=sea.scale.x||1,pb=new T.Box3().setFromObject(root),ps=new T.Vector3();pb.getSize(ps);ps.divideScalar(sc);
+  sea.add(m);m.updateMatrixWorld(true);const gb=new T.Box3().setFromObject(m),gs=new T.Vector3();gb.getSize(gs);const k=ps.z/Math.max(gs.z,.001);m.scale.setScalar(k);m.updateMatrixWorld(true);
+  const gb2=new T.Box3().setFromObject(m);m.position.y-=(gb2.min.y-sea.position.y)/sc;
+  root.traverse(o=>{if(!o.isMesh)return;let a=o,org=false;while(a&&a!==root){if(a.userData&&a.userData.t){org=true;break;}a=a.parent;}if(!org)o.visible=false;});
+  m.traverse(o=>{if(o.isMesh)o.castShadow=true;});heroGlb=m;heroMixer=new T.AnimationMixer(m);gl.animations.forEach(c=>{heroActs[c.name]=heroMixer.clipAction(c);});heroPlay('Idle',0);
+  }catch(e){}},undefined,()=>{});}catch(e){}};
+ if(T.GLTFLoader)go();else{const sc=document.createElement('script');sc.src='lib/GLTFLoader.js';sc.onload=go;sc.onerror=()=>{};document.head.appendChild(sc);}}
+loadHeroGlb();
 const skillDescriptions={sea:'กัด: โจมตีด้านหน้า • ทุบพื้น: โจมตีรอบตัว (รอ 5 วิ) • กิน: ฟื้นเลือดและจัดการศัตรูที่เลือดน้อย (รอ 8 วิ) • ยั่ว: เรียกศัตรูเข้าหา (รอ 10 วิ) • โล่: ลดความเสียหาย 5 วิ (รอ 12 วิ)',bloop:'ยิงฟอง: โจมตีด้านหน้า • รักษา: ฟื้นเลือด (รอ 6 วิ) • พร: เพิ่มพลังโจมตี (รอ 14 วิ) • เพลง: ฟื้นเลือดต่อเนื่อง (รอ 12 วิ) • โล่ฟอง: ลดความเสียหาย 5 วิ (รอ 12 วิ)',maja:'ยิง: ยิงพลังไปด้านหน้า • น้ำวน: สร้างความเสียหายและชะลอศัตรู (รอ 10 วิ) • บลาสต์: ยิงพลังระยะไกล (รอ 7 วิ)'};
 $('skilltext').textContent=skillDescriptions[CLS]||skillDescriptions.sea;
 $('skillhelp').addEventListener('click',()=>{$('skillinfo').style.display='flex';});$('closehelp').addEventListener('click',()=>{$('skillinfo').style.display='none';});
@@ -1501,7 +1516,7 @@ movezone.addEventListener('pointermove',e=>{if(e.pointerId!==sid)return;e.preven
 const end=e=>{if(e.pointerId===sid){sid=null;jx=jz=0;knob.style.transform='';movezone.classList.remove('active');if(movezone.hasPointerCapture(e.pointerId))movezone.releasePointerCapture(e.pointerId);}};
 ['pointerup','pointercancel','lostpointercapture'].forEach(type=>movezone.addEventListener(type,end));
 window.addEventListener('blur',()=>{if(sid!==null)end({pointerId:sid});});
-const doBite=()=>{if(biteT<=0){biteT=.45;tutNext(1);aimAtLock(CLS==='maja'?17:CLS==='bloop'?14:10);if(CLS==='maja')shoot(9+P.lv*3,18,19,0x8cf4ff,.24);else setTimeout(()=>hit(false),150);}};
+const doBite=()=>{if(biteT<=0){biteT=.45;tutNext(1);heroBite();aimAtLock(CLS==='maja'?17:CLS==='bloop'?14:10);if(CLS==='maja')shoot(9+P.lv*3,18,19,0x8cf4ff,.24);else setTimeout(()=>hit(false),150);}};
 const doSlam=()=>{if(slamCD<=0&&biteT<=0){playTone('skill');biteT=.45;if(CLS==='maja'){slamCD=10;whirlpool();say('Whirlpool! น้ำวนชะลอศัตรู');}else if(CLS==='bloop'){slamCD=6;P.hp=Math.min(P.max,P.hp+P.max*.3*P.healMul);say('คลื่นรักษา! ฟื้นเลือด');}else{slamCD=5;setTimeout(()=>hit(true),220);}}};
 $('slam').addEventListener('pointerdown',e=>{e.preventDefault();doSlam();});const doDevour=()=>{if(CLS==='maja'){if(P.devCD>0||biteT>0)return;P.devCD=7;biteT=.45;aimAtLock(17);shoot(22+P.lv*3,22,20,0xbd8cff,.48);say('Abyss Blast!');return;}if(CLS==='bloop'){if(P.devCD>0)return;P.devCD=14;P.bless=8*P.blMul;say('พรแห่งทะเล! โจมตีแรงขึ้น');return;}if(P.devCD>0||biteT>0)return;P.devCD=8;biteT=.45;aimAtLock(7);let n=0;mons.forEach(m=>{if(m.dead>0)return;const dx=m.g.position.x-sea.position.x,dz=m.g.position.z-sea.position.z,d=Math.hypot(dx,dz)||1;if(d<4.5*(HERO_SCALE>1?1.5:1)&&(dx*Math.sin(face)+dz*Math.cos(face))/d>.3&&m.hp<=m.mhp*.35){m.hp=0;devKill=true;kill(m);devKill=false;n++;}});if(n){P.hp=Math.min(P.max,P.hp+P.max*.3*n);say('กินสำเร็จ! ฟื้นเลือด');}else{hit(false);P.hp=Math.min(P.max,P.hp+10);}};const doTaunt=()=>{if(CLS==='maja')return;if(CLS==='bloop'){if(P.tauntCD>0)return;P.tauntCD=12;P.song=6;say('เพลงฟื้นชีพ ฟื้นเลือดต่อเนื่อง');return;}if(P.tauntCD>0)return;P.tauntCD=10;P.tauntT=4;say('ยั่ว! ศัตรูรุมมาหา');};const doShield=()=>{if(CLS==='maja')return;if(P.shCD>0)return;P.shCD=12;P.sh=5*P.shMul;say('โล่ลดดาเมจ 5 วิ');};['devour','taunt','shield'].forEach((id,i)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();playTone('skill');[doDevour,doTaunt,doShield][i]();}));function makeSaveBackup(storage,origin,now){
   const mapping=[['sea','sel01'],['bloop','sel01b'],['maja','sel01m']];
@@ -1702,7 +1717,7 @@ if(mv){sea.position.x=Math.max(-95,Math.min(95,sea.position.x+wx*7*dt*P.spMul));
 let d=Math.atan2(wx,wz)-face;d=Math.atan2(Math.sin(d),Math.cos(d));face+=d*Math.min(1,dt*10);sea.rotation.y=face;}
 const w=mv?t*11:0;legs[0].rotation.x=Math.sin(w)*.7;legs[1].rotation.x=-Math.sin(w)*.7;
 sea.position.y=h(sea.position.x,sea.position.z)+(mv?Math.abs(Math.sin(w))*.15:Math.sin(t*2)*.03);
-segs.forEach((g,i)=>g.rotation.y=Math.sin(t*(mv?8:2.5)-i*.9)*(mv?.35:.15));animateOrgans(t);
+segs.forEach((g,i)=>g.rotation.y=Math.sin(t*(mv?8:2.5)-i*.9)*(mv?.35:.15));animateOrgans(t);heroUpdate(dt,mv);
 let o=1;if(biteT>0){biteT-=dt;const p=Math.sin(Math.max(0,biteT)/.45*Math.PI);o=1+p*.9;body.position.z=p*.35;}else body.position.z=0;
 mouth.scale.y=o;mouth.position.z=.05+(body.position.z);if(sea.userData.root)sea.userData.root.position.z=body.position.z;if(sea.userData.jaw&&sea.userData.jaw.userData.y0!==undefined)sea.userData.jaw.position.y=sea.userData.jaw.userData.y0-(o-1)*.2;
 const bpa=bg.attributes.position;for(let i=0;i<bpa.count;i++){let y=bpa.getY(i)+dt*1.2;if(y>18)y=0;bpa.setY(i,y);}bpa.needsUpdate=true;
