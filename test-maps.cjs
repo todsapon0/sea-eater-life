@@ -1,7 +1,7 @@
 // Directional topology, population and spawn safety from the shipped map tables.
 const fs=require('fs'),assert=require('assert'),html=fs.readFileSync('index.html','utf8');
 const source=html.slice(html.indexOf('let curMap=0;'),html.indexOf('const sandTex='));
-const {MAPS,MAP_ROUTES,PORTALS,SPAWN,monsterMeta,monsterRoster,portalDeeper,mapExit,mapEdge}=new Function(source+';return {MAPS,MAP_ROUTES,PORTALS,SPAWN,monsterMeta,monsterRoster,portalDeeper,mapExit,mapEdge};')();
+const {MAPS,MAP_ROUTES,PORTALS,SPAWN,monsterMeta,monsterRoster,portalDeeper,mapExit,mapEdge,WARP_R}=new Function(source+';return {WARP_R,MAPS,MAP_ROUTES,PORTALS,SPAWN,monsterMeta,monsterRoster,portalDeeper,mapExit,mapEdge};')();
 assert.equal(MAPS.length,16);assert.equal(MAPS.filter(d=>!d.arena).length,15);assert.equal(PORTALS.length,52);assert.equal(MAPS.filter(d=>d.safe).length,1);
 const inside=(d,p)=>Math.abs(p.x)<d.w/2&&Math.abs(p.z)<d.d/2;
 for(const [i,d] of MAPS.entries()){assert.equal(d.id,i);assert(['town','shallows','kelp','cave','lair'].includes(d.music));assert(d.hpScale>0&&d.xpScale>0);}
@@ -22,15 +22,15 @@ for(const p of PORTALS){
  const back=PORTALS.find(q=>q.map===p.to.map&&q.to.map===p.map);assert(back,'return portal');
  assert.equal(p.dx,dx);assert.equal(p.dz,dz);
  const e=mapEdge(p);assert(inside(A,{x:e.x1,z:e.z1})&&inside(A,{x:e.x2,z:e.z2}));
- for(const f of [-1,-.8,-.3,0,.3,.8,1]){
-  const x=dx?dx*(A.w/2-1):f*(A.w/2-2),z=dz?dz*(A.d/2-1):f*(A.d/2-2);
+ // RO-style warp: only standing inside the glowing circle teleports; the arrival is outside the partner's circle (no bounce).
+ for(const f of [-1,-.5,0,.5,1]){
+  const x=p.x+(dz?f*WARP_R*.8:0),z=p.z+(dx?f*WARP_R*.8:0);
   const arrival=mapExit(A.id,x,z);assert.equal(arrival.map,B.id);assert(inside(B,arrival));
   assert.equal(mapExit(B.id,arrival.x,arrival.z),null,'no automatic bounce');
-  const returnPoint={x:back.dx?back.dx*(B.w/2-1):arrival.x,z:back.dz?back.dz*(B.d/2-1):arrival.z};
-  const returned=mapExit(B.id,returnPoint.x,returnPoint.z);assert.equal(returned.map,A.id);
-  assert(Math.abs((dx?returned.z:returned.x)-(dx?z:x))<1e-9,'lateral position survives round trip');
+  assert(Math.hypot(arrival.x-back.x,arrival.z-back.z)>WARP_R+4,'arrival is clear of the partner circle');
+  const returned=mapExit(B.id,back.x,back.z);assert.equal(returned.map,A.id);
  }
- assert.equal(mapExit(A.id,p.x,p.z),null,'old center portal never teleports');
+ assert.equal(mapExit(A.id,p.x+(dz?WARP_R*1.6:0),p.z+(dx?WARP_R*1.6:0)),null,'outside the circle never teleports');
  assert.equal(portalDeeper(p),B.tier>A.tier);
 }
 for(const d of MAPS){
@@ -38,7 +38,7 @@ for(const d of MAPS){
  for(const [dx,dz] of [[-1,0],[1,0],[0,-1],[0,1]]){
   const p=PORTALS.find(p=>p.map===d.id&&p.dx===dx&&p.dz===dz);
   const result=mapExit(d.id,dx*(d.w/2+10),dz*(d.d/2+10));
-  assert.equal(result?.map,p?.to.map,'only connected sides open');
+  assert.equal(result,null,'far outside the map is not an exit; exits are warp circles only');
  }
  for(const [x,z] of [[999,999],[-999,999],[999,-999],[-999,-999]]){
   const result=mapExit(d.id,x,z);if(result){assert(inside(MAPS[result.map],result));assert.equal(mapExit(result.map,result.x,result.z),null,'corner does not chain exits');}

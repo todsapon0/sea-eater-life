@@ -339,14 +339,12 @@ RING_LINKS.forEach(([a,adx,adz,b,bdx,bdz])=>{const A=MAPS[a],B=MAPS[b],e=(d,dx,d
 const portalDeeper=p=>MAPS[p.to.map].tier>MAPS[p.map].tier;
 const edgeArrow=p=>p.dx<0?'←':p.dx>0?'→':p.dz<0?'↑':'↓';
 function mapEdge(p){const d=MAPS[p.map],x=d.w/2-1,z=d.d/2-1;return p.dx?{x1:p.dx*x,z1:-z,x2:p.dx*x,z2:z}:{x1:-x,z1:p.dz*z,x2:x,z2:p.dz*z};}
-function mapExit(id,x,z){const A=MAPS[id],bx=A.w/2-1,bz=A.d/2-1;
- const edges=PORTALS.filter(p=>p.map===id&&((p.dx&&x*p.dx>=bx)||(p.dz&&z*p.dz>=bz)));
- // At a corner take only one connected side, preferring the larger overshoot.
- edges.sort((a,b)=>(b.dx?x*b.dx-bx:z*b.dz-bz)-(a.dx?x*a.dx-bx:z*a.dz-bz));
- const p=edges[0];if(!p)return null;const B=MAPS[p.to.map],nx=B.w/2-2,nz=B.d/2-2;
- const clamp=(v,b)=>Math.max(-b,Math.min(b,v));
- const f=clamp(p.dx?z/(A.d/2-2):x/(A.w/2-2),1),tx=p.to.dx,tz=p.to.dz;
- return {map:B.id,x:tx?tx*nx:f*nx,z:tz?tz*nz:f*nz};}
+// ทางออกแบบ RO: เดินเข้า "วงวาร์ป" ที่จุดกลางขอบแมพ (WARP_R) แล้วย้ายแมพ; ขอบแมพเป็นกำแพง เดินทะลุไม่ได้ — ไปโผล่ในแมพปลายทางเยื้องเข้ามา 9 หน่วยจากวงวาร์ปคู่ (พ้นรัศมี จึงไม่เด้งกลับ)
+const WARP_R=3.4;
+function mapExit(id,x,z){let best=null,bd=1e9;
+ for(const p of PORTALS){if(p.map!==id)continue;const d=Math.hypot(x-p.x,z-p.z);if(d<WARP_R&&d<bd){best=p;bd=d;}}
+ if(!best)return null;const B=MAPS[best.to.map],tx=best.to.dx,tz=best.to.dz,inw=9;
+ return {map:B.id,x:tx?tx*(B.w/2-3-inw):0,z:tz?tz*(B.d/2-3-inw):0};}
 const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
 const hf=(x,z)=>Math.sin(x*.15)*Math.cos(z*.13)*.5+Math.sin(x*.4+z*.3)*.1;
 const h=(x,z)=>MAPS[curMap].flat?0:hf(x,z);
@@ -1145,10 +1143,10 @@ function updateNames(){const nm=playerName(),tt=(typeof myTitle==='function')?my
   for(const m of mons){const el=m.tag;if(m.dead>0||!m.g.visible){el.style.display='none';continue;}const dx=m.g.position.x-sea.position.x,dz=m.g.position.z-sea.position.z;if(dx*dx+dz*dz>(m.ty.n==='boss'?4900:1600)){el.style.display='none';continue;}placeTag(el,m.g.position.x,m.g.position.y+3.45*m.ty.s,m.g.position.z);}}
 // ===== เดินเชื่อมขอบแมพ + หน้าจอแผนที่ + มินิแมพ =====
 PORTALS.forEach(p=>{const def=MAPS[p.map],col=portalDeeper(p)?0xffd95a:0x7dffb0,g=new T.Group();
- const line=mapEdge(p),cx=(line.x1+line.x2)/2,cz=(line.z1+line.z2)/2;g.position.set(cx,0,cz);
- const geo=new T.PlaneGeometry(p.dx?.7:def.w-2,p.dz?.7:def.d-2,p.dx?1:24,p.dx?16:1);geo.rotateX(-Math.PI/2);
- const pts=geo.attributes.position;for(let i=0;i<pts.count;i++)pts.setY(i,(def.flat?0:hf(cx+pts.getX(i),cz+pts.getZ(i)))+.15);
- // ไม่วาดแถบสีที่ขอบแมพแล้ว (ผู้ใช้ไม่ต้องการเส้นขอบฉาก) เหลือแค่ป้ายชื่อทางออก
+ g.position.set(p.x,(def.flat?0:hf(p.x,p.z))+.12,p.z);
+ const mk=(geo,op,side)=>new T.Mesh(geo,new T.MeshBasicMaterial({color:col,transparent:true,opacity:op,side:side||T.FrontSide,depthWrite:false,blending:T.AdditiveBlending,fog:false}));
+ const ring=mk(new T.RingGeometry(WARP_R*.76,WARP_R,40),.95,T.DoubleSide),inner=mk(new T.RingGeometry(WARP_R*.38,WARP_R*.46,32),.7,T.DoubleSide),disc=mk(new T.CircleGeometry(WARP_R*.76,40),.26,T.DoubleSide),beam=mk(new T.CylinderGeometry(WARP_R*.62,WARP_R*.8,10,24,1,true),.12,T.DoubleSide);
+ ring.rotation.x=inner.rotation.x=disc.rotation.x=-Math.PI/2;beam.position.y=5;g.add(ring,inner,disc,beam);g.userData.ring=ring;g.userData.inner=inner;g.userData.beam=beam;
  scene.add(g);p.g=g;const d=MAPS[p.to.map];p.tag=mkTag('portal',edgeArrow(p)+' '+d.ic+' '+d.n+(d.rec>1?' Lv.'+d.rec+'+':''));});
 // Performance diagnostics are opt-in and stay in memory; no save or network data.
 let perfRecording=false,perfData={},perfSampleStart=0,perfFrames=0,perfMapStarted=0,perfStartupMs=null,perfFrustum=null,perfMatrix=null,perfSphere=null;
@@ -1181,8 +1179,8 @@ function crossMap(exit){const ox=sea.position.x,oy=sea.position.y,oz=sea.positio
 function updatePortals(dt){const exit=mapExit(curMap,sea.position.x,sea.position.z);if(exit)crossMap(exit);
  const d=MAPS[curMap],bx=d.w/2-1,bz=d.d/2-1;sea.position.x=Math.max(-bx,Math.min(bx,sea.position.x));sea.position.z=Math.max(-bz,Math.min(bz,sea.position.z));
  for(const p of PORTALS){p.tag.style.display='none';if(p.map!==curMap)continue;
-  const dist=p.dx?d.w/2-sea.position.x*p.dx:d.d/2-sea.position.z*p.dz;
-  if(dist<16)placeTag(p.tag,p.g.position.x,(d.flat?0:hf(p.g.position.x,p.g.position.z))+2.2,p.g.position.z);}}
+  const pu=1+.07*Math.sin(performance.now()/260+p.x);p.g.userData.ring.scale.setScalar(pu);p.g.userData.inner.rotation.z+=dt*1.2;p.g.userData.beam.material.opacity=.1+.04*Math.sin(performance.now()/340+p.z);
+  if(Math.hypot(sea.position.x-p.x,sea.position.z-p.z)<26)placeTag(p.tag,p.g.position.x,(d.flat?0:hf(p.g.position.x,p.g.position.z))+2.2,p.g.position.z);}}
 const mapov=document.createElement('div');mapov.id='mapov';mapov.setAttribute('role','dialog');mapov.setAttribute('aria-label','แผนที่');document.body.append(mapov);
 let mapTab=0,mapTimer=null;const MAPICON={ray:'🔷',shark:'🦈',eel:'🐍',puffer:'🐡',whale:'🐋',shrimp:'🦐',boss:'👑'};
 function renderMapUI(){const def=MAPS[mapTab],here=mons.filter(m=>m.map===mapTab),seen={};here.forEach(m=>{seen[m.ty.n]=m.ty;});const k=300/(def.w+6),ch=Math.round((def.d+6)*k);
@@ -1198,7 +1196,7 @@ function drawMap(){const cv=$('mapcv');if(!cv)return;const c=cv.getContext('2d')
     c.globalAlpha=waiting?.4:1;c.strokeStyle=boss?'#ffd95a':'rgba(255,255,255,.3)';c.lineWidth=boss?2.5:1;c.beginPath();c.arc(x,y,boss?11:4.5*k/1.2,0,6.2832);c.stroke();
     c.font=(boss?22:13)+'px system-ui';c.fillText(m.ty.ic||MAPICON[m.ty.n]||'●',x,y+1);c.globalAlpha=1;}
   for(const t of TREASURE_BY_MAP[mapTab]){if(treasureOpen(t))continue;c.font='18px system-ui';c.fillText(t.kind==='chest'?'💰':'🦪',X(t.x),Y(t.z));}
-  for(const p of PORTALS){if(p.map!==mapTab)continue;const e=mapEdge(p);c.strokeStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.lineWidth=5;c.beginPath();c.moveTo(X(e.x1),Y(e.z1));c.lineTo(X(e.x2),Y(e.z2));c.stroke();c.font='14px system-ui';c.fillStyle='#fff';c.fillText(edgeArrow(p)+MAPS[p.to.map].ic,X(p.x-p.dx*2),Y(p.z-p.dz*2));}
+  for(const p of PORTALS){if(p.map!==mapTab)continue;c.strokeStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.lineWidth=4;c.beginPath();c.arc(X(p.x),Y(p.z),9,0,6.2832);c.stroke();c.font='14px system-ui';c.fillStyle='#fff';c.fillText(edgeArrow(p)+MAPS[p.to.map].ic,X(p.x-p.dx*2),Y(p.z-p.dz*2));}
   if(curMap===mapTab){const px=X(sea.position.x),py=Y(sea.position.z);c.save();c.translate(px,py);c.rotate(Math.PI-face);c.fillStyle='#fff';c.strokeStyle='#00b7d6';c.lineWidth=2;c.beginPath();c.moveTo(0,-8);c.lineTo(6,6);c.lineTo(-6,6);c.closePath();c.fill();c.stroke();c.restore();}}
 function openMap(){mapTab=curMap;renderMapUI();mapov.style.display='flex';mapov.classList.add('pop');setTimeout(()=>mapov.classList.remove('pop'),400);clearInterval(mapTimer);mapTimer=setInterval(drawMap,300);}
 function closeMap(){mapov.style.display='none';clearInterval(mapTimer);}
@@ -1210,7 +1208,7 @@ function updateMini(dt){miniT-=dt;if(miniT>0)return;miniT=.2;const def=MAPS[curM
   if(mini.style.width!==cw+'px'||mini.style.height!==ch+'px'){mini.width=cw*2;mini.height=ch*2;mini.style.width=cw+'px';mini.style.height=ch+'px';}
   const c=mini.getContext('2d'),X=x=>(x+def.w/2+2)*k,Y=z=>(z+def.d/2+2)*k+14;c.setTransform(2,0,0,2,0,0);c.clearRect(0,0,cw,ch);
   c.fillStyle='#fff';c.font='10px system-ui';c.textAlign='left';c.fillText(MAPTHEME[def.theme]+(def.safe?'':' '+def.rec+'+')+'  ↑ N',4,11);c.fillStyle=def.mc;c.globalAlpha=.8;c.fillRect(X(-def.w/2),Y(-def.d/2),def.w*k,def.d*k);c.globalAlpha=1;
-  for(const p of PORTALS){if(p.map!==curMap)continue;const e=mapEdge(p);c.strokeStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.lineWidth=3;c.beginPath();c.moveTo(X(e.x1),Y(e.z1));c.lineTo(X(e.x2),Y(e.z2));c.stroke();}
+  for(const p of PORTALS){if(p.map!==curMap)continue;c.strokeStyle=portalDeeper(p)?'#ffd95a':'#7dffb0';c.lineWidth=3;c.beginPath();c.arc(X(p.x),Y(p.z),5,0,6.2832);c.stroke();}
   for(const m of mons){if(m.map!==curMap||m.dead>0||!m.g.visible)continue;const boss=m.ty.n==='boss';c.fillStyle=boss?'#ffd95a':(m===lockM?'#ffffff':'#ff5a4a');c.beginPath();c.arc(X(m.g.position.x),Y(m.g.position.z),boss?4:m===lockM?2.6:1.8,0,6.2832);c.fill();}
   for(const t of TREASURE_BY_MAP[curMap]){if(treasureOpen(t))continue;c.fillStyle=t.kind==='chest'?'#ffdf48':'#f5e6ff';c.strokeStyle='#264d58';c.lineWidth=1;c.beginPath();c.arc(X(t.x),Y(t.z),3.5,0,6.2832);c.fill();c.stroke();}
   c.save();c.translate(X(sea.position.x),Y(sea.position.z));c.rotate(Math.PI-face);c.fillStyle='#fff';c.strokeStyle='#00b7d6';c.lineWidth=1.2;c.beginPath();c.moveTo(0,-5);c.lineTo(3.6,3.6);c.lineTo(-3.6,3.6);c.closePath();c.fill();c.stroke();c.restore();}
@@ -1428,7 +1426,7 @@ function updateGoal(dt){goalT-=dt;if(goalPos&&goalEl.style.display!=='none'){con
   else if(d&&Array.isArray(d.qs)&&d.f.some(x=>!x)){const i=d.f.findIndex(x=>!x);txt='ภารกิจ: '+QTXT[d.qs[i].e](d.qs[i].n)+(d.qs[i].n>1?' ('+d.k[i]+'/'+d.qs[i].n+')':'');}
   else{const b=bestMap();if(b!==curMap&&MAPS[b].rec>cur.rec&&P.lv>=cur.rec+4){tgt=b;txt='พร้อมแล้ว • ไป '+MAPS[b].ic+MAPS[b].n+' (Lv.'+MAPS[b].rec+')';}else{const rs=royalState(),rm=royalMon(),mv=mons.find(q=>q.mvp&&q.map===curMap&&q.dead<=0&&!q.parked);if(!rs.done&&rm&&P.lv>=MAPS[rm.map].rec-2){txt='🎯 คำขอวันนี้: ล่า '+rm.ty.nm+' ('+MAPS[rm.map].n+')';if(rm.map!==curMap)tgt=rm.map;}else txt=mv&&P.lv>=cur.rec?'ท้า '+mv.ty.nm+' ในแมพนี้ (แรงมาก!)':'ล่ามอนสเตอร์ สะสม EXP และวัตถุดิบ';}}}
  if(evOn){txt=evt.n+' ปรากฏ! ('+Math.ceil(evt.t)+' วิ)';tgt=-1;}
- goalPos=null;if(tgt>=0){const p=mapPath(curMap,tgt),hop=p&&p[1],po=PORTALS.find(q=>q.map===curMap&&q.to.map===hop);if(po)goalPos=po.dx?{x:po.x,z:sea.position.z}:{x:sea.position.x,z:po.z};}
+ goalPos=null;if(tgt>=0){const p=mapPath(curMap,tgt),hop=p&&p[1],po=PORTALS.find(q=>q.map===curMap&&q.to.map===hop);if(po)goalPos={x:po.x,z:po.z};}
  if(evOn)goalPos={x:evt.x,z:evt.z};
  goalAr.style.display=goalPos?'inline-block':'none';goalEl.style.display='flex';if(goalKey!==txt){goalKey=txt;goalTx.textContent=txt;}}
 const game=dt=>{updateLock(dt);sun.position.set(sea.position.x+10,25,sea.position.z+8);sun.target.position.set(sea.position.x,0,sea.position.z);updateFeedback(dt);updateNames();updateBuffHud(dt);updateZone(dt);updatePortals(dt);updateMini(dt);updateBgm(dt);updateNpcs(dt);updateTreasure();updateArena(dt);updateGoal(dt);updateEvent(dt);updateEvent(dt);grace=Math.max(0,grace-dt);if(CLS==='maja')updateMaja(dt);separateMonsters();assignPursuers();slamCD=Math.max(0,slamCD-dt*P.cdr);['devCD','tauntCD','shCD'].forEach(k=>P[k]=Math.max(0,P[k]-dt*P.cdr));['tauntT','sh','bless','song'].forEach(k=>P[k]=Math.max(0,P[k]-dt));{let fx=false;FOODKEYS.forEach(k=>{const kk='fb_'+k;if(P[kk]>0){P[kk]=Math.max(0,P[kk]-dt);if(P[kk]===0)fx=true;}});if(fx){P.fbOrder=P.fbOrder.filter(x=>P[x]>0);applyJob();}}shm.visible=P.sh>0;
