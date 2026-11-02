@@ -19,10 +19,11 @@ with sync_playwright() as p:
  const tr=(n,d,v)=>new T.AnimationClip(n,d,[new T.VectorKeyframeTrack('body.position',[0,d],v)]);
  return await new Promise(r=>new T.GLTFExporter().parse(g,x=>{let u=new Uint8Array(x),s='';for(const c of u)s+=String.fromCharCode(c);r(btoa(s));},{binary:true,animations:[tr('Idle',1,[0,0,0,0,.1,0]),tr('Bite',.4,[0,0,0,0,.3,0]),tr('Move',1,[0,0,0,0,.2,0])]}));}""")
  t.close();data=base64.b64decode(glb)
- def run(enable):
+ def run(enable,cls='sea'):
   ctx=b.new_context(viewport={'width':1024,'height':768});pg=ctx.new_page();errs=[]
-  pg.on('pageerror',lambda e:errs.append(str(e)))
-  html=base.replace('"model/sea_eater":"glb",','').replace('const ASSETS={','const ASSETS={'+('"model/sea_eater":"glb",' if enable else ''),1)
+  pg.on('pageerror',lambda e:errs.append(str(e)));pg.on('console',lambda m:errs.append('C:'+m.text[:120]) if m.type=='error' else None)
+  KEY={'sea':'model/sea_eater','bloop':'model/bloop','maja':'model/maja'}[cls]
+  html=base.replace('"model/sea_eater":"glb",','').replace('const ASSETS={','const ASSETS={'+('"'+KEY+'":"glb",' if enable else ''),1)
   def route(r):
    u=r.request.url
    if 'three.min.js' in u:r.fulfill(path=str(three),content_type='application/javascript')
@@ -31,22 +32,35 @@ with sync_playwright() as p:
    elif u.split('?')[0]==url.split('?')[0]:r.fulfill(body=html,content_type='text/html')
    else:r.continue_()
   ctx.route('**/*',route)
-  pg.add_init_script("localStorage.setItem('selcls','sea');localStorage.setItem('sel01',JSON.stringify({lv:5,xp:0,q:0,qd:0,inv:{},seen:{}}));")
-  pg.goto(url,wait_until='networkidle');pg.wait_for_function('window.__g');pg.wait_for_timeout(1500)
+  pg.add_init_script("localStorage.setItem('selcls','%s');"%cls+"localStorage.setItem('sel01',JSON.stringify({lv:5,xp:0,q:0,qd:0,inv:{},seen:{}}));")
+  pg.goto(url,wait_until='networkidle')
+  try:pg.wait_for_function('window.__g',timeout=90000)
+  except Exception:raise AssertionError(('game did not start',cls,enable,errs,pg.evaluate("document.getElementById('hud').textContent.slice(0,80)")))
+  pg.wait_for_timeout(1500)
   r=pg.evaluate('__g()')
   if enable:
-   pg.keyboard.press('Space');pg.wait_for_timeout(100);r2=pg.evaluate('__g()');pg.wait_for_timeout(900);r3=pg.evaluate('__g()')
+   r2=None
+   for _try in range(6):
+    pg.keyboard.press('Space')
+    for _ in range(20):
+     pg.wait_for_timeout(50);r2=pg.evaluate('__g()')
+     if r2['biting']:break
+    if r2['biting']:break
+   for _ in range(100):
+    pg.wait_for_timeout(100);r3=pg.evaluate('__g()')
+    if not r3['biting']:break
    drift=pg.evaluate("()=>{const g=__gh.glb(),y=[];for(let i=0;i<900;i++){__gh.hu(.016,true);if(i%100===99){g.updateMatrixWorld(true);y.push(new THREE.Box3().setFromObject(g).min.y);}}return y;}")
    assert all(abs(v)<.4 for v in drift),('model drifts while walking',drift)
-   return r,r2,r3,errs
-  return r,None,None,errs
- r,r2,r3,e=run(True)
- print('with glb:',r,r2['biting'],r3['biting'],r3['cur'],e)
- assert r['mix'] and r['glb'] and set(r['acts'])=={'Idle','Move','Bite'},r
- assert r['vis']==0,r
- assert r2['biting'] and not r3['biting'],(r2,r3)
- assert not e,e
- r,_,_,e=run(False)
- print('without:',r,e)
- assert not r['mix'] and not r['glb'] and r['vis']>0 and not e
+   ctx.close();return r,r2,r3,errs
+  ctx.close();return r,None,None,errs
+ for CLASS in ('sea','bloop','maja'):
+   r,r2,r3,e=run(True,CLASS)
+   print('with glb:',CLASS,r,r2['biting'],r3['biting'],r3['cur'],e)
+   assert r['mix'] and r['glb'] and set(r['acts'])=={'Idle','Move','Bite'},r
+   assert r['vis']==0,r
+   assert r2['biting'] and not r3['biting'],(r2,r3)
+   assert not e,e
+   r,_,_,e=run(False,CLASS)
+   print('without:',CLASS,r,e)
+   assert not r['mix'] and not r['glb'] and r['vis']>0 and not e
  b.close();print('PASS test-glb')

@@ -789,9 +789,11 @@ function heroMapTop(){heroTop.length=0;heroGlb.updateMatrixWorld(true);sea.updat
  for(let z=-4.6;z<=3.2;z+=.2){const o=sea.localToWorld(new T.Vector3(0,12,z));heroRay.set(o,new T.Vector3(0,-1,0));const h=heroRay.intersectObjects(meshes,false);let y=null;if(h.length){const p=sea.worldToLocal(h[0].point.clone());y=p.y;}heroTop.push([z,y]);}}
 function heroTopY(z){let best=null,bd=9;for(const [zz,y] of heroTop){if(y===null)continue;const d=Math.abs(zz-z);if(d<bd){bd=d;best=y;}}return best===null?2.2:best;}
 const HERO_SOCK={head:{s:'socket_head',o:[0,.05,-.05]},back:{z:-.15,dy:.12},tail:{z:-1.15,dy:.1}};
-function heroSockets(){if(!heroGlb||!organGroup||CLS!=='sea')return;heroGlb.updateMatrixWorld(true);organGroup.updateMatrixWorld(true);
+const HERO_SOCK_BONES={head:{s:'socket_head',o:[0,0,0]},back:{s:'socket_back',o:[0,0,0]},tail:{s:'socket_tail',o:[0,0,0]}};
+function heroSockets(){if(!heroGlb||!organGroup)return;heroGlb.updateMatrixWorld(true);organGroup.updateMatrixWorld(true);
  const bob=heroY0===null?0:(heroGlb.position.y-heroY0);
- for(const g of organParts){const sp=HERO_SOCK[g.userData.slot];if(!sp)continue;if(g.parent!==organGroup){organGroup.add(g);g.scale.setScalar(g.userData.sc||1);g.rotation.set(0,0,0);}
+ const SK=CLS==='sea'?HERO_SOCK:HERO_SOCK_BONES;
+ for(const g of organParts){const sp=SK[g.userData.slot];if(!sp)continue;if(g.parent!==organGroup){organGroup.add(g);g.scale.setScalar(g.userData.sc||1);g.rotation.set(0,0,0);}
   if(sp.s){const b=heroGlb.getObjectByName(sp.s);if(!b)continue;b.getWorldPosition(heroSockV);organGroup.worldToLocal(heroSockV);g.position.set(heroSockV.x+sp.o[0],heroSockV.y+sp.o[1],heroSockV.z+sp.o[2]);}
   else g.position.set(0,heroTopY(sp.z)+sp.dy+bob,sp.z);}}
 // ออร่าวิวัฒนาการ: ขั้น 1 วงฟ้า+ลูกแสง 3 ดวง, ขั้น 2 วงทอง+5 ดวง+ลำแสงบาง, ขั้น 3 วงม่วง+8 ดวง+ลำแสง; มีคลื่นแสงขยายตอนวิวัฒนาการสำเร็จ (ผู้ใช้: 'วิวัฒนาการไม่เห็นความเปลี่ยนแปลง')
@@ -824,10 +826,12 @@ function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=m
   rot(heroLeg.L,sw);rot(heroLeg.R,-sw);rot(heroLeg.sL,-lift(Math.cos(heroPh)));rot(heroLeg.sR,-lift(-Math.cos(heroPh)));
   }
  if(heroGlb&&heroY0!==null)heroGlb.position.y=heroY0+Math.abs(Math.sin(heroPh))*.05*heroWalkK;heroSockets();}
-function loadHeroGlb(){if(CLS!=='sea'||!ASSETS['model/sea_eater'])return;
- const go=()=>{try{new T.GLTFLoader().load('assets/model/'+HERO_GLB+'.'+ASSETS['model/sea_eater'],gl=>{try{
+// ไฟล์โมเดลฮีโร่ต่อคลาส: ใส่ key ใน ASSETS เมื่อมีไฟล์ใน assets/model/ (sea ใช้ HERO_GLB; bloop → bloop.glb; maja → maja.glb) sc = ขยายเทียบขนาดโมเดลเดิม
+const HERO_MODELS={sea:{key:'model/sea_eater',file:HERO_GLB,sc:1.2},bloop:{key:'model/bloop',file:'bloop',sc:1},maja:{key:'model/maja',file:'maja',sc:1}};
+function loadHeroGlb(){const hm=HERO_MODELS[CLS];if(!hm||!ASSETS[hm.key])return;
+ const go=()=>{try{new T.GLTFLoader().load('assets/model/'+hm.file+'.'+ASSETS[hm.key],gl=>{try{
   const m=gl.scene,root=sea.userData.root;if(!root)return;sea.updateMatrixWorld(true);const sc=sea.scale.x||1,pb=new T.Box3().setFromObject(root),ps=new T.Vector3();pb.getSize(ps);ps.divideScalar(sc);
-  sea.add(m);m.updateMatrixWorld(true);const gb=new T.Box3().setFromObject(m),gs=new T.Vector3();gb.getSize(gs);const k=ps.z/Math.max(gs.z,.001);m.scale.setScalar(k*1.2);m.updateMatrixWorld(true);
+  sea.add(m);m.updateMatrixWorld(true);const gb=new T.Box3().setFromObject(m),gs=new T.Vector3();gb.getSize(gs);const k=ps.z/Math.max(gs.z,.001);m.scale.setScalar(k*hm.sc);m.updateMatrixWorld(true);
   const gb2=new T.Box3().setFromObject(m);m.position.y-=(gb2.min.y-sea.position.y)/sc;heroY0=m.position.y;
   root.traverse(o=>{if(!o.isMesh)return;let a=o,org=false;while(a&&a!==root){if(a.userData&&a.userData.t){org=true;break;}a=a.parent;}if(!org)o.visible=false;});
   m.traverse(o=>{if(o.isMesh)o.castShadow=true;});heroGlb=m;heroLeg=null;heroMapTop();heroMixer=new T.AnimationMixer(m);gl.animations.forEach(c=>{heroActs[c.name]=heroMixer.clipAction(c);});heroPlay('Idle',0);
