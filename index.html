@@ -1805,7 +1805,7 @@ const l=Math.hypot(x,z);if(l>1){x/=l;z/=l;}const mv=l>.12;
 // away from the camera however far it has been orbited.
 const camCos=Math.cos(CAM.yaw),camSin=Math.sin(CAM.yaw);
 const wx=x*camCos+z*camSin,wz=-x*camSin+z*camCos;
-if(mv){sea.position.x=Math.max(-95,Math.min(95,sea.position.x+wx*7*dt*P.spMul));sea.position.z=Math.max(-95,Math.min(95,sea.position.z+wz*7*dt*P.spMul));{const md=MAPS[curMap],bx=md.w/2-1,bz=md.d/2-1;sea.position.x=Math.max(-bx,Math.min(bx,sea.position.x));sea.position.z=Math.max(-bz,Math.min(bz,sea.position.z));}
+if(mv){sea.position.x=Math.max(-95,Math.min(95,sea.position.x+wx*8.75*dt*P.spMul));sea.position.z=Math.max(-95,Math.min(95,sea.position.z+wz*8.75*dt*P.spMul));{const md=MAPS[curMap],bx=md.w/2-1,bz=md.d/2-1;sea.position.x=Math.max(-bx,Math.min(bx,sea.position.x));sea.position.z=Math.max(-bz,Math.min(bz,sea.position.z));}
 let d=Math.atan2(wx,wz)-face;d=Math.atan2(Math.sin(d),Math.cos(d));face+=d*Math.min(1,dt*10);sea.rotation.y=face;}
 const w=mv?t*11:0;legs[0].rotation.x=Math.sin(w)*.7;legs[1].rotation.x=-Math.sin(w)*.7;
 sea.position.y=h(sea.position.x,sea.position.z)+(mv?Math.abs(Math.sin(w))*.15:Math.sin(t*2)*.03);
