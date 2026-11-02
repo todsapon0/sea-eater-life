@@ -185,3 +185,10 @@
 สร้าง 2026-11-01 UTC ด้วย Blender 4.3.2 โดยปั้น geometry และ rig ใหม่ตามคำบรรยายที่ผู้ใช้อนุมัติ: ตัวสีเทาผิวเรียบเป็นปล้อง ไม่มีตา ไม่มีฟัน ปากกลวงกลม ขาหน้าสองข้างและหางครีบ; ไม่ใช้โมเดลจากเกมอื่น ภาพ `assets/model/sea_eater_preview.jpg` เรนเดอร์จากโมเดลเดียวกันสี่มุมด้วย Blender และจัดเป็นแผ่นด้วย ImageMagick
 
 `assets/model/sea_eater.glb` เป็น glTF 2.0 binary แบบฝังข้อมูล ขนาด 261,484 bytes: 5,900 triangles, 2 materials, ไม่มี texture หรือ Draco, rig 12 bones พร้อม socket_head/back/tail และ animation ชื่อ Idle, Move, Bite; เป็นโมเดลทดลอง รอเชื่อมเข้าเกมและตรวจสัดส่วนกับ FPS บน iPad 8 จริง
+
+
+## เฟส B2 — Sea Eater ปั้นใหม่จากฟิกเกอร์
+
+สร้าง 2026-11-02 UTC ด้วย Blender 4.3.2 เป็น geometry/rig ต้นฉบับ โดยใช้ภาพถ่ายฟิกเกอร์ที่ผู้ใช้ส่งในแชทและคำบรรยายใน CODEX-PROMPT B2: หัวบล็อกเหลี่ยมมนปากกลวง ไม่มีตา/ฟัน สีเทาผิวเรียบ ปล้องแยกเรียวเร็ว หางครีบเดี่ยวตั้งเฉียง ขาหน้าสองข้างเรียวยาวยกเข่าสูง; ไม่บันทึกภาพถ่ายผู้ใช้ลง repo ภาพ `sea_eater_v2_preview.jpg` เรนเดอร์ 4 มุมจากโมเดลใน Blender จัดแผ่นด้วย ImageMagick ผู้ใช้อนุมัติภาพแล้ว
+
+`assets/model/sea_eater_v2.glb`: glTF 2.0 แบบฝังข้อมูล 4,072 triangles, 1 mesh 2 primitives, 2 materials, ไม่มี texture หรือ Draco; skin 12 bones, socket_head/back/tail และ Idle/Move/Bite; ตัวทดลองรอ Claude เชื่อมและตรวจ FPS/สัดส่วนบน iPad จริง
