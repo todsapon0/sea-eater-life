@@ -27,7 +27,7 @@ with sync_playwright() as p:
    u=r.request.url
    if 'three.min.js' in u:r.fulfill(path=str(three),content_type='application/javascript')
    elif 'cdn.jsdelivr.net' in u:r.fulfill(body='',content_type='application/javascript')
-   elif u.endswith('sea_eater.glb'):r.fulfill(body=data,content_type='model/gltf-binary')
+   elif ('/assets/model/' in u and u.endswith('.glb')):r.fulfill(body=data,content_type='model/gltf-binary')
    elif u.split('?')[0]==url.split('?')[0]:r.fulfill(body=html,content_type='text/html')
    else:r.continue_()
   ctx.route('**/*',route)
