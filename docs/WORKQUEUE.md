@@ -20,7 +20,7 @@
 
 | # | owner | งาน | สถานะ |
 |---|---|---|---|
-| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | TODO |
+| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | DOING (Codex 2026-11-02 UTC) |
 | 2 | CLAUDE | ผูกฉลาม + เรนเดอร์ + เทสต์ (test-mon-glb, monsters, performance, fuzz) + วัด calls/triangles | รอข้อ 1 |
 | 3 | CODEX | M1-วาฬ: `mon_whale.glb` + preview | TODO |
 | 4 | CLAUDE | ผูกวาฬ ตรวจ | รอข้อ 3 |
@@ -46,7 +46,7 @@ PAUSED: no`
 
 | # | owner | งาน | สถานะ |
 |---|---|---|---|
-| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | TODO |
+| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | DOING (Codex 2026-11-02 UTC) |
 | 2 | CLAUDE | ผูกฉลาม + เรนเดอร์ + เทสต์ (test-mon-glb, monsters, performance, fuzz) + วัด calls/triangles → รายงานผู้ใช้ | รอข้อ 1 |
 | 3 | CODEX | M1-วาฬ: `mon_whale.glb` + preview | TODO |
 | 4 | CLAUDE | ผูกวาฬ ตรวจ → รายงานผู้ใช้ | รอข้อ 3 |
