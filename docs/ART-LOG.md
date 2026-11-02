@@ -192,3 +192,10 @@
 สร้าง 2026-11-02 UTC ด้วย Blender 4.3.2 เป็น geometry/rig ต้นฉบับ โดยใช้ภาพถ่ายฟิกเกอร์ที่ผู้ใช้ส่งในแชทและคำบรรยายใน CODEX-PROMPT B2: หัวบล็อกเหลี่ยมมนปากกลวง ไม่มีตา/ฟัน สีเทาผิวเรียบ ปล้องแยกเรียวเร็ว หางครีบเดี่ยวตั้งเฉียง ขาหน้าสองข้างเรียวยาวยกเข่าสูง; ไม่บันทึกภาพถ่ายผู้ใช้ลง repo ภาพ `sea_eater_v2_preview.jpg` เรนเดอร์ 4 มุมจากโมเดลใน Blender จัดแผ่นด้วย ImageMagick ผู้ใช้อนุมัติภาพแล้ว
 
 `assets/model/sea_eater_v2.glb`: glTF 2.0 แบบฝังข้อมูล 4,072 triangles, 1 mesh 2 primitives, 2 materials, ไม่มี texture หรือ Draco; skin 12 bones, socket_head/back/tail และ Idle/Move/Bite; ตัวทดลองรอ Claude เชื่อมและตรวจ FPS/สัดส่วนบน iPad จริง
+
+
+## รุ่นแก้ไข Sea Eater ทรงกลม
+
+สร้าง 2026-11-02 UTC ด้วย Blender 4.3.2 จากคำสั่งล่าสุดและภาพอ้างอิงภาพที่สองที่ผู้ใช้ส่งในแชท: ทรงหัว/ปากกลม ตัวอวบเรียบสีเทา ไม่มีตา/ฟัน ขาหน้าสองข้างโค้งต่อเนื่อง เข่ายกเหนือหลังเล็กน้อย ลำตัวปล้องและหางครีบ; เรนเดอร์ `sea_eater_round_preview.jpg` สี่มุมจากโมเดลด้วย Blender และจัดแผ่นด้วย ImageMagick ไม่บันทึกภาพที่ผู้ใช้ส่งลง repo
+
+`assets/model/sea_eater_round.glb` เป็น glTF 2.0 178,912 ไบต์, 4,652 triangles, 1 mesh/2 primitives, 2 materials, ไม่ใช้ texture/Draco; skin 12 bones, socket_head/back/tail, Idle/Move/Bite; เป็นตัวอย่างรอผู้ใช้ตรวจ ไม่ทับไฟล์ก่อนหน้า
