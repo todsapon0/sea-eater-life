@@ -204,8 +204,6 @@ body.hudmin #hud #qt{display:none}body.compact #hud{width:150px}
 .warparr{position:absolute;left:0;top:0;display:none;min-width:40px;height:40px;border-radius:20px;background:rgba(5,30,40,.78);border:2px solid #7dffb0;color:#fff;font:700 15px system-ui;line-height:36px;text-align:center;padding:0 8px;white-space:nowrap;box-shadow:0 0 12px rgba(125,255,176,.55)}
 .warparr.deep{border-color:#ffd95a;box-shadow:0 0 12px rgba(255,217,90,.55)}
 .warparr i{display:inline-block;font-style:normal;margin-right:3px}
-#worldmini{position:fixed;left:calc(138px + env(safe-area-inset-left,0px));top:calc(112px + env(safe-area-inset-top,0px));z-index:2;border-radius:8px;background:rgba(7,38,48,.5);border:1px solid rgba(255,255,255,.3);pointer-events:none}
-body.hudmin #worldmini{display:none}
 #minimap{position:fixed;left:calc(10px + env(safe-area-inset-left,0px));top:calc(106px + env(safe-area-inset-top,0px));z-index:2;border-radius:10px;background:rgba(7,38,48,.55);border:1px solid rgba(255,255,255,.4);touch-action:manipulation;box-shadow:0 3px 10px rgba(0,40,60,.3)}
 
 #npcov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,30,40,.6);z-index:11;padding:12px;box-sizing:border-box}
@@ -783,7 +781,15 @@ const HERO_GLB='sea_eater_round_sole'; // ชื่อไฟล์ใน assets/
 let heroMixer=null,heroActs={},heroCur='',heroBiting=false,heroGlb=null;
 function heroPlay(name,fade){const a=heroActs[name];if(!a)return;const prev=heroActs[heroCur];if(prev&&prev!==a)prev.fadeOut(fade||.2);a.reset().fadeIn(fade||.2).play();heroCur=name;}
 function heroBite(){if(!heroMixer||!heroActs.Bite||heroBiting)return;heroBiting=true;const a=heroActs.Bite;a.reset().setLoop(T.LoopOnce,1);a.clampWhenFinished=true;const prev=heroActs[heroCur];if(prev)prev.fadeOut(.08);a.fadeIn(.08).play();setTimeout(()=>{heroBiting=false;a.fadeOut(.15);heroCur='';},Math.max(300,(a.getClip().duration||.45)*1000));}
-function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=moving?'Move':'Idle';if(want!==heroCur)heroPlay(want,.2);}heroMixer.update(dt);}
+let heroWalkK=0,heroPh=0,heroLeg=null;const heroQ=new T.Quaternion(),heroAx=new T.Vector3(1,0,0);
+// เดินจริง: โมเดล GLB ซ้อนท่าก้าวขาสลับซ้าย-ขวาด้วยโค้ดทับท่า Move (ผู้ใช้: 'ลอยเฉยๆ ไม่ใช่เดิน')
+function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=moving?'Move':'Idle';if(want!==heroCur)heroPlay(want,.2);}heroMixer.update(dt);
+ heroWalkK+=((moving&&!heroBiting?1:0)-heroWalkK)*Math.min(1,dt*9);if(moving)heroPh+=dt*9;
+ if(!heroLeg&&heroGlb){const g=n=>heroGlb.getObjectByName(n);heroLeg={L:g('leg_L'),R:g('leg_R'),sL:g('shin_L'),sR:g('shin_R'),body:g('body')};}
+ if(heroLeg&&heroWalkK>.01){const sw=Math.sin(heroPh)*.6*heroWalkK,lift=(a)=>Math.max(0,a)*.55*heroWalkK;
+  const rot=(b,a)=>{if(!b)return;heroQ.setFromAxisAngle(heroAx,a);b.quaternion.multiply(heroQ);};
+  rot(heroLeg.L,sw);rot(heroLeg.R,-sw);rot(heroLeg.sL,-lift(Math.cos(heroPh)));rot(heroLeg.sR,-lift(-Math.cos(heroPh)));
+  if(heroLeg.body){heroLeg.body.position.y+=Math.abs(Math.sin(heroPh))*.04*heroWalkK;}}}
 function loadHeroGlb(){if(CLS!=='sea'||!ASSETS['model/sea_eater'])return;
  const go=()=>{try{new T.GLTFLoader().load('assets/model/'+HERO_GLB+'.'+ASSETS['model/sea_eater'],gl=>{try{
   const m=gl.scene,root=sea.userData.root;if(!root)return;sea.updateMatrixWorld(true);const sc=sea.scale.x||1,pb=new T.Box3().setFromObject(root),ps=new T.Vector3();pb.getSize(ps);ps.divideScalar(sc);
@@ -1191,18 +1197,9 @@ const TREASURE_BY_MAP=MAPS.map(d=>TREASURES.filter(t=>t.map===d.id));
 const treasureOpen=t=>P.tr.includes(t.id);
 // แถบล่างจอ iPad (พื้นที่ที่หน้าเว็บวาดไม่ถึง) ใช้สีเดียวกับพื้นทะเลของแมพนั้น จะได้ดูเหมือนพื้นต่อเนื่อง ไม่เป็นเส้นฟ้าสว่าง
 function setEdgeColor(def){try{const c=new T.Color(0xe0bf82).multiply(new T.Color(def.tint[0],def.tint[1],def.tint[2])).multiplyScalar(.82),hex='#'+c.getHexString(),m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',hex);document.documentElement.style.background=hex;document.body.style.background=hex;}catch(e){}}
-// แผนที่โลกย่อ (มุมซ้าย ใต้มินิแมป): ช่องสี่เหลี่ยมแทนแต่ละแมพตามตำแหน่งจริงในโลก, จุดสว่าง=ตอนนี้อยู่ที่นี่, เส้น=ทางที่ต่อกัน (เหลือง=ไปแมพที่เลเวลสูงกว่า) เพื่อให้รู้ว่าตัวเองอยู่ตรงไหนของโลก
-let worldMini=null;
-function drawWorldMini(){if(!worldMini){worldMini=document.createElement('canvas');worldMini.id='worldmini';document.body.append(worldMini);}
- const F=MAPS.filter(d=>!d.arena),gxs=F.map(d=>d.gx),gys=F.map(d=>d.gy),x0=Math.min(...gxs),x1=Math.max(...gxs),y0=Math.min(...gys),y1=Math.max(...gys),cell=11,gap=4,pad=5,dpr=Math.min(devicePixelRatio||1,2);
- const W=pad*2+(x1-x0+1)*(cell+gap)-gap,H=pad*2+(y1-y0+1)*(cell+gap)-gap;if(worldMini.width!==W*dpr){worldMini.width=W*dpr;worldMini.height=H*dpr;worldMini.style.width=W+'px';worldMini.style.height=H+'px';}
- const c=worldMini.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
- const cx=d=>pad+(d.gx-x0)*(cell+gap)+cell/2,cy=d=>pad+(d.gy-y0)*(cell+gap)+cell/2;
- c.lineWidth=2;for(const [a,b] of ALL_ROUTES){const A=MAPS[a],B=MAPS[b];if(A.arena||B.arena)continue;c.strokeStyle=(A.id===curMap||B.id===curMap)?(MAPS[Math.max(A.tier,B.tier)===B.tier?b:a].tier>MAPS[curMap].tier&&A.id!==B.id?'rgba(255,217,90,.9)':'rgba(125,255,176,.9)'):'rgba(255,255,255,.28)';c.beginPath();c.moveTo(cx(A),cy(A));c.lineTo(cx(B),cy(B));c.stroke();}
- for(const d of F){c.fillStyle=d.mc||'#2a9fb0';c.fillRect(cx(d)-cell/2,cy(d)-cell/2,cell,cell);if(d.id===curMap){c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(cx(d)-cell/2-1,cy(d)-cell/2-1,cell+2,cell+2);c.fillStyle='#fff';c.beginPath();c.arc(cx(d),cy(d),2.6,0,6.2832);c.fill();}}}
 function setMap(i){if(perfRecording&&i!==curMap){perfMapStarted=performance.now();perfSampleStart=0;perfFrames=0;}curMap=i;setSkyFor(MAPS[i]);setEdgeColor(MAPS[i]);SPRU.tint.value.set(MAPS[i].tint[0]*.5+.5,MAPS[i].tint[1]*.5+.5,MAPS[i].tint[2]*.5+.5);MAPS.forEach(d=>{d.group.visible=d.id===i;});mons.forEach(m=>{if(m.map===i){if(m.parked){m.parked=false;m.dead=m.parkedDead;if(m.dead<=0){m.g.visible=true;m.bar.visible=true;}}}
   else if(!m.parked){m.parked=true;m.parkedDead=m.dead;m.dead=1e9;m.g.visible=false;m.bar.visible=false;m.aggro=false;m.windup=0;m.dash=0;if(m.ty.n==='boss')hideBossFx();}});
-  PORTALS.forEach(p=>{p.g.visible=p.map===i;});drawWorldMini();}
+  PORTALS.forEach(p=>{p.g.visible=p.map===i;});}
 function crossMap(exit){const ox=sea.position.x,oy=sea.position.y,oz=sea.position.z;setMap(exit.map);
  sea.position.set(exit.x,h(exit.x,exit.z),exit.z);const shift=new T.Vector3(sea.position.x-ox,sea.position.y-oy,sea.position.z-oz);
  cam.position.add(shift);camTarget.add(shift);bub.position.add(shift);sun.position.add(shift);sun.target.position.add(shift);
