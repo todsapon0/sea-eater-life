@@ -26,6 +26,7 @@
 | 4 | CLAUDE | ผูกวาฬ ตรวจ | รอข้อ 3 |
 | 5 | CODEX | M1-งูทะเล: `mon_eel.glb` + preview | TODO |
 | 6 | CLAUDE | ผูกงูทะเล ตรวจ + สรุปภาระการวาดของมอนสเตอร์ใหม่ 4 ตัว | รอข้อ 5 |
+| T1 | CODEX | Tenticle Crab: ภาพ concept 3 มุม (หน้า/ข้าง/หลัง) พื้นขาว ตามเฟส T1 ใน CODEX-PROMPT.md → `assets/concept/tenticle_crab_{front,side,back}.png` **ห้ามทำโมเดล 3D ต่อจนผู้ใช้อนุมัติภาพ** (ผู้ใช้สั่งเริ่ม 2026-11-02 17:31) | TODO |
 | 7 | CODEX | M3 ชุดมอนสเตอร์ที่เหลือ ทีละ 3 ตัวต่อรอบ: puffer, shrimp, chp1–3, crb1–3, hnd1–3, srp1–3, swm1–2, tub1–2, boss (ใช้ข้อกำหนด M1; ตามคอนเซปต์ใน docs/concept/) | TODO (เริ่มได้หลังข้อ 5) |
 | 8 | CLAUDE | ผูกชุดจากข้อ 7 ทีละชุด วัดภาระ (ถ้า calls/triangles สูงเกินงบ ให้ลดจำนวนตัวที่ขยับ/ปิดโมเดลชนิดนั้นด้วย key) | รอข้อ 7 |
 | A | CLAUDE | ขยายตัวโหลดฮีโร่ให้ Bloop/Maja (key `model/bloop`, `model/maja`; ชื่อไฟล์ใน `assets/model/`) + เทสต์ด้วย GLB จำลอง — ไม่เปิดใช้จนมีโมเดลที่ผู้ใช้อนุมัติ | DONE (ตัวโหลด+เทสต์ผ่าน sea/bloop/maja; ยังไม่เปิด key) |

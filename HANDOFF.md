@@ -331,3 +331,4 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 - 2026-11-02: Task B เสร็จ: docs/TENTICLE-CRAB-DESIGN.md (ร่าง)
 - 2026-11-02: ผู้ใช้สั่ง 'รวมเข้า main' → PR #14 merged (0084dca): main กลับใช้โมเดล Sea Eater v0.8.0, ไม่มี key model/sea_eater
 - 2026-11-02: Task C เสร็จ: docs/MULTIPLAYER-DESIGN.md (ร่าง)
+- 2026-11-02 17:31: ผู้ใช้อนุมัติ Tenticle Crab (เริ่ม concept ให้โค: คิว T1) + เล่นพร้อมกัน (รอผู้ใช้ตั้ง Supabase ก่อนเขียนโค้ด)
