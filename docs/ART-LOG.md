@@ -199,3 +199,10 @@
 สร้าง 2026-11-02 UTC ด้วย Blender 4.3.2 จากคำสั่งล่าสุดและภาพอ้างอิงภาพที่สองที่ผู้ใช้ส่งในแชท: ทรงหัว/ปากกลม ตัวอวบเรียบสีเทา ไม่มีตา/ฟัน ขาหน้าสองข้างโค้งต่อเนื่อง เข่ายกเหนือหลังเล็กน้อย ลำตัวปล้องและหางครีบ; เรนเดอร์ `sea_eater_round_preview.jpg` สี่มุมจากโมเดลด้วย Blender และจัดแผ่นด้วย ImageMagick ไม่บันทึกภาพที่ผู้ใช้ส่งลง repo
 
 `assets/model/sea_eater_round.glb` เป็น glTF 2.0 178,912 ไบต์, 4,652 triangles, 1 mesh/2 primitives, 2 materials, ไม่ใช้ texture/Draco; skin 12 bones, socket_head/back/tail, Idle/Move/Bite; เป็นตัวอย่างรอผู้ใช้ตรวจ ไม่ทับไฟล์ก่อนหน้า
+
+
+## ปรับระดับเข่า Sea Eater ทรงกลม
+
+สร้าง 2026-11-02 UTC ด้วย Blender 4.3.2 จากรุ่น `sea_eater_round.glb` โดยลดแนวเข่าและตำแหน่งกระดูกให้ยอดเข่าอยู่สูงกว่าหัวเพียงเล็กน้อยตามคำขอผู้ใช้ คงตัวและปากกลม สีเทา ผิวเรียบ ขาสองข้าง และท่าทั้งสาม ภาพ `sea_eater_round_knee_preview.jpg` เรนเดอร์สี่มุมด้วย Blender แล้วจัดแผ่นด้วย ImageMagick
+
+`assets/model/sea_eater_round_knee.glb`: glTF 2.0, 178,912 ไบต์, 4,652 triangles, 1 mesh/2 primitives, 2 materials, skin 12 bones และ Idle/Move/Bite; รุ่นทดลองให้ผู้ใช้ตรวจ ยังไม่เชื่อมเข้าเกม
