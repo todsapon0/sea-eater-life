@@ -1,5 +1,5 @@
 """Monster GLB support (phase M1): a tiny generated GLB (not committed) is served as assets/model/mon_ray.glb.
-Checks: every ray gets the model, procedural meshes hidden, material 'main' shares the monster material (hit flash/tint), Idle/Move/Attack mixer works,
+Checks: every ray gets the model, procedural meshes hidden, material 'main' is cloned per monster (own copy; emissive synced for hit flash), Idle/Move/Attack mixer works,
 no page errors; and without the asset key nothing changes. Run: THREE_JS_PATH=/path/three.min.js python3 test-mon-glb.py"""
 import os, base64, threading, http.server
 from pathlib import Path
@@ -22,7 +22,7 @@ with sync_playwright() as p:
  def run(enable):
   ctx=b.new_context(viewport={'width':900,'height':600});pg=ctx.new_page();errs=[]
   pg.on('pageerror',lambda e:errs.append(str(e)))
-  html=base.replace('const ASSETS={','const ASSETS={'+('"model/mon_ray":"glb",' if enable else ''),1)
+  html=base.replace('"model/mon_ray":"glb",','').replace('const ASSETS={','const ASSETS={'+('"model/mon_ray":"glb",' if enable else ''),1)
   def route(r):
    u=r.request.url
    if 'three.min.js' in u:r.fulfill(path=str(three),content_type='application/javascript')
@@ -35,7 +35,7 @@ with sync_playwright() as p:
   pg.goto(url,wait_until='networkidle');pg.wait_for_function('window.__mg');pg.wait_for_timeout(2500)
   r=pg.evaluate("""()=>{const rays=__mg.mons.filter(m=>m.ty.n==='ray'),sh=__mg.mons.filter(m=>m.ty.n==='shark');
    const withGlb=rays.filter(m=>m.glb).length,vis=rays.filter(m=>m.glb).every(m=>{let n=0;m.g.children.forEach(c=>{if(c===m.g.children[m.g.children.length-1])return;c.traverse(o=>{if(o.isMesh&&o.visible)n++;});});return n===0;}),
-   shared=rays.filter(m=>m.glb).every(m=>{let ok=false;m.g.traverse(o=>{if(o.isMesh&&o.material===m.mat&&o.visible)ok=true;});return ok;});
+   shared=rays.filter(m=>m.glb).every(m=>m.glb.mains.length>0&&m.glb.mains.every(x=>x!==m.mat));
    return {rays:rays.length,withGlb,vis,shared,sharkGlb:sh.filter(m=>m.glb).length,acts:rays.find(m=>m.glb)?Object.keys(rays.find(m=>m.glb).glb.acts):[]};}""")
   pg.wait_for_timeout(1500)
   r2=pg.evaluate("()=>{const m=__mg.mons.find(q=>q.ty.n==='ray'&&q.glb);return m?m.glb.cur:null;}")
