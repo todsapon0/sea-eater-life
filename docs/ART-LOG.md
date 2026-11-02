@@ -213,3 +213,8 @@
 สร้าง 2026-11-02 UTC ด้วย Blender 4.3.2 จากรุ่น `sea_eater_round_knee.glb` โดยลดจุดเข่าและกระดูกลงอีกเล็กน้อยและขยายเฉพาะช่วงปลายฝ่าเท้าที่แตะพื้นตามคำขอผู้ใช้; ภาพ `sea_eater_round_sole_preview.jpg` เรนเดอร์สี่มุมด้วย Blender แล้วจัดแผ่นด้วย ImageMagick
 
 `assets/model/sea_eater_round_sole.glb`: glTF 2.0, 178,908 ไบต์, 4,652 triangles, 1 mesh/2 primitives, 2 materials, skin 12 bones และ Idle/Move/Bite; รุ่นทดลองให้ผู้ใช้ตรวจ ยังไม่เชื่อมเข้าเกม
+
+
+## M1 ปลากระเบนตาฟ้า
+
+สร้าง 2026-11-02 ด้วย Blender 4.3.2 จากคอนเซปต์ `docs/concept/set2_ray.jpg`: ปลากระเบนสีฟ้าเทา ตาฟ้า ปีกและหางขยับได้; ภาพตัวอย่างสี่มุมเรนเดอร์ Blender และจัดด้วย ImageMagick. `mon_ray.glb` 764 triangles, 51,256 bytes, 2 materials ไม่มี texture, 4 bones, Idle/Move/Attack; ตรวจเปิด/โครงสร้างและภาพ ยังไม่ได้ทดสอบ iPad
