@@ -218,3 +218,8 @@
 ## M1 ปลากระเบนตาฟ้า
 
 สร้าง 2026-11-02 ด้วย Blender 4.3.2 จากคอนเซปต์ `docs/concept/set2_ray.jpg`: ปลากระเบนสีฟ้าเทา ตาฟ้า ปีกและหางขยับได้; ภาพตัวอย่างสี่มุมเรนเดอร์ Blender และจัดด้วย ImageMagick. `mon_ray.glb` 764 triangles, 51,256 bytes, 2 materials ไม่มี texture, 4 bones, Idle/Move/Attack; ตรวจเปิด/โครงสร้างและภาพ ยังไม่ได้ทดสอบ iPad
+
+
+## M1 ฉลาม — ร่างที่ยังไม่ผ่าน
+
+2026-11-02 ทดลองสร้างด้วย Blender 4.3.2 ตาม `docs/concept/set2_shark.jpg` และเรนเดอร์ภาพสี่มุม `assets/model/mon_shark_draft_preview.jpg` แต่รูปทรงและปากยังไม่ตรงความดุดันสมจริง จึงยังไม่ส่ง GLB เข้าเกม; ไม่รัน review.sh ตามคำสั่ง

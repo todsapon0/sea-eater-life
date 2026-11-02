@@ -20,7 +20,7 @@
 
 | # | owner | งาน | สถานะ |
 |---|---|---|---|
-| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | DOING (Codex 2026-11-02 UTC) |
+| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | BLOCKED(quality: รูปร่างและปากยังไม่ตรงคอนเซปต์) |
 | 2 | CLAUDE | ผูกฉลาม + เรนเดอร์ + เทสต์ (test-mon-glb, monsters, performance, fuzz) + วัด calls/triangles | รอข้อ 1 |
 | 3 | CODEX | M1-วาฬ: `mon_whale.glb` + preview | TODO |
 | 4 | CLAUDE | ผูกวาฬ ตรวจ | รอข้อ 3 |
@@ -46,7 +46,7 @@ PAUSED: no`
 
 | # | owner | งาน | สถานะ |
 |---|---|---|---|
-| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | DOING (Codex 2026-11-02 UTC) |
+| 1 | CODEX | M1-ฉลาม: `assets/model/mon_shark.glb` + `mon_shark_preview.jpg` (รายละเอียด CODEX-PROMPT.md เฟส M1) | BLOCKED(quality: รูปร่างและปากยังไม่ตรงคอนเซปต์) |
 | 2 | CLAUDE | ผูกฉลาม + เรนเดอร์ + เทสต์ (test-mon-glb, monsters, performance, fuzz) + วัด calls/triangles → รายงานผู้ใช้ | รอข้อ 1 |
 | 3 | CODEX | M1-วาฬ: `mon_whale.glb` + preview | TODO |
 | 4 | CLAUDE | ผูกวาฬ ตรวจ → รายงานผู้ใช้ | รอข้อ 3 |
@@ -65,3 +65,9 @@ PAUSED: no`
 PAUSED: no
 
 ## บันทึกผลงานโค (โคเขียนใต้บรรทัดนี้: งาน # → ไฟล์/ขนาด/triangles/เวลา)
+
+
+### ผลตรวจ M1 ฉลาม — Codex 2026-11-02
+- ต้นแบบยังดูเรียบและปากแข็ง ไม่ตรงแนวสมจริงดุดันที่ผู้ใช้ขอ จึงยังไม่ส่งเป็น REVIEW หรือเชื่อมเกม; ภาพร่าง `assets/model/mon_shark_draft_preview.jpg` ใช้ดูจุดที่ต้องแก้
+- GLB ทดลองใน workspace มี 1,376 triangles, 78,472 bytes, 2 materials, 2 bones, Idle/Move/Attack แต่ยังไม่ส่งไฟล์เกมเพราะคุณภาพภาพไม่ผ่าน; ไม่ได้รัน review.sh และไม่ได้ทดสอบ iPad
+- ผู้ใช้แจ้งด้วยว่าโมเดลกระเบนก่อนหน้านี้ดูหน่อมแน้ม ไม่สมจริง โปรดอย่านำไปใช้เป็นแบบผ่านโดยไม่แก้ตาม feedback
