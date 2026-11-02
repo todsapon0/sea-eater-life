@@ -11,7 +11,7 @@ class H(http.server.SimpleHTTPRequestHandler):
  def log_message(self,*a):pass
 srv=http.server.ThreadingHTTPServer(('127.0.0.1',0),H);threading.Thread(target=srv.serve_forever,daemon=True).start()
 url=f'http://127.0.0.1:{srv.server_port}/?debug=1'
-base=(root/'index.html').read_text().replace('loop();\n}','window.__g=()=>({mix:!!heroMixer,acts:Object.keys(heroActs),cur:heroCur,biting:heroBiting,glb:!!heroGlb,vis:(()=>{let n=0;sea.userData.root.traverse(o=>{if(!o.isMesh||!o.visible)return;let a=o,org=false;while(a&&a!==sea.userData.root){if(a.userData&&a.userData.t){org=true;break;}a=a.parent;}if(!org)n++;});return n;})()});loop();\n}',1)
+base=(root/'index.html').read_text().replace('loop();\n}','window.__gh={hu:(d,m)=>heroUpdate(d,m),glb:()=>heroGlb};window.__g=()=>({mix:!!heroMixer,acts:Object.keys(heroActs),cur:heroCur,biting:heroBiting,glb:!!heroGlb,vis:(()=>{let n=0;sea.userData.root.traverse(o=>{if(!o.isMesh||!o.visible)return;let a=o,org=false;while(a&&a!==sea.userData.root){if(a.userData&&a.userData.t){org=true;break;}a=a.parent;}if(!org)n++;});return n;})()});loop();\n}',1)
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path=os.environ.get('CHROME','/usr/bin/chromium') if os.path.exists('/usr/bin/chromium') else None,headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
  t=b.new_page();t.set_content('<html></html>');t.add_script_tag(path=str(three));t.add_script_tag(path=str(exporter))
@@ -36,6 +36,8 @@ with sync_playwright() as p:
   r=pg.evaluate('__g()')
   if enable:
    pg.keyboard.press('Space');pg.wait_for_timeout(100);r2=pg.evaluate('__g()');pg.wait_for_timeout(900);r3=pg.evaluate('__g()')
+   drift=pg.evaluate("()=>{const g=__gh.glb(),y=[];for(let i=0;i<900;i++){__gh.hu(.016,true);if(i%100===99){g.updateMatrixWorld(true);y.push(new THREE.Box3().setFromObject(g).min.y);}}return y;}")
+   assert all(abs(v)<.4 for v in drift),('model drifts while walking',drift)
    return r,r2,r3,errs
   return r,None,None,errs
  r,r2,r3,e=run(True)

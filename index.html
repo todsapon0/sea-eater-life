@@ -781,7 +781,7 @@ const HERO_GLB='sea_eater_round_sole'; // ชื่อไฟล์ใน assets/
 let heroMixer=null,heroActs={},heroCur='',heroBiting=false,heroGlb=null;
 function heroPlay(name,fade){const a=heroActs[name];if(!a)return;const prev=heroActs[heroCur];if(prev&&prev!==a)prev.fadeOut(fade||.2);a.reset().fadeIn(fade||.2).play();heroCur=name;}
 function heroBite(){if(!heroMixer||!heroActs.Bite||heroBiting)return;heroBiting=true;const a=heroActs.Bite;a.reset().setLoop(T.LoopOnce,1);a.clampWhenFinished=true;const prev=heroActs[heroCur];if(prev)prev.fadeOut(.08);a.fadeIn(.08).play();setTimeout(()=>{heroBiting=false;a.fadeOut(.15);heroCur='';},Math.max(300,(a.getClip().duration||.45)*1000));}
-let heroWalkK=0,heroPh=0,heroLeg=null;const heroQ=new T.Quaternion(),heroAx=new T.Vector3(1,0,0);
+let heroWalkK=0,heroPh=0,heroLeg=null,heroY0=null;const heroQ=new T.Quaternion(),heroAx=new T.Vector3(1,0,0);
 // เดินจริง: โมเดล GLB ซ้อนท่าก้าวขาสลับซ้าย-ขวาด้วยโค้ดทับท่า Move (ผู้ใช้: 'ลอยเฉยๆ ไม่ใช่เดิน')
 function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=moving?'Move':'Idle';if(want!==heroCur)heroPlay(want,.2);}heroMixer.update(dt);
  heroWalkK+=((moving&&!heroBiting?1:0)-heroWalkK)*Math.min(1,dt*9);if(moving)heroPh+=dt*9;
@@ -789,12 +789,13 @@ function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=m
  if(heroLeg&&heroWalkK>.01){const sw=Math.sin(heroPh)*.6*heroWalkK,lift=(a)=>Math.max(0,a)*.55*heroWalkK;
   const rot=(b,a)=>{if(!b)return;heroQ.setFromAxisAngle(heroAx,a);b.quaternion.multiply(heroQ);};
   rot(heroLeg.L,sw);rot(heroLeg.R,-sw);rot(heroLeg.sL,-lift(Math.cos(heroPh)));rot(heroLeg.sR,-lift(-Math.cos(heroPh)));
-  if(heroLeg.body){heroLeg.body.position.y+=Math.abs(Math.sin(heroPh))*.04*heroWalkK;}}}
+  }
+ if(heroGlb&&heroY0!==null)heroGlb.position.y=heroY0+Math.abs(Math.sin(heroPh))*.05*heroWalkK;}
 function loadHeroGlb(){if(CLS!=='sea'||!ASSETS['model/sea_eater'])return;
  const go=()=>{try{new T.GLTFLoader().load('assets/model/'+HERO_GLB+'.'+ASSETS['model/sea_eater'],gl=>{try{
   const m=gl.scene,root=sea.userData.root;if(!root)return;sea.updateMatrixWorld(true);const sc=sea.scale.x||1,pb=new T.Box3().setFromObject(root),ps=new T.Vector3();pb.getSize(ps);ps.divideScalar(sc);
   sea.add(m);m.updateMatrixWorld(true);const gb=new T.Box3().setFromObject(m),gs=new T.Vector3();gb.getSize(gs);const k=ps.z/Math.max(gs.z,.001);m.scale.setScalar(k*1.2);m.updateMatrixWorld(true);
-  const gb2=new T.Box3().setFromObject(m);m.position.y-=(gb2.min.y-sea.position.y)/sc;
+  const gb2=new T.Box3().setFromObject(m);m.position.y-=(gb2.min.y-sea.position.y)/sc;heroY0=m.position.y;
   root.traverse(o=>{if(!o.isMesh)return;let a=o,org=false;while(a&&a!==root){if(a.userData&&a.userData.t){org=true;break;}a=a.parent;}if(!org)o.visible=false;});
   m.traverse(o=>{if(o.isMesh)o.castShadow=true;});heroGlb=m;heroMixer=new T.AnimationMixer(m);gl.animations.forEach(c=>{heroActs[c.name]=heroMixer.clipAction(c);});heroPlay('Idle',0);
   }catch(e){}},undefined,()=>{});}catch(e){}};
