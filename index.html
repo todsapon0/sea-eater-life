@@ -587,7 +587,7 @@ function buildOrgans(){
  Object.keys(ORG).forEach((slot,i)=>{const o=organFor(slot);if(!o)return;const g=new T.Group();g.name=o.org;g.position.set(...anchors[i]);
   if(CLS==='sea'){if(slot==='back')g.position.y-=.4;if(slot==='tail'){g.position.z-=.9;g.position.y+=.25;if(o.org==='spike')g.position.y+=.2;}if(o.org==='fang'||o.org==='jaw')g.position.y-=.35;}
   if(o.org==='bub'){g.position.y-=.2;g.position.z+=.3;}
-  g.scale.setScalar((CLS==='sea'?1.35:1.25)*(.9+o.lv*.012)*({shell:.68,scale:.8,helm:.85,jaw:.85,wing:1.05,fin:.9,horn:.9}[o.org]||1));g.userData={t:o.org,ph:i*1.7};organGroup.add(g);
+  g.scale.setScalar((CLS==='sea'?1.35:1.25)*(.9+o.lv*.012)*({shell:.68,scale:.8,helm:.85,jaw:.85,wing:1.05,fin:.9,horn:.9}[o.org]||1));g.userData={t:o.org,ph:i*1.7,slot,sc:g.scale.x};organGroup.add(g);
   const rc=new T.Color(RARITY[o.rar].col),emi=o.rar==='epic'?.7:o.rar==='rare'?.35:0;
   const mat=(col,opt)=>new T.MeshStandardMaterial(Object.assign({color:col,roughness:.45,metalness:.12,emissive:rc,emissiveIntensity:emi*.45},opt||{}));
   const add=(geo,col,x,y,z,opt)=>{const m=new T.Mesh(geo,mat(col,opt));m.position.set(x||0,y||0,z||0);g.add(m);return m;};
@@ -783,6 +783,17 @@ function heroPlay(name,fade){const a=heroActs[name];if(!a)return;const prev=hero
 function heroBite(){if(!heroMixer||!heroActs.Bite||heroBiting)return;heroBiting=true;const a=heroActs.Bite;a.reset().setLoop(T.LoopOnce,1);a.clampWhenFinished=true;const prev=heroActs[heroCur];if(prev)prev.fadeOut(.08);a.fadeIn(.08).play();setTimeout(()=>{heroBiting=false;a.fadeOut(.15);heroCur='';},Math.max(300,(a.getClip().duration||.45)*1000));}
 let heroWalkK=0,heroPh=0,heroLeg=null,heroY0=null;const heroQ=new T.Quaternion(),heroAx=new T.Vector3(1,0,0);
 // เดินจริง: โมเดล GLB ซ้อนท่าก้าวขาสลับซ้าย-ขวาด้วยโค้ดทับท่า Move (ผู้ใช้: 'ลอยเฉยๆ ไม่ใช่เดิน')
+const heroSockV=new T.Vector3(),heroRay=new T.Raycaster(),heroTop=[];
+// อวัยวะ/อุปกรณ์ที่ติดตัว (เขี้ยว กระดอง หาง ฯลฯ): ตำแหน่งตามรูปร่างโมเดล GLB แทนตำแหน่งตายตัวของโมเดลเดิม (ผู้ใช้: 'ไอเทมไม่สมดุลกับร่างกาย ลอยไปคนละส่วน') — หัว=จุด socket_head, หลัง/หาง=ผิวบนของตัวที่ z นั้น (ยิงรังสีลงตอนโหลด)
+function heroMapTop(){heroTop.length=0;heroGlb.updateMatrixWorld(true);sea.updateMatrixWorld(true);const meshes=[];heroGlb.traverse(o=>{if(o.isMesh)meshes.push(o);});
+ for(let z=-4.6;z<=3.2;z+=.2){const o=sea.localToWorld(new T.Vector3(0,12,z));heroRay.set(o,new T.Vector3(0,-1,0));const h=heroRay.intersectObjects(meshes,false);let y=null;if(h.length){const p=sea.worldToLocal(h[0].point.clone());y=p.y;}heroTop.push([z,y]);}}
+function heroTopY(z){let best=null,bd=9;for(const [zz,y] of heroTop){if(y===null)continue;const d=Math.abs(zz-z);if(d<bd){bd=d;best=y;}}return best===null?2.2:best;}
+const HERO_SOCK={head:{s:'socket_head',o:[0,.05,-.05]},back:{z:-.15,dy:.12},tail:{z:-1.15,dy:.1}};
+function heroSockets(){if(!heroGlb||!organGroup||CLS!=='sea')return;heroGlb.updateMatrixWorld(true);organGroup.updateMatrixWorld(true);
+ const bob=heroY0===null?0:(heroGlb.position.y-heroY0);
+ for(const g of organParts){const sp=HERO_SOCK[g.userData.slot];if(!sp)continue;if(g.parent!==organGroup){organGroup.add(g);g.scale.setScalar(g.userData.sc||1);g.rotation.set(0,0,0);}
+  if(sp.s){const b=heroGlb.getObjectByName(sp.s);if(!b)continue;b.getWorldPosition(heroSockV);organGroup.worldToLocal(heroSockV);g.position.set(heroSockV.x+sp.o[0],heroSockV.y+sp.o[1],heroSockV.z+sp.o[2]);}
+  else g.position.set(0,heroTopY(sp.z)+sp.dy+bob,sp.z);}}
 function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=moving?'Move':'Idle';if(want!==heroCur)heroPlay(want,.2);}heroMixer.update(dt);
  heroWalkK+=((moving&&!heroBiting?1:0)-heroWalkK)*Math.min(1,dt*9);if(moving)heroPh+=dt*9;
  if(!heroLeg&&heroGlb){const g=n=>heroGlb.getObjectByName(n);heroLeg={L:g('leg_L'),R:g('leg_R'),sL:g('shin_L'),sR:g('shin_R'),body:g('body')};}
@@ -790,14 +801,14 @@ function heroUpdate(dt,moving){if(!heroMixer)return;if(!heroBiting){const want=m
   const rot=(b,a)=>{if(!b)return;heroQ.setFromAxisAngle(heroAx,a);b.quaternion.multiply(heroQ);};
   rot(heroLeg.L,sw);rot(heroLeg.R,-sw);rot(heroLeg.sL,-lift(Math.cos(heroPh)));rot(heroLeg.sR,-lift(-Math.cos(heroPh)));
   }
- if(heroGlb&&heroY0!==null)heroGlb.position.y=heroY0+Math.abs(Math.sin(heroPh))*.05*heroWalkK;}
+ if(heroGlb&&heroY0!==null)heroGlb.position.y=heroY0+Math.abs(Math.sin(heroPh))*.05*heroWalkK;heroSockets();}
 function loadHeroGlb(){if(CLS!=='sea'||!ASSETS['model/sea_eater'])return;
  const go=()=>{try{new T.GLTFLoader().load('assets/model/'+HERO_GLB+'.'+ASSETS['model/sea_eater'],gl=>{try{
   const m=gl.scene,root=sea.userData.root;if(!root)return;sea.updateMatrixWorld(true);const sc=sea.scale.x||1,pb=new T.Box3().setFromObject(root),ps=new T.Vector3();pb.getSize(ps);ps.divideScalar(sc);
   sea.add(m);m.updateMatrixWorld(true);const gb=new T.Box3().setFromObject(m),gs=new T.Vector3();gb.getSize(gs);const k=ps.z/Math.max(gs.z,.001);m.scale.setScalar(k*1.2);m.updateMatrixWorld(true);
   const gb2=new T.Box3().setFromObject(m);m.position.y-=(gb2.min.y-sea.position.y)/sc;heroY0=m.position.y;
   root.traverse(o=>{if(!o.isMesh)return;let a=o,org=false;while(a&&a!==root){if(a.userData&&a.userData.t){org=true;break;}a=a.parent;}if(!org)o.visible=false;});
-  m.traverse(o=>{if(o.isMesh)o.castShadow=true;});heroGlb=m;heroMixer=new T.AnimationMixer(m);gl.animations.forEach(c=>{heroActs[c.name]=heroMixer.clipAction(c);});heroPlay('Idle',0);
+  m.traverse(o=>{if(o.isMesh)o.castShadow=true;});heroGlb=m;heroLeg=null;heroMapTop();heroMixer=new T.AnimationMixer(m);gl.animations.forEach(c=>{heroActs[c.name]=heroMixer.clipAction(c);});heroPlay('Idle',0);
   }catch(e){}},undefined,()=>{});}catch(e){}};
  if(T.GLTFLoader)go();else{const sc=document.createElement('script');sc.src='lib/GLTFLoader.js';sc.onload=go;sc.onerror=()=>{};document.head.appendChild(sc);}}
 loadHeroGlb();
