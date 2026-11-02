@@ -28,6 +28,7 @@ with sync_playwright() as p:
  for wave,n in enumerate([3,4,5,6,8],1):
   pg.evaluate("__t.updateArena(5)")  # countdown -> spawn wave
   assert pg.evaluate(alive)==n,(wave,pg.evaluate(alive))
+  if wave==1:rn=pg.evaluate("(()=>{const m=__t.mons.find(m=>m.map===14&&m.dead<=0);return m.mhp/(m.ty.hp*m.zf)})()");dn=pg.evaluate("__t.mons.filter(m=>m.map===14).map(m=>m.ty.d)")
   pg.evaluate("__t.mons.filter(m=>m.map===14&&m.dead<=0).forEach(m=>{m.dead=.01;m.g.visible=false;m.bar.visible=false})")
   pg.evaluate("__t.game(.05)")  # arena monsters must NOT auto-respawn
   assert pg.evaluate("__t.mons.filter(m=>m.map===14&&m.dead>0&&m.dead<1e8).length")==0
@@ -41,5 +42,26 @@ with sync_playwright() as p:
  pg.reload(wait_until='networkidle');pg.wait_for_function('window.__t')
  assert pg.evaluate("__t.P.ar")==pg.evaluate("__t.todayStr()")
  pg.evaluate("__t.openNpc('board')");assert pg.locator('[data-arena][disabled]').count()==1
+
+ # ---- hard arena (lv20+): separate daily run, tougher monsters, restored afterwards ----
+ pg.evaluate("__t.P.lv=19");pg.evaluate("__t.openNpc('board')");assert pg.locator('[data-arena-hard]').count()==0,'hard arena hidden below lv20'
+ pg.evaluate("__t.P.lv=20");pg.evaluate("__t.openNpc('board')");assert pg.locator('[data-arena-hard]:not([disabled])').count()==1
+ pg.locator('[data-arena-hard]').click()
+ assert pg.evaluate("__t.getMap()")==14 and pg.evaluate("__t.getArena().hard")==True and pg.evaluate("__t.P.ar2")==pg.evaluate("__t.todayStr()")
+ for wave,n in enumerate([4,6,8,8,8],1):
+  pg.evaluate("__t.updateArena(5)");assert pg.evaluate(alive)==n,(wave,pg.evaluate(alive))
+  if wave==1:
+   rh=pg.evaluate("(()=>{const m=__t.mons.find(m=>m.map===14&&m.dead<=0);return m.mhp/(m.tyB.hp*m.zf)})()")
+   assert abs(rh/rn-2.5)<.01,(rh,rn)
+   dh=pg.evaluate("__t.mons.filter(m=>m.map===14).map(m=>m.ty.d)");assert all(h==int(d*1.5+.5) for h,d in zip(dh,dn)),(dh,dn)
+  pg.evaluate("__t.mons.filter(m=>m.map===14&&m.dead<=0).forEach(m=>{m.dead=.01;m.g.visible=false;m.bar.visible=false})")
+  pg.evaluate("__t.game(.05)");pg.evaluate("__t.updateArena(.1)")
+  assert pg.evaluate("__t.getArena().wave")==wave
+ pg.evaluate("__t.updateArena(6)")
+ assert pg.evaluate("__t.getMap()")==0 and pg.evaluate("__t.getArena()")is None
+ assert pg.evaluate("__t.mons.filter(m=>m.map===14).every(m=>m.ty===m.tyB)"),'monster stats restored after hard run'
+ pg.evaluate("__t.openNpc('board')");assert pg.locator('[data-arena-hard][disabled]').count()==1,'hard: one run per day'
+ pg.reload(wait_until='networkidle');pg.wait_for_function('window.__t')
+ assert pg.evaluate("__t.P.ar2")==pg.evaluate("__t.todayStr()")
  assert not errs,errs
- print('PASS: arena entry from board, 5 waves (3/4/5/6/8), dormant between waves, no auto respawn, rewards, exits to town, once per day, persists after reload')
+ print('PASS (incl. hard arena lv20: waves 4/6/8/8/8, x2.5 hp, x1.5 dmg, restored, once/day): arena entry from board, 5 waves (3/4/5/6/8), dormant between waves, no auto respawn, rewards, exits to town, once per day, persists after reload')

@@ -25,6 +25,7 @@
       Object.keys(r[f]).forEach(function (k) { if (['head', 'back', 'tail'].indexOf(k) < 0 || !isInt(r[f][k], 0, 10)) fail('ตีบวกของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง'); });
     });
     if (r.ar !== undefined && !(typeof r.ar === 'string' && /^(\d{4}-\d{2}-\d{2})?$/.test(r.ar))) fail('สนามคลื่นของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
+    if (r.ar2 !== undefined && !(typeof r.ar2 === 'string' && /^(\d{4}-\d{2}-\d{2})?$/.test(r.ar2))) fail('สนามประลองระดับยากของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.tr !== undefined && (!Array.isArray(r.tr) || r.tr.length > 28 || r.tr.some(function (id, i, a) { return typeof id !== 'string' || !/^[cp](?:[1-9]|1[0-3]|15)$/.test(id) || a.indexOf(id) !== i; }))) fail('สมบัติของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.dy !== undefined && !isInt(r.dy, 0, 8)) fail('สีของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
     if (r.rq !== undefined && !(typeof r.rq === 'string' && /^(\d{4}-\d{2}-\d{2}:\d{1,2}:[01])?$/.test(r.rq))) fail('คำขอราชาของ ' + CLASS_NAMES[name] + ' ไม่ถูกต้อง');
