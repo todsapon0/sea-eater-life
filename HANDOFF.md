@@ -329,3 +329,4 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 - ✔ Claude 2026-11-02 16:30 (ผู้ใช้: 'ออร่าไม่เท่ ขอแนว ออร่า lv99 ของ RO'): เขียนออร่าวิวัฒนาการใหม่ (auraBuild/auraUpdate) — เสาแสงโปร่งรอบตัว (ไล่ความโปร่งใสด้านบน) + ประกายลอยขึ้น 22–38 จุด (Points ชุดเดียว ไม่วนรอบตัว) + วงใต้เท้ากับคลื่นแสงขยายเป็นจังหวะ; สีตามขั้น ฟ้า/ทอง/ม่วง; ยังอยู่บนสาขาทดสอบ ไม่ได้รวมเข้า main
 - 2026-11-02: Task A เสร็จ: HERO_MODELS รองรับ sea/bloop/maja (key model/bloop, model/maja ยังปิด), test-glb.py วนทั้ง 3 คลาส (timeout 90s, ปิด context, retry Space)
 - 2026-11-02: Task B เสร็จ: docs/TENTICLE-CRAB-DESIGN.md (ร่าง)
+- 2026-11-02: ผู้ใช้สั่ง 'รวมเข้า main' → PR #14 merged (0084dca): main กลับใช้โมเดล Sea Eater v0.8.0, ไม่มี key model/sea_eater
