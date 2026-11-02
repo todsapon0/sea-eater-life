@@ -330,3 +330,4 @@ python3 test-gear-ui.py && python3 test-evolution.py && python3 test-monsters.py
 - 2026-11-02: Task A เสร็จ: HERO_MODELS รองรับ sea/bloop/maja (key model/bloop, model/maja ยังปิด), test-glb.py วนทั้ง 3 คลาส (timeout 90s, ปิด context, retry Space)
 - 2026-11-02: Task B เสร็จ: docs/TENTICLE-CRAB-DESIGN.md (ร่าง)
 - 2026-11-02: ผู้ใช้สั่ง 'รวมเข้า main' → PR #14 merged (0084dca): main กลับใช้โมเดล Sea Eater v0.8.0, ไม่มี key model/sea_eater
+- 2026-11-02: Task C เสร็จ: docs/MULTIPLAYER-DESIGN.md (ร่าง)
