@@ -276,7 +276,7 @@ else{
 const T=THREE,BG=0x56cfd8;
 const scene=new T.Scene();scene.background=new T.Color(BG);scene.fog=new T.Fog(BG,40,130);
 const cam=new T.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);
-const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight,false);ren.domElement.id='gl';document.body.prepend(ren.domElement);
+const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,1.6));ren.setSize(innerWidth,innerHeight,false);ren.domElement.id='gl';document.body.prepend(ren.domElement);
 scene.add(new T.HemisphereLight(0xf0ffff,0xe3c283,.64));
 const sun=new T.DirectionalLight(0xfff0cf,.5);sun.position.set(10,25,8);scene.add(sun);
 // look v1: แสงเติมสีฟ้าอ่อนจากด้านตรงข้าม (ไม่มีเงา) ให้ด้านเงายังสว่างนุ่ม แบบการ์ตูน
@@ -306,7 +306,7 @@ skyDome.renderOrder=-10;skyDome.frustumCulled=false;scene.add(skyDome);
 // ===== เงา (เปิด/ปิดได้ ปิดจะลดความละเอียดภาพด้วย เหมาะกับ iPad 8 / iPhone 11) =====
 sun.target.position.set(0,0,0);scene.add(sun.target);let gfxHigh=true;try{if(localStorage.getItem('gfx')==='0')gfxHigh=false;}catch(e){}
 sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22,near:1,far:70});sun.shadow.bias=-.0008;ren.shadowMap.enabled=true;ren.shadowMap.type=gfxHigh?T.PCFSoftShadowMap:T.PCFShadowMap;
-let gfxReady=false;function setGfx(on,persist){gfxHigh=on;sun.castShadow=on;ren.setPixelRatio(on?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio,1.25));if(gfxReady)applyViewportSoon();else ren.setSize(innerWidth,innerHeight,false);if(persist){try{localStorage.setItem('gfx',on?'1':'0');}catch(e){}}}
+let gfxReady=false;function setGfx(on,persist){gfxHigh=on;sun.castShadow=on;ren.setPixelRatio(on?Math.min(devicePixelRatio,1.6):Math.min(devicePixelRatio,1.25));if(gfxReady)applyViewportSoon();else ren.setSize(innerWidth,innerHeight,false);if(persist){try{localStorage.setItem('gfx',on?'1':'0');}catch(e){}}}
 setGfx(gfxHigh,false);
 let gfxN=0,gfxDts=[],gfxAutoDone=false;
 function gfxProbe(dt){gfxReady=true;if(gfxAutoDone||!gfxHigh||navigator.webdriver||document.hidden)return;if(++gfxN<=30)return;gfxDts.push(dt);if(gfxDts.length>=60){gfxAutoDone=true;gfxDts.sort((a,b)=>a-b);if(gfxDts[30]>1/24){setGfx(false,true);say('ภาพช้า จึงปิดเงาให้อัตโนมัติ เปิดกลับได้ในสมุด');if(typeof refreshDisplayUI==='function')refreshDisplayUI();}}}
