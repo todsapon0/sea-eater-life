@@ -22,13 +22,13 @@ with sync_playwright() as p:
  # automation (webdriver) must NOT show the popup by default so other tests are unaffected
  pg.goto(base+'?debug=1',wait_until='networkidle');pg.wait_for_timeout(1500)
  assert pg.evaluate("getComputedStyle(document.getElementById('whatsnew')).display")=='none'
- assert 'v0.8.0' in pg.title() and 'v0.8.0' in pg.evaluate("document.getElementById('gver').textContent")
+ assert 'v0.8.1' in pg.title() and 'v0.8.1' in pg.evaluate("document.getElementById('gver').textContent")
  # forced popup shows, lists rows, closes, and remembers the version
  pg.goto(base+'?debug=1&whatsnew=1',wait_until='networkidle');pg.wait_for_timeout(2000)
  assert pg.evaluate("getComputedStyle(document.getElementById('whatsnew')).display")=='flex'
  assert pg.locator('#whatsnew .wrow').count()==6
  pg.locator('#wnok').click()
  assert pg.evaluate("getComputedStyle(document.getElementById('whatsnew')).display")=='none'
- assert pg.evaluate("localStorage.getItem('seenver')").startswith('v0.8.0')
+ assert pg.evaluate("localStorage.getItem('seenver')").startswith('v0.8.1')
  assert not errs,errs
  print('PASS: single GAME_VERSION in title/HUD, What\'s New popup forced via ?whatsnew=1, 6 rows, closes and remembers version, hidden under automation by default')

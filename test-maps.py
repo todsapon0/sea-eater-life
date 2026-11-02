@@ -13,7 +13,7 @@ class H(http.server.SimpleHTTPRequestHandler):
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),H);threading.Thread(target=server.serve_forever,daemon=True).start()
 url=f'http://127.0.0.1:{server.server_port}/?debug=1'
 html=Path('index.html').read_text().replace('function loop(){requestAnimationFrame(loop);','function loop(){requestAnimationFrame(loop);if(window.__pauseTest)return;')
-expose='window.__maps={P,sea,scene,cam,ren,MAPS,PORTALS,SPAWN,mons,spawn,setMap,mapExit,mapEdge,game,keys,shots,vortices,shoot,whirlpool,updatePortals,updateMini,updateZone,updateNames,updateBgm,BGM,ZN,save,kill,openMap,closeMap,get current(){return curMap},get grace(){return grace},ready:()=>{grace=0}};'
+expose='window.__maps={WARP_R,P,sea,scene,cam,ren,MAPS,PORTALS,SPAWN,mons,spawn,setMap,mapExit,mapEdge,game,keys,shots,vortices,shoot,whirlpool,updatePortals,updateMini,updateZone,updateNames,updateBgm,BGM,ZN,save,kill,openMap,closeMap,get current(){return curMap},get grace(){return grace},ready:()=>{grace=0}};'
 html=html.replace('loop();\n}',expose+'loop();\n}')
 legacy={'lv':8,'xp':12,'q':2,'qd':1,'inv':{'ครีบกระเบน':7},'seen':{'ray':1}}
 with sync_playwright() as p:
@@ -40,7 +40,9 @@ with sync_playwright() as p:
  portals=page.evaluate('__maps.PORTALS.map(p=>({map:p.map,to:p.to.map}))')
  report=page.evaluate("""()=>{const t=__maps;let trips=0;for(const [i,p] of t.PORTALS.entries())for(const f of [-.8,0,.8]){
   const A=t.MAPS[p.map];t.setMap(p.map);t.ready();
-  t.sea.position.set(p.dx?p.dx*(A.w/2-1):f*(A.w/2-2),0,p.dz?p.dz*(A.d/2-1):f*(A.d/2-2));
+  // RO-style warp: stand inside the glowing circle (offset by f*radius*.8 across it); the edge itself is a wall.
+  const wr=t.WARP_R*.8*f;t.sea.position.set(p.x+(p.dz?wr:0),0,p.z+(p.dx?wr:0));
+  const wallPos=[p.dx?p.dx*(A.w/2-1):.8*(A.w/2-2),p.dz?p.dz*(A.d/2-1):.8*(A.d/2-2)];if(f!==0&&t.mapExit(p.map,p.dx?wallPos[0]:wallPos[0]*Math.sign(f),p.dz?wallPos[1]:wallPos[1]*Math.sign(f)))throw Error('edge away from warp must be a wall');
   const expected=t.mapExit(p.map,t.sea.position.x,t.sea.position.z),offset=t.cam.position.clone().sub(t.sea.position);
   t.updatePortals(0);if(t.current!==p.to.map)throw Error('edge destination');
   if(Math.hypot(t.sea.position.x-expected.x,t.sea.position.z-expected.z)>1e-9)throw Error('lateral arrival');
@@ -56,17 +58,17 @@ with sync_playwright() as p:
   for(const w of walls)if(t.PORTALS.some(p=>p.map===d.id&&p.dx===w.userData.closedEdge.dx&&p.dz===w.userData.closedEdge.dz))throw Error('exit wall');
  }
  // Standing at the old ring location does not teleport anymore.
- t.setMap(0);const p=t.PORTALS.find(p=>p.map===0);t.sea.position.set(p.x,0,p.z);t.updatePortals(0);if(t.current!==0)throw Error('old ring trigger');
+ t.setMap(0);const p=t.PORTALS.find(p=>p.map===0);t.sea.position.set(p.x+t.WARP_R*1.6*(p.dz?1:0),0,p.z+t.WARP_R*1.6*(p.dx?1:0));t.updatePortals(0);if(t.current!==0)throw Error('outside the warp circle must not teleport');
  // Clear attack meshes so spells cannot hit monsters in another block.
  let disposed=0;t.shoot(1,1,1,0xffffff,.1);t.whirlpool();const fx=[...t.shots,...t.vortices];for(const a of fx){a.mesh.geometry.addEventListener('dispose',()=>disposed++);a.mesh.material.addEventListener('dispose',()=>disposed++);}
- t.sea.position.set(p.dx*(t.MAPS[0].w/2-1),0,p.dz*(t.MAPS[0].d/2-1));t.updatePortals(0);
+ t.sea.position.set(p.x,0,p.z);t.updatePortals(0);
  if(t.shots.length||t.vortices.length||disposed!==fx.length*2||fx.some(a=>a.mesh.parent))throw Error('old-block attack remains');
  if(document.querySelector('#fadeov'))throw Error('edge walk should not fade/lock');
  return {trips};}""")
  assert report['trips']==156,report
  # Actual held walking input across all four town edges continues into the next block.
  for key,dx,dz,to in [('d',1,0,12),('a',-1,0,7),('w',0,-1,5),('s',0,1,1)]:
-  page.evaluate('''([dx,dz])=>{const t=__maps;t.setMap(0);t.sea.position.set(dx*(t.MAPS[0].w/2-2),0,dz*(t.MAPS[0].d/2-2));__cam.yaw=0;window.__pauseTest=false;}''',[dx,dz])
+  page.evaluate('''([dx,dz])=>{const t=__maps;t.setMap(0);t.sea.position.set(dx*(t.MAPS[0].w/2-9),0,dz*(t.MAPS[0].d/2-9));__cam.yaw=0;window.__pauseTest=false;}''',[dx,dz])
   page.keyboard.down(key)
   page.wait_for_function('(to)=>__maps.current===to',arg=to,timeout=120000)
   page.keyboard.up(key);page.evaluate('window.__pauseTest=true')

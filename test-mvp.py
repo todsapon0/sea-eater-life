@@ -30,8 +30,8 @@ with sync_playwright() as p:
  assert r['maps']==[2,3,6,8,9,10,11,13,15],r
  assert r['names'] and r['hp'],r
  assert r['mvpDead']==480 and r['drop'] and r['kc']==1 and r['respawnHp'] and r['normalDead']==6,r
- assert r['total']==114,r
+ assert r['total']==175,r
  assert r['xf']==[1,1,.9,.2,.2],r
  assert r['xfArena']==1,r
  assert not errs,errs[:2]
- print('PASS: 9 MVP elites in far maps, HP x6, 8-minute respawn, extra drops, normal monsters unchanged, 114 monsters')
+ print('PASS: 9 MVP elites in far maps, HP x6, 8-minute respawn, extra drops, normal monsters unchanged, 175 monsters')
