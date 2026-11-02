@@ -1027,6 +1027,20 @@ function makeMonsterInstance(ty){let template=monsterTemplates.get(ty.n);
  for(const o of copies)if(o.isMesh&&o.material===template.mat)o.material=mat;
  const remap=o=>o?copies[original.indexOf(o)]:o,b=template.built;
  return {mat,built:{g,tail:remap(b.tail),puff:remap(b.puff),segs:b.segs&&b.segs.map(remap)}};}
+// ===== โมเดล GLB ของมอนสเตอร์ (เฟส M1 จากโค): ใส่ "model/mon_<ชื่อชนิด>":"glb" ใน ASSETS เมื่อมีไฟล์ assets/model/mon_<ชื่อชนิด>.glb (ท่า Idle/Move/Attack) — ซ่อนทรงโค้ดเดิม ใช้สี/แฟลชโดนตีของเดิม (วัสดุชื่อ main) ขยับตามสถานะ; โหลดไม่สำเร็จ = ทรงเดิม =====
+const monGlb={};
+function monGlbScripts(cb){const need=['lib/GLTFLoader.js','lib/SkeletonUtils.js'].filter(u=>!(u.includes('GLTF')?T.GLTFLoader:T.SkeletonUtils));if(!need.length)return cb();let n=need.length;need.forEach(u=>{const sc=document.createElement('script');sc.src=u;sc.onload=()=>{if(--n===0)cb();};sc.onerror=()=>{};document.head.appendChild(sc);});}
+function monGlbAttach(m,src){try{const g=m.g,old=[];g.children.slice().forEach(c=>old.push(c));old.forEach(c=>c.traverse(o=>{if(o.isMesh)o.visible=false;}));
+ const sc=T.SkeletonUtils.clone(src.scene);sc.traverse(o=>{if(o.isMesh){o.castShadow=true;if(o.material&&o.material.name==='main')o.material=m.mat;}});g.add(sc);
+ m.glb={mixer:new T.AnimationMixer(sc),acts:{},cur:'',px:g.position.x,pz:g.position.z,atk:false};src.anims.forEach(c=>{m.glb.acts[c.name]=m.glb.mixer.clipAction(c);});
+ const A=m.glb.acts;if(A.Attack){A.Attack.setLoop(T.LoopOnce,1);A.Attack.clampWhenFinished=true;}monGlbPlay(m,'Idle');}catch(e){m.glb=null;}}
+function monGlbPlay(m,name){const G=m.glb;if(!G||G.cur===name||!G.acts[name])return;const prev=G.acts[G.cur];if(prev)prev.fadeOut(.15);G.acts[name].reset().fadeIn(.15).play();G.cur=name;}
+function monGlbUpdate(m,dt){const G=m.glb;if(!G||!m.g.visible)return;const dx=m.g.position.x-G.px,dz=m.g.position.z-G.pz;G.px=m.g.position.x;G.pz=m.g.position.z;
+ if(Math.hypot(sea.position.x-G.px,sea.position.z-G.pz)>90)return;
+ const atk=(m.windup>0||m.dash>0);if(atk&&!G.atk&&G.acts.Attack){G.atk=true;G.cur='Attack';G.acts.Attack.reset().setEffectiveWeight(1).fadeIn(.1).play();}else if(!atk&&G.atk){G.atk=false;G.cur='';}
+ if(!G.atk)monGlbPlay(m,Math.hypot(dx,dz)/Math.max(dt,.001)>.4?'Move':'Idle');G.mixer.update(dt);}
+function monGlbInit(){const names=[...new Set(types.map(t=>t.n))].filter(n=>ASSETS['model/mon_'+n]);if(!names.length)return;
+ monGlbScripts(()=>{names.forEach(n=>{try{new T.GLTFLoader().load('assets/model/mon_'+n+'.'+ASSETS['model/mon_'+n],gl=>{monGlb[n]={scene:gl.scene,anims:gl.animations};mons.forEach(m=>{if(m.ty.n===n&&!m.glb)monGlbAttach(m,monGlb[n]);});},undefined,()=>{});}catch(e){}});});}
 const monsterBarGeometry=new T.PlaneGeometry(1.6,.18),monsterBarFill=new T.MeshBasicMaterial({color:0x5cf08a}),monsterBarBack=new T.MeshBasicMaterial({color:0});
 for(let i=0;i<monsterRoster.length;i++){const ty=types.find(t=>t.n===monsterRoster[i]),{mat,built}=makeMonsterInstance(ty),g=built.g;
 g.scale.setScalar(ty.s);scene.add(g);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});
@@ -1034,6 +1048,7 @@ const bar=new T.Group(),bf=new T.Mesh(monsterBarGeometry,monsterBarFill);bf.posi
 const m={g,ty,bar,bf,mat,tail:built.tail,segs:built.segs,puff:built.puff,flash:0,k:Math.random()*6,orbit:i%2?1:-1};m.map=monsterMeta[i].map;m.home=monsterMeta[i].home;mons.push(m);spawn(m);}
 // ราชามอนสเตอร์ (MVP): แมพไกลแต่ละแมพมีตัวที่แข็งที่สุด 1 ตัวถูกเลื่อนขั้น — เลือด x6 ดาเมจ x1.6 ตัวใหญ่ x1.6 EXP x8 เกิดใหม่ 8 นาที (นับเฉพาะตอนผู้เล่นอยู่แมพนั้น) ดรอปของ+อุปกรณ์เพิ่ม ใช้โมเดลสายพันธุ์เดิมจนกว่าโคจะทำโมเดลใหม่
 [2,6,8,9,10,11,13,3,15].forEach(id=>{const c=mons.filter(q=>q.map===id&&q.ty.n!=='boss').sort((a,b)=>b.ty.hp-a.ty.hp)[0];if(!c)return;c.mvp=1;c.ty=Object.assign({},c.ty,{nm:'👑 ราชา'+c.ty.nm,d:Math.round(c.ty.d*1.6),xp:c.ty.xp*8,s:c.ty.s*1.3});c.g.scale.setScalar(c.ty.s);spawn(c);});
+monGlbInit();
 const damagePool=Array.from({length:12},()=>{const el=document.createElement('span');el.className='damage-number';document.body.append(el);return {el,time:0,pos:new T.Vector3()};});
 const rings=Array.from({length:6},()=>{const mesh=new T.Mesh(new T.TorusGeometry(1,.08,6,20),new T.MeshBasicMaterial({color:0xa7edff,transparent:true,opacity:.7}));mesh.rotation.x=-Math.PI/2;mesh.visible=false;scene.add(mesh);return {mesh,time:0};});
 let soundOn=false,audioContext=null,soundLevel=1;const soundToggle=$('soundToggle'),soundLevelButton=$('soundLevel');
@@ -1520,7 +1535,7 @@ else{m.a+=(Math.random()-.5)*dt*4;g.position.x+=Math.sin(m.a)*.8*dt*speedFactor;
 // Keep stronger species outside the training area, even while wandering.
 clampNewHabitat(m);g.position.x=Math.max(-95,Math.min(95,g.position.x));g.position.z=Math.max(-95,Math.min(95,g.position.z));
 if(!m.aggro){m.windup=0;m.dash=0;}if(m.puff)m.puff.scale.setScalar(1+(m.windup>0?.2*(1-m.windup/1.2):0));if(m.flash<=0)m.mat.emissive.setHex(m.windup>0?0x693d00:0);
-g.position.y=h(g.position.x,g.position.z)+.3+Math.sin(m.k*2)*.15;g.rotation.y=m.a;if(m.tail)m.tail.rotation.y=Math.sin(m.k*5)*.4;if(m.segs)m.segs.forEach((q,j)=>{q.position.x=Math.sin(m.k*4-j*.6)*.2*(1+j*.1);});
+g.position.y=h(g.position.x,g.position.z)+.3+Math.sin(m.k*2)*.15;g.rotation.y=m.a;if(m.tail)m.tail.rotation.y=Math.sin(m.k*5)*.4;if(m.segs)m.segs.forEach((q,j)=>{q.position.x=Math.sin(m.k*4-j*.6)*.2*(1+j*.1);});if(m.glb)monGlbUpdate(m,dt);
 const r=m.hp/m.mhp;m.bar.position.set(g.position.x,g.position.y+2.8*m.ty.s,g.position.z);m.bar.quaternion.copy(cam.quaternion);m.bf.scale.x=Math.max(.001,r);m.bf.position.x=-.8*(1-r);});
 if(P.hp<=0){setMap(0);sea.position.set(0,0,0);P.hp=P.max;grace=graceDuration;mons.forEach(m=>{m.aggro=false;if(m.dead<=0&&Math.hypot(m.g.position.x,m.g.position.z)<12){const a=Math.atan2(m.g.position.x,m.g.position.z)||m.a;m.g.position.x=Math.sin(a)*12;m.g.position.z=Math.cos(a)*12;}});say('สลบ! ฟื้นที่เมือง');}else P.hp=Math.min(P.max,P.hp+dt*P.max*P.regB+dt*P.healMul*(P.song>0?P.max*.08:1));
 msgT-=dt;if(msgT<=0)$('msg').style.opacity=0;
